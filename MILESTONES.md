@@ -25,7 +25,7 @@ Acceptance criteria:
 
 1. Framed message reader and writer. Completed in `feature/001-framing`.
 2. Transport codecs. Completed in `feature/002-transport-codecs`.
-3. Connection lifecycle.
+3. Connection lifecycle. Completed in `feature/003-connection-lifecycle`.
 4. JSON parsing, validation, and standard errors.
 5. Request and notification registration.
 6. Inbound dispatch and response writing.
@@ -69,4 +69,21 @@ Acceptance criteria:
 
 - PureUnit covers partial lines, multiple lines, CRLF delimiters, embedded newline rejection, and oversized lines.
 - `examples/002-transport-codecs/stdio_codec_probe.pb` builds and runs.
+- `./tools/check.sh` passes.
+
+## 003-connection-lifecycle
+
+Branch: `feature/003-connection-lifecycle`
+
+Purpose:
+
+- Add connection lifecycle state.
+- Add fake writer capture for deterministic tests.
+- Make close idempotent.
+- Reject writes after close.
+
+Acceptance criteria:
+
+- PureUnit covers create, close twice, missing writer, fake writer capture, and post-close rejection.
+- `examples/003-connection-lifecycle/connection_probe.pb` builds and runs.
 - `./tools/check.sh` passes.

@@ -7,6 +7,7 @@ Current pages:
 - [000 Project Foundation](000-project-foundation.md)
 - [001 Framing](001-framing.md)
 - [002 Transport Codecs](002-transport-codecs.md)
+- [003 Connection Lifecycle](003-connection-lifecycle.md)
 
 Future API pages should document:
 
