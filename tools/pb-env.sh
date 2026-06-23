@@ -2,7 +2,23 @@
 
 PB_PROJECT_ROOT="${PB_PROJECT_ROOT:-$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)}"
 
-PB_INSTALL_HOME="${PB_INSTALL_HOME:-/Applications/PureBasic.app/Contents/Resources}"
+pb_detect_install_home() {
+  if command -v pbcompiler >/dev/null 2>&1; then
+    detected_compiler="$(command -v pbcompiler)"
+    CDPATH= cd -- "$(dirname -- "$detected_compiler")/.." && pwd
+    return 0
+  fi
+
+  if command -v mdfind >/dev/null 2>&1; then
+    detected_app="$(mdfind 'kMDItemFSName == "PureBasic.app"' | sed -n '1p')"
+    if [ -n "$detected_app" ] && [ -d "$detected_app/Contents/Resources" ]; then
+      printf '%s\n' "$detected_app/Contents/Resources"
+      return 0
+    fi
+  fi
+}
+
+PB_INSTALL_HOME="${PB_INSTALL_HOME:-$(pb_detect_install_home)}"
 PB_LOCAL_HOME="${PB_LOCAL_HOME:-$PB_PROJECT_ROOT/.local/purebasic-home}"
 PUREUNIT_LOCAL_HOME="${PUREUNIT_LOCAL_HOME:-$PB_PROJECT_ROOT/.local/pureunit-home}"
 
@@ -11,11 +27,6 @@ PUREBASIC_HOME="${PUREBASIC_HOME:-$PB_HOME}"
 PB_COMPILER="${PB_COMPILER:-$PB_HOME/compilers/pbcompiler}"
 PUREUNIT_HOME="${PUREUNIT_HOME:-$PUREUNIT_LOCAL_HOME}"
 PUREUNIT="${PUREUNIT:-$PUREUNIT_HOME/pureunit}"
-
-if [ ! -d "$PB_INSTALL_HOME" ] && command -v pbcompiler >/dev/null 2>&1; then
-  detected_compiler="$(command -v pbcompiler)"
-  PB_INSTALL_HOME="$(CDPATH= cd -- "$(dirname -- "$detected_compiler")/.." && pwd)"
-fi
 
 export PB_PROJECT_ROOT
 export PB_INSTALL_HOME
@@ -47,6 +58,7 @@ pb_link_children() {
 pb_create_local_homes() {
   pb_prepare_dirs
 
+  [ -n "$PB_INSTALL_HOME" ] || pb_fail "PureBasic installation home not discovered. Set PB_INSTALL_HOME or put pbcompiler on PATH."
   [ -d "$PB_INSTALL_HOME" ] || pb_fail "PureBasic installation home not found: $PB_INSTALL_HOME"
   [ -x "$PB_INSTALL_HOME/compilers/pbcompiler" ] || pb_fail "PureBasic compiler not found: $PB_INSTALL_HOME/compilers/pbcompiler"
   [ -d "$PB_INSTALL_HOME/sdk/pureunit" ] || pb_fail "PureUnit SDK not found: $PB_INSTALL_HOME/sdk/pureunit"
@@ -74,6 +86,7 @@ pb_pureunit_version() {
 }
 
 pb_require_tools() {
+  [ -n "$PB_INSTALL_HOME" ] || pb_fail "PureBasic installation home not discovered. Set PB_INSTALL_HOME or put pbcompiler on PATH."
   [ -d "$PB_INSTALL_HOME" ] || pb_fail "PureBasic installation home not found: $PB_INSTALL_HOME"
   [ -d "$PB_HOME" ] || pb_fail "PureBasic home not found: $PB_HOME"
   [ -x "$PB_COMPILER" ] || pb_fail "PureBasic compiler not executable: $PB_COMPILER"

@@ -23,3 +23,5 @@ PureBasic --build path/to/project.pbp --target target-name --readonly --quiet
 ```
 
 Do not encode target type only as raw `pbcompiler` flags. If a new root, scenario, or MCP target needs a console application, GUI executable/application, or shared library, add the target to the nearest `.pbp` file and then update `tools/pbp-projects.sh`.
+
+Keep generated output paths project-root-relative, normally under `.build/`. Do not commit absolute workstation paths in `.pbp` metadata, examples, or documentation.

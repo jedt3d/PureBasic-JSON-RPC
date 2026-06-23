@@ -22,6 +22,11 @@ The current alpha target is `0.1.0-alpha.1`, with generic JSON-RPC foundation wo
 
 ## Quick Start
 
+All project-local paths in this repository are written relative to the repository
+root. Generated work belongs under `.local/`, `.build/`, and `.reports/`; do not
+commit machine-specific absolute paths into docs, source, project metadata, or
+example configuration.
+
 ```sh
 ./tools/discover-purebasic.sh
 ./tools/verify-projects.sh

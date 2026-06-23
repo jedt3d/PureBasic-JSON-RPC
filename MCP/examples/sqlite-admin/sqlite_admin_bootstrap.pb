@@ -7,7 +7,7 @@ Define dbPath.s
 
 OpenConsole()
 
-MCP_SQLiteAdmin_SetConfig(GetCurrentDirectory() + ".local/sqlite-admin/")
+MCP_SQLiteAdmin_SetConfig(MCP_SQLiteAdmin_DefaultAllowedRoot())
 
 If CountProgramParameters() > 0
   dbPath = ProgramParameter(0)

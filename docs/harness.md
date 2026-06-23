@@ -41,6 +41,12 @@ Raw `pbcompiler` flags should not be the source of truth for scenario target typ
 
 These folders are ignored by Git.
 
+## Path Convention
+
+Repository paths in source comments, documentation, probes, and examples should be relative to the repository root. Use `.local/...`, `.build/...`, `MCP/examples/...`, and `examples/...` instead of committing workstation-specific absolute paths.
+
+Some tools still need real system paths at runtime. The PureBasic installation path is treated as a discovered or environment-configured dependency, not as project metadata. Use `PB_INSTALL_HOME` when the default discovery is not correct for the local machine.
+
 ## Toolchain Contract
 
 - PureBasic version must be `6.40`.

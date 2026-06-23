@@ -33,7 +33,7 @@ The project must support:
 
 The AI agent should discover the local PureBasic installation and create project-local development homes/configuration as needed, including:
 
-- Look at this folder, /Applications/PureBasic.app/Contents/Resources. It could be set as PureBasic Home.
+- Discover the PureBasic installation through the harness, using `PB_INSTALL_HOME` when a developer needs to override the system-specific location.
 - PureBasic home/setup for this project
 - PureUnit home/setup for this project
 - Build output directories

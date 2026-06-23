@@ -5,8 +5,9 @@ SQLite files from PureBasic. It is a real MCP server, not only a probe: it
 responds to `initialize`, exposes tools through `tools/list`, and executes
 tool calls through newline-delimited JSON-RPC on stdin/stdout.
 
-The server intentionally keeps file access narrow. By default it manages files
-under:
+The server intentionally keeps file access narrow. Paths shown here are relative
+to the repository root unless explicitly labeled as a system dependency. By
+default the server manages files under:
 
 ```text
 .local/sqlite-admin/
@@ -45,7 +46,7 @@ must use stdin/stdout. Diagnostics belong on stderr.
 MCP/examples/sqlite-admin/scripts/create_demo_db.sh
 ```
 
-The default demo database is created at:
+The default demo database is created at this project-root-relative path:
 
 ```text
 .local/sqlite-admin/demo.sqlite

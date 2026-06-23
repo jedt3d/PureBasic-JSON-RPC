@@ -10,6 +10,7 @@ UseZipPacker()
 #MCP_SQLiteAdmin_DefaultExportMaxRows = 5000
 #MCP_SQLiteAdmin_MaxExportRows = 10000
 #MCP_SQLiteAdmin_Database = 0
+#MCP_SQLiteAdmin_DefaultAllowedRootRelative$ = ".local/sqlite-admin"
 #MCP_SQLiteAdmin_OdsMimeType$ = "application/vnd.oasis.opendocument.spreadsheet"
 #MCP_SQLiteAdmin_XlsxMimeType$ = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
@@ -61,7 +62,7 @@ Procedure.s MCP_SQLiteAdmin_EnsureTrailingSlash(path.s)
 EndProcedure
 
 Procedure.s MCP_SQLiteAdmin_DefaultAllowedRoot()
-  ProcedureReturn MCP_SQLiteAdmin_EnsureTrailingSlash(GetCurrentDirectory() + ".local/sqlite-admin")
+  ProcedureReturn MCP_SQLiteAdmin_EnsureTrailingSlash(GetCurrentDirectory() + #MCP_SQLiteAdmin_DefaultAllowedRootRelative$)
 EndProcedure
 
 Procedure.s MCP_SQLiteAdmin_DefaultDbPath()
@@ -171,6 +172,23 @@ Procedure.s MCP_SQLiteAdmin_ResolvePath(inputPath.s, *errorMessage.String)
   ProcedureReturn resolved
 EndProcedure
 
+Procedure.s MCP_SQLiteAdmin_ProjectRelativePath(path.s)
+  Protected projectRoot.s
+  Protected localMarker.i
+
+  projectRoot = MCP_SQLiteAdmin_EnsureTrailingSlash(GetCurrentDirectory())
+  If projectRoot <> "" And Left(path, Len(projectRoot)) = projectRoot
+    ProcedureReturn Mid(path, Len(projectRoot) + 1)
+  EndIf
+
+  localMarker = FindString(path, "/.local/", 1)
+  If localMarker > 0
+    ProcedureReturn Mid(path, localMarker + 1)
+  EndIf
+
+  ProcedureReturn path
+EndProcedure
+
 Procedure.i MCP_SQLiteAdmin_EnsureAllowedRoot()
   ProcedureReturn MCP_SQLiteAdmin_EnsureDirectory(MCP_SQLiteAdmin_Config\allowedRoot)
 EndProcedure
@@ -220,18 +238,18 @@ Procedure.i MCP_SQLiteAdmin_OpenDatabase(dbPath.s, createIfMissing.i, *result.MC
     If file
       CloseFile(file)
     Else
-      *result\text = "Unable to create SQLite file: " + dbPath
+      *result\text = "Unable to create SQLite file: " + MCP_SQLiteAdmin_ProjectRelativePath(dbPath)
       ProcedureReturn #False
     EndIf
   EndIf
 
   If createIfMissing = #False And FileSize(dbPath) < 0
-    *result\text = "SQLite file does not exist: " + dbPath
+    *result\text = "SQLite file does not exist: " + MCP_SQLiteAdmin_ProjectRelativePath(dbPath)
     ProcedureReturn #False
   EndIf
 
   If OpenDatabase(#MCP_SQLiteAdmin_Database, dbPath, "", "", #PB_Database_SQLite) = 0
-    *result\text = "Unable to open SQLite database " + dbPath + ": " + DatabaseError()
+    *result\text = "Unable to open SQLite database " + MCP_SQLiteAdmin_ProjectRelativePath(dbPath) + ": " + DatabaseError()
     ProcedureReturn #False
   EndIf
 
@@ -338,7 +356,7 @@ Procedure.i MCP_SQLiteAdmin_BootstrapDatabase(dbPath.s, overwrite.i, *result.MCP
     EndIf
 
     If DeleteFile(resolved) = #False
-      *result\text = "Unable to remove existing SQLite file: " + resolved
+      *result\text = "Unable to remove existing SQLite file: " + MCP_SQLiteAdmin_ProjectRelativePath(resolved)
       ProcedureReturn #False
     EndIf
   EndIf
@@ -350,7 +368,7 @@ Procedure.i MCP_SQLiteAdmin_BootstrapDatabase(dbPath.s, overwrite.i, *result.MCP
   If MCP_SQLiteAdmin_CreateSchema(*result) And MCP_SQLiteAdmin_InsertSampleData(*result)
     *result\ok = #True
     *result\isError = #False
-    *result\text = "SQLite admin database bootstrapped at " + resolved + "." + #LF$ + "Created admin_notes, sql_recipes, multilingual sample rows, and starter SQL recipes."
+    *result\text = "SQLite admin database bootstrapped at " + MCP_SQLiteAdmin_ProjectRelativePath(resolved) + "." + #LF$ + "Created admin_notes, sql_recipes, multilingual sample rows, and starter SQL recipes."
   EndIf
 
   CloseDatabase(#MCP_SQLiteAdmin_Database)
@@ -861,7 +879,7 @@ Procedure.i MCP_SQLiteAdmin_RunCsvExport(dbPath.s, sql.s, outputPath.s, maxRows.
 
   outputDirectory = GetPathPart(outputPath)
   If MCP_SQLiteAdmin_EnsureDirectory(outputDirectory) = #False
-    *result\text = "Unable to create CSV export directory: " + outputDirectory
+    *result\text = "Unable to create CSV export directory: " + MCP_SQLiteAdmin_ProjectRelativePath(outputDirectory)
     ProcedureReturn #False
   EndIf
 
@@ -883,7 +901,7 @@ Procedure.i MCP_SQLiteAdmin_RunCsvExport(dbPath.s, sql.s, outputPath.s, maxRows.
 
   file = CreateFile(#PB_Any, outputPath)
   If file = 0
-    *result\text = "Unable to create CSV export file: " + outputPath
+    *result\text = "Unable to create CSV export file: " + MCP_SQLiteAdmin_ProjectRelativePath(outputPath)
     FinishDatabaseQuery(#MCP_SQLiteAdmin_Database)
     CloseDatabase(#MCP_SQLiteAdmin_Database)
     ProcedureReturn #False
@@ -892,7 +910,7 @@ Procedure.i MCP_SQLiteAdmin_RunCsvExport(dbPath.s, sql.s, outputPath.s, maxRows.
   WriteStringFormat(file, #PB_UTF8)
   columns = DatabaseColumns(#MCP_SQLiteAdmin_Database)
   If MCP_SQLiteAdmin_WriteCsvHeader(file, columns) = #False
-    *result\text = "Unable to write CSV header: " + outputPath
+    *result\text = "Unable to write CSV header: " + MCP_SQLiteAdmin_ProjectRelativePath(outputPath)
     CloseFile(file)
     FinishDatabaseQuery(#MCP_SQLiteAdmin_Database)
     CloseDatabase(#MCP_SQLiteAdmin_Database)
@@ -906,7 +924,7 @@ Procedure.i MCP_SQLiteAdmin_RunCsvExport(dbPath.s, sql.s, outputPath.s, maxRows.
     EndIf
 
     If MCP_SQLiteAdmin_WriteCsvRow(file, columns) = #False
-      *result\text = "Unable to write CSV row: " + outputPath
+      *result\text = "Unable to write CSV row: " + MCP_SQLiteAdmin_ProjectRelativePath(outputPath)
       CloseFile(file)
       FinishDatabaseQuery(#MCP_SQLiteAdmin_Database)
       CloseDatabase(#MCP_SQLiteAdmin_Database)
@@ -922,7 +940,7 @@ Procedure.i MCP_SQLiteAdmin_RunCsvExport(dbPath.s, sql.s, outputPath.s, maxRows.
 
   *result\ok = #True
   *result\isError = #False
-  *result\text = ~"{\"path\":\"" + JSONRPC_Protocol_EscapeString(outputPath) + ~"\",\"format\":\"csv\",\"encoding\":\"UTF-8 with BOM\",\"quotedFields\":true,\"lineEnding\":\"CRLF\",\"exportedRows\":" + Str(exportedRows) + ~",\"truncated\":" + MCP_SQLiteAdmin_BoolJson(truncated) + "}"
+  *result\text = ~"{\"path\":\"" + JSONRPC_Protocol_EscapeString(MCP_SQLiteAdmin_ProjectRelativePath(outputPath)) + ~"\",\"format\":\"csv\",\"encoding\":\"UTF-8 with BOM\",\"quotedFields\":true,\"lineEnding\":\"CRLF\",\"exportedRows\":" + Str(exportedRows) + ~",\"truncated\":" + MCP_SQLiteAdmin_BoolJson(truncated) + "}"
   ProcedureReturn #True
 EndProcedure
 
@@ -946,7 +964,7 @@ Procedure.i MCP_SQLiteAdmin_RunOdsExport(dbPath.s, sql.s, outputPath.s, maxRows.
 
   outputDirectory = GetPathPart(outputPath)
   If MCP_SQLiteAdmin_EnsureDirectory(outputDirectory) = #False
-    *result\text = "Unable to create ODS export directory: " + outputDirectory
+    *result\text = "Unable to create ODS export directory: " + MCP_SQLiteAdmin_ProjectRelativePath(outputDirectory)
     ProcedureReturn #False
   EndIf
 
@@ -994,13 +1012,13 @@ Procedure.i MCP_SQLiteAdmin_RunOdsExport(dbPath.s, sql.s, outputPath.s, maxRows.
   CloseDatabase(#MCP_SQLiteAdmin_Database)
 
   If MCP_SQLiteAdmin_WriteOdsPackage(outputPath, contentXml) = #False
-    *result\text = "Unable to create ODS export package: " + outputPath
+    *result\text = "Unable to create ODS export package: " + MCP_SQLiteAdmin_ProjectRelativePath(outputPath)
     ProcedureReturn #False
   EndIf
 
   *result\ok = #True
   *result\isError = #False
-  *result\text = ~"{\"path\":\"" + JSONRPC_Protocol_EscapeString(outputPath) + ~"\",\"format\":\"ods\",\"mediaType\":\"" + #MCP_SQLiteAdmin_OdsMimeType$ + ~"\",\"encoding\":\"UTF-8 XML\",\"sheet\":\"QueryResult\",\"stringCells\":true,\"exportedRows\":" + Str(exportedRows) + ~",\"truncated\":" + MCP_SQLiteAdmin_BoolJson(truncated) + "}"
+  *result\text = ~"{\"path\":\"" + JSONRPC_Protocol_EscapeString(MCP_SQLiteAdmin_ProjectRelativePath(outputPath)) + ~"\",\"format\":\"ods\",\"mediaType\":\"" + #MCP_SQLiteAdmin_OdsMimeType$ + ~"\",\"encoding\":\"UTF-8 XML\",\"sheet\":\"QueryResult\",\"stringCells\":true,\"exportedRows\":" + Str(exportedRows) + ~",\"truncated\":" + MCP_SQLiteAdmin_BoolJson(truncated) + "}"
   ProcedureReturn #True
 EndProcedure
 
@@ -1025,7 +1043,7 @@ Procedure.i MCP_SQLiteAdmin_RunXlsxExport(dbPath.s, sql.s, outputPath.s, maxRows
 
   outputDirectory = GetPathPart(outputPath)
   If MCP_SQLiteAdmin_EnsureDirectory(outputDirectory) = #False
-    *result\text = "Unable to create XLSX export directory: " + outputDirectory
+    *result\text = "Unable to create XLSX export directory: " + MCP_SQLiteAdmin_ProjectRelativePath(outputDirectory)
     ProcedureReturn #False
   EndIf
 
@@ -1075,13 +1093,13 @@ Procedure.i MCP_SQLiteAdmin_RunXlsxExport(dbPath.s, sql.s, outputPath.s, maxRows
   CloseDatabase(#MCP_SQLiteAdmin_Database)
 
   If MCP_SQLiteAdmin_WriteXlsxPackage(outputPath, worksheetXml) = #False
-    *result\text = "Unable to create XLSX export package: " + outputPath
+    *result\text = "Unable to create XLSX export package: " + MCP_SQLiteAdmin_ProjectRelativePath(outputPath)
     ProcedureReturn #False
   EndIf
 
   *result\ok = #True
   *result\isError = #False
-  *result\text = ~"{\"path\":\"" + JSONRPC_Protocol_EscapeString(outputPath) + ~"\",\"format\":\"xlsx\",\"mediaType\":\"" + #MCP_SQLiteAdmin_XlsxMimeType$ + ~"\",\"encoding\":\"UTF-8 XML in OOXML ZIP\",\"sheet\":\"QueryResult\",\"stringCells\":true,\"inlineStrings\":true,\"macroFree\":true,\"exportedRows\":" + Str(exportedRows) + ~",\"truncated\":" + MCP_SQLiteAdmin_BoolJson(truncated) + "}"
+  *result\text = ~"{\"path\":\"" + JSONRPC_Protocol_EscapeString(MCP_SQLiteAdmin_ProjectRelativePath(outputPath)) + ~"\",\"format\":\"xlsx\",\"mediaType\":\"" + #MCP_SQLiteAdmin_XlsxMimeType$ + ~"\",\"encoding\":\"UTF-8 XML in OOXML ZIP\",\"sheet\":\"QueryResult\",\"stringCells\":true,\"inlineStrings\":true,\"macroFree\":true,\"exportedRows\":" + Str(exportedRows) + ~",\"truncated\":" + MCP_SQLiteAdmin_BoolJson(truncated) + "}"
   ProcedureReturn #True
 EndProcedure
 
@@ -1387,9 +1405,9 @@ Procedure.i MCP_SQLiteAdmin_BackupHandler(argumentsValue, *context.JSONRPC_Reque
   EndIf
 
   If CopyFile(dbPath, backupPath)
-    MCP_SQLiteAdmin_SetMCPResult(*result, "SQLite backup written to " + backupPath + ".")
+    MCP_SQLiteAdmin_SetMCPResult(*result, "SQLite backup written to " + MCP_SQLiteAdmin_ProjectRelativePath(backupPath) + ".")
   Else
-    MCP_SQLiteAdmin_SetMCPResult(*result, "Unable to write backup to " + backupPath + ".", #True)
+    MCP_SQLiteAdmin_SetMCPResult(*result, "Unable to write backup to " + MCP_SQLiteAdmin_ProjectRelativePath(backupPath) + ".", #True)
   EndIf
   ProcedureReturn #True
 EndProcedure

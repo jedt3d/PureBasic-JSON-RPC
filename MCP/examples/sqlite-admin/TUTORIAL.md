@@ -12,6 +12,13 @@ inspection, queries, writes, backups, maintenance, and saved SQL recipes.
 
 The longer version is the rest of this guide.
 
+## Path Convention
+
+All repository paths in this tutorial are relative to the project root unless a
+paragraph explicitly says a host requires an expanded local path. The examples
+use `.local/...`, `.build/...`, and `MCP/examples/...` so the guide can be read
+and copied without carrying a developer-specific workstation path.
+
 ## 1. What This Server Is For
 
 SQLite is often the quiet workhorse inside desktop tools, local prototypes,
@@ -41,13 +48,13 @@ Administration in this example means safe local file administration plus SQL
 execution. The server can create, open, query, update, back up, and check SQLite
 files inside its allowed root. It does not delete database files in v1.
 
-The default allowed root is:
+The default allowed root is this project-root-relative directory:
 
 ```text
 .local/sqlite-admin/
 ```
 
-The default database is:
+The default database is this project-root-relative file:
 
 ```text
 .local/sqlite-admin/demo.sqlite
@@ -190,22 +197,25 @@ useful when you want test-style pass/fail output without reading raw JSON-RPC.
 Every MCP host has its own configuration format, but the shape is usually the
 same: register a command that launches the stdio server.
 
-Use an absolute path to the compiled executable:
+Many MCP hosts want the command expanded to a real local executable path. In
+project documentation, write it with the project-root placeholder:
 
 ```json
 {
   "mcpServers": {
     "sqlite-admin": {
-      "command": "/absolute/path/to/PureBasic-JSON-RPC/.build/MCP/examples/sqlite-admin/sqlite_admin_server"
+      "command": "<project-root>/.build/MCP/examples/sqlite-admin/sqlite_admin_server"
     }
   }
 }
 ```
 
-Run the host from the repository root when you want the default allowed root to
-be `.local/sqlite-admin/` in this project. A future hardened server could accept
-an explicit configuration file or environment variable for the allowed root, but
-this example keeps configuration deliberately small.
+Expand `<project-root>` for the local host configuration if that host cannot
+resolve relative commands. Run the host from the repository root when you want
+the default allowed root to be `.local/sqlite-admin/` in this project. A future
+hardened server could accept an explicit configuration file or environment
+variable for the allowed root, but this example keeps configuration deliberately
+small.
 
 ## 8. The MCP Messages
 
@@ -901,7 +911,8 @@ protocol messages only.
 ### A path is rejected
 
 Paths must stay inside `.local/sqlite-admin/` by default. Avoid `..`, `~`, and
-absolute paths outside the allowed root.
+absolute paths outside the allowed root. Tool results report project-root-relative
+paths whenever they point back into this repository.
 
 ### A SELECT returns too few rows
 

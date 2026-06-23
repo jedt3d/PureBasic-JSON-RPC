@@ -84,7 +84,7 @@ Procedure.i MCP_CheckTool_RunCommand(*commandResult.MCP_CheckTool_CommandResult)
   *commandResult\output = ""
   *commandResult\truncated = #False
 
-  program = RunProgram("/bin/sh", ~"-c \"" + MCP_CheckTool_Config\shellCommand + ~"\"", MCP_CheckTool_Config\projectRoot, #PB_Program_Open | #PB_Program_Read)
+  program = RunProgram("sh", ~"-c \"" + MCP_CheckTool_Config\shellCommand + ~"\"", MCP_CheckTool_Config\projectRoot, #PB_Program_Open | #PB_Program_Read)
   If program = 0
     *commandResult\output = "Unable to launch check command."
     ProcedureReturn #False
