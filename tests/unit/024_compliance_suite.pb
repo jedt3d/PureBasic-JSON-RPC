@@ -10,7 +10,7 @@ ProcedureUnit CoreComplianceSuitePasses()
 
   Assert(JSONRPC_Compliance_RunCore(@report), "Core JSON-RPC compliance suite should pass.")
   Assert(report\failed = 0, "Compliance suite should report zero failures.")
-  Assert(report\passed >= 9, "Compliance suite should run expected checks.")
+  Assert(report\passed >= 17, "Compliance suite should run the expanded matrix checks.")
 EndProcedureUnit
 
 ProcedureUnit ComplianceSummaryIsJson()

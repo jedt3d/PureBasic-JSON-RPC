@@ -15,6 +15,7 @@ milestones
 release-notes
 release-hardening-plan
 release-quality-gates
+jsonrpc-compliance-matrix
 mcp-for-purebasic
 tutorial-building-with-purebasic-jsonrpc
 mcp-example-milestone-log

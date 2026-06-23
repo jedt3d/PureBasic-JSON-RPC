@@ -6,6 +6,8 @@ Documentation and harness discipline:
 
 - Added release quality gates for alpha, beta, and production-candidate
   readiness under `docs/release-quality-gates.md`.
+- Added a JSON-RPC compliance matrix and expanded the reusable compliance runner
+  with additional protocol edge cases.
 - Added `tools/verify-docs.sh` to verify numbered routes have matching example
   READMEs, API pages, milestone sections, API index entries, docs API bridge
   entries, and required Sphinx navigation.

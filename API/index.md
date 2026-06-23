@@ -32,6 +32,7 @@ Current pages:
 - [025 Public API Review](025-public-api-review.md)
 - [026 Alpha Release Package](026-alpha-release-package.md)
 - [027 Release Quality Gates](027-release-quality-gates.md)
+- [028 Compliance Matrix](028-compliance-matrix.md)
 
 Future API pages should document:
 
