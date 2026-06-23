@@ -36,6 +36,7 @@ Acceptance criteria:
 11. Diagnostics counters. Completed in `feature/010-diagnostics`.
 12. Stress tests and memory lifecycle tests. Completed in `feature/011-stress-memory`.
 13. Stdio runtime pump. Completed in `feature/012-stdio-runtime-pump`.
+14. MCP lifecycle adapter. Completed in `feature/013-mcp-lifecycle`.
 
 ## 001-framing
 
@@ -237,4 +238,20 @@ Acceptance criteria:
 
 - PureUnit covers request dispatch, partial lines, response matching, batch dispatch, and cancellation notifications.
 - `examples/012-stdio-runtime-pump/stdio_runtime_probe.pb` builds and runs.
+- `./tools/check.sh` passes.
+
+## 013-mcp-lifecycle
+
+Branch: `feature/013-mcp-lifecycle`
+
+Purpose:
+
+- Add MCP lifecycle adapter registration.
+- Support `initialize` and `notifications/initialized`.
+- Return protocol version, server info, capabilities, and optional instructions.
+
+Acceptance criteria:
+
+- PureUnit covers initialize result, missing protocol version, and initialized notification.
+- `examples/013-mcp-lifecycle/mcp_lifecycle_probe.pb` builds and runs.
 - `./tools/check.sh` passes.
