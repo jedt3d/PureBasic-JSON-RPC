@@ -197,6 +197,11 @@ Procedure.s JSONRPC_Dispatcher_Dispatch(*dispatcher.JSONRPC_Dispatcher, *connect
 
   If *connection <> 0
     *connection\diagnostics\receivedMessages + 1
+    If *connection\tracePayloads
+      JSONRPC_Trace_Log(*connection, #JSONRPC_Trace_Messages, "received: " + body)
+    Else
+      JSONRPC_Trace_Log(*connection, #JSONRPC_Trace_Messages, "received message bytes=" + Str(StringByteLength(body, #PB_UTF8)))
+    EndIf
   EndIf
 
   If JSONRPC_Protocol_Inspect(body, @inspect) = #False
