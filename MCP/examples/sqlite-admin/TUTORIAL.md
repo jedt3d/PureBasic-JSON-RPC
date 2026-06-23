@@ -729,6 +729,11 @@ non-row commands through `sqlite/execute`. The safety boundary is the approved
 database path, bounded output, and an explicit tool name that separates writes
 from reads.
 
+Treat `sqlite/execute` as a reviewed administrator action. Before running write
+or DDL SQL, require the model to show the exact SQL, create a backup when the
+database matters, and use the MCP host's user-confirmation flow when one is
+available.
+
 For AI-assisted work, a good pattern is:
 
 ```text
@@ -940,6 +945,7 @@ checklist:
 - Ask for the proposed SQL in plain text before executing writes.
 - Prefer `sqlite/query` for exploration.
 - Back up before `sqlite/execute` statements that change data or schema.
+- Use host/user confirmation for write or DDL calls when the MCP client supports it.
 - Use small `maxRows` values during exploration.
 - Treat recipes as reviewed commands, not arbitrary hidden instructions.
 - Keep secrets and production credentials out of local demo databases.

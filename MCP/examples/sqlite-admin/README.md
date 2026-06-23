@@ -99,6 +99,12 @@ Run the compiled dispatcher scenario:
 - `sqlite/recipe/run`: run a saved row-returning recipe with scalar parameters.
 - `sqlite/recipe/delete`: remove a recipe from the catalog table.
 
+## Safety Note
+
+`sqlite/execute` is an administrator/developer tool, not a sandbox. Use it only
+after reviewing the SQL, back up the database before write or DDL operations, and
+prefer MCP host/user confirmation for calls that change data or schema.
+
 ## i18n Scope
 
 The v1 i18n scope is data-only. The demo database stores UTF-8 text and includes
