@@ -1,8 +1,12 @@
 # JSON-RPC Foundation Gap Plan
 
-This note records the main generic JSON-RPC gaps to keep in view before calling the library production-ready. It is not a commitment to implement everything immediately.
+This note records the main generic JSON-RPC gaps to keep in view before calling
+the library production-ready. It is not a commitment to implement everything
+immediately.
 
-The scope of this plan is the reusable JSON-RPC layer only. MCP adapters, MCP schemas, and MCP-specific features should build on top of this foundation rather than drive these rounds directly.
+The scope of this plan is the reusable JSON-RPC layer only. MCP adapters, MCP
+schemas, and MCP-specific features should build on top of this foundation rather
+than drive these rounds directly.
 
 ## Reference Baseline
 
@@ -25,7 +29,14 @@ The library now has a usable generic JSON-RPC base:
 - diagnostics counters.
 - stress tests and packaging templates.
 
-This is enough for controlled local examples and early adapter work. The next improvements should focus on runtime correctness, lifecycle behavior, and API stability.
+This is enough for controlled local examples and early adapter work. The
+completed 017-026 rounds addressed the first major foundation gaps: transport
+interfaces, byte-buffer state, events, handler lifecycle, cancellation tokens,
+write queues, trace hooks, compliance tests, API review, and alpha packaging.
+
+The next improvements should now focus on release quality gates, deeper
+compliance evidence, negative testing, stress/lifecycle testing, robustness, and
+release automation polish.
 
 ## Main Gaps
 
@@ -140,7 +151,7 @@ The library needs:
 - changelog convention
 - migration notes for breaking changes
 
-## Recommended Next JSON-RPC-Only Rounds
+## Completed JSON-RPC-Only Rounds
 
 ### 017 Reader And Writer Interfaces
 
@@ -247,6 +258,77 @@ Definition of done:
 
 ## Suggested Immediate Next Step
 
-Start with round 017. Reader and writer interfaces are the best foundation because they reduce coupling before more lifecycle, tracing, cancellation, socket, or adapter work is added.
+Rounds 017-026 are complete. The next phase should start with round 027 and keep
+the center of gravity on the JSON-RPC library source and tests.
 
-Round 017 should avoid new protocol features. It should only reshape the runtime boundary so future JSON-RPC work can plug into stable transport abstractions.
+Round 027 should not add protocol features. It should define release quality
+gates so later hardening work can be measured against explicit criteria.
+
+## Recommended Next JSON-RPC Hardening Rounds
+
+### 027 Release Quality Gates
+
+Define the quality bar for alpha, beta, and production readiness.
+
+Definition of done:
+
+- quality gates are documented in `docs/release-quality-gates.md`
+- JSON-RPC source, test, documentation, package, and API stability gates are
+  explicit
+- MCP examples are identified as dogfooding evidence, not the primary gate for
+  generic JSON-RPC correctness
+
+### 028 Compliance Matrix Expansion
+
+Create a traceable matrix from JSON-RPC 2.0 rules to tests and source behavior.
+
+Definition of done:
+
+- each core protocol rule has a test reference or a documented gap
+- request, response, notification, error, id, params, and batch behavior are
+  covered
+- missing high-value tests are added when cheap and low-risk
+
+### 029 Negative Test Expansion
+
+Add malformed-input and edge-case coverage around the library core.
+
+Definition of done:
+
+- invalid JSON, invalid ids, invalid params, invalid batches, oversized payloads,
+  and orphan responses are covered
+- notification no-response behavior is preserved
+- JSON allocation/free behavior remains paired in new paths
+
+### 030 Stress And Lifecycle Testing
+
+Increase repeated-use testing for connection and protocol lifecycle behavior.
+
+Definition of done:
+
+- stress loops cover parse, dispatch, batch, cancellation, timeout, write, trace,
+  and close cleanup
+- pending requests, cancellations, queued writes, trace buffers, and diagnostics
+  remain bounded and clean
+
+### 031 Security And Robustness Review
+
+Document and test the generic library's robustness boundaries.
+
+Definition of done:
+
+- message limits, trace payload controls, write failures, malformed-message
+  recovery, and error boundaries are reviewed
+- application-level policy such as SQL, filesystem, and command execution is
+  clearly separated from the generic JSON-RPC library
+
+### 032 Release Automation Polish
+
+Make the release loop repeatable and stale-document-resistant.
+
+Definition of done:
+
+- release checklist is documented
+- docs, PDFs, package manifests, checksums, `.pbp` metadata, tests, and builds
+  are verified from the current tree
+- the next alpha or beta candidate process is clear

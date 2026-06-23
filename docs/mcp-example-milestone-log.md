@@ -3,7 +3,7 @@
 This document records the unnumbered MCP example and release-support work that
 continued after the core JSON-RPC milestone sequence. It is a companion to
 `milestones.md`, which tracks the numbered foundation rounds from `000` through
-`016`.
+`026` and the next JSON-RPC hardening rounds.
 
 The source of truth for this log is the Git history. Commit hashes are included
 so future maintainers can connect each milestone entry to the actual repository
@@ -192,10 +192,11 @@ As of merge commit `0257cad`, the repository has:
 - a full local check that runs PureUnit, builds, scenario probes, MCP stdio
   smoke tests, docs, and alpha packaging.
 
-## Open Follow-Up Track
+## Deferred MCP Example Follow-Up Track
 
-The next planning discussion should treat SQLite admin production hardening as a
-separate milestone family. Candidate topics include read-only mode, explicit
-write policy, stronger approval guidance, richer recipe parameter validation,
-configurable allowed roots, and audit logging. Those controls were intentionally
-not implemented in the quick alpha cleanup.
+SQLite admin production hardening remains useful, but it is not the next primary
+track. The next numbered rounds should focus on the reusable JSON-RPC library
+source and tests. When MCP example hardening resumes, candidate topics include
+read-only mode, explicit write policy, stronger approval guidance, richer recipe
+parameter validation, configurable allowed roots, and audit logging. Those
+controls were intentionally not implemented in the quick alpha cleanup.
