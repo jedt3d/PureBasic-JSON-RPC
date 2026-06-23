@@ -1,5 +1,6 @@
 EnableExplicit
 
+XIncludeFile "io.pbi"
 XIncludeFile "codec.pbi"
 
 Enumeration
@@ -14,12 +15,6 @@ Enumeration
 EndEnumeration
 
 #JSONRPC_Connection_DefaultTimeoutMs = 30000
-
-Structure JSONRPC_FakeWriter
-  captured.s
-  writeCount.i
-  closed.i
-EndStructure
 
 Structure JSONRPC_PendingRequest
   idText.s
@@ -49,7 +44,7 @@ Structure JSONRPC_Connection
   closing.i
   closed.i
   writerMutex.i
-  *writer.JSONRPC_FakeWriter
+  *writer.JSONRPC_Writer
   nextId.q
   Map pending.JSONRPC_PendingRequest()
   Map cancellations.JSONRPC_CancellationToken()
@@ -62,9 +57,7 @@ Structure JSONRPC_Connection
   lastErrorMessage.s
 EndStructure
 
-Declare JSONRPC_FakeWriter_Init(*writer.JSONRPC_FakeWriter)
-Declare JSONRPC_FakeWriter_Close(*writer.JSONRPC_FakeWriter)
-Declare.i JSONRPC_Connection_Init(*connection.JSONRPC_Connection, *writer.JSONRPC_FakeWriter = 0)
+Declare.i JSONRPC_Connection_Init(*connection.JSONRPC_Connection, *writer.JSONRPC_Writer = 0)
 Declare.i JSONRPC_Connection_Close(*connection.JSONRPC_Connection)
 Declare.i JSONRPC_Connection_SendBody(*connection.JSONRPC_Connection, body.s)
 Declare.i JSONRPC_Connection_IsRunning(*connection.JSONRPC_Connection)
@@ -78,17 +71,7 @@ Procedure JSONRPC_Connection_SetError(*connection.JSONRPC_Connection, code.i, me
   *connection\lastErrorMessage = message
 EndProcedure
 
-Procedure JSONRPC_FakeWriter_Init(*writer.JSONRPC_FakeWriter)
-  *writer\captured = ""
-  *writer\writeCount = 0
-  *writer\closed = #False
-EndProcedure
-
-Procedure JSONRPC_FakeWriter_Close(*writer.JSONRPC_FakeWriter)
-  *writer\closed = #True
-EndProcedure
-
-Procedure.i JSONRPC_Connection_Init(*connection.JSONRPC_Connection, *writer.JSONRPC_FakeWriter = 0)
+Procedure.i JSONRPC_Connection_Init(*connection.JSONRPC_Connection, *writer.JSONRPC_Writer = 0)
   *connection\running = #False
   *connection\closing = #False
   *connection\closed = #False
@@ -128,7 +111,7 @@ Procedure.i JSONRPC_Connection_Close(*connection.JSONRPC_Connection)
   *connection\running = #False
 
   If *connection\writer <> 0
-    JSONRPC_FakeWriter_Close(*connection\writer)
+    JSONRPC_Writer_Close(*connection\writer)
   EndIf
 
   ClearMap(*connection\pending())
@@ -164,9 +147,16 @@ Procedure.i JSONRPC_Connection_SendBody(*connection.JSONRPC_Connection, body.s)
     LockMutex(*connection\writerMutex)
   EndIf
 
-  *connection\writer\captured + body
-  *connection\writer\writeCount + 1
-  *connection\diagnostics\sentMessages + 1
+  If JSONRPC_Writer_Write(*connection\writer, body)
+    *connection\diagnostics\sentMessages + 1
+  Else
+    JSONRPC_Connection_SetError(*connection, #JSONRPC_Connection_ErrorNoWriter, JSONRPC_Writer_GetLastErrorMessage(*connection\writer))
+    If *connection\writerMutex <> 0
+      UnlockMutex(*connection\writerMutex)
+    EndIf
+
+    ProcedureReturn #False
+  EndIf
 
   If *connection\writerMutex <> 0
     UnlockMutex(*connection\writerMutex)

@@ -82,7 +82,11 @@ package_console_out="$package_out_dir/console_template"
 package_shared_out="$package_out_dir/shared_library_template.dylib"
 package_app_out="$package_out_dir/app_template"
 
-mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir" "$outbound_out_dir" "$timeout_out_dir" "$batch_out_dir" "$cancel_out_dir" "$diagnostics_out_dir" "$stress_out_dir" "$stdio_runtime_out_dir" "$mcp_lifecycle_out_dir" "$mcp_tools_list_out_dir" "$mcp_tools_call_out_dir" "$package_out_dir"
+io_src="$ROOT/examples/017-reader-writer-interfaces/io_probe.pb"
+io_out_dir="$ROOT/.build/examples/017-reader-writer-interfaces"
+io_out="$io_out_dir/io_probe"
+
+mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir" "$outbound_out_dir" "$timeout_out_dir" "$batch_out_dir" "$cancel_out_dir" "$diagnostics_out_dir" "$stress_out_dir" "$stdio_runtime_out_dir" "$mcp_lifecycle_out_dir" "$mcp_tools_list_out_dir" "$mcp_tools_call_out_dir" "$package_out_dir" "$io_out_dir"
 
 "$PB_COMPILER" "$foundation_src" --console --thread --output "$foundation_out"
 printf 'Built console scenario: %s\n' "$foundation_out"
@@ -143,3 +147,6 @@ printf 'Built shared library template: %s\n' "$package_shared_out"
 
 "$PB_COMPILER" "$package_app_src" --thread --output "$package_app_out"
 printf 'Built app template: %s\n' "$package_app_out"
+
+"$PB_COMPILER" "$io_src" --console --thread --output "$io_out"
+printf 'Built reader writer interfaces scenario: %s\n' "$io_out"
