@@ -19,6 +19,8 @@ Structure JSONRPC_Diagnostics
   orphanResponses.q
   batches.q
   cancellations.q
+  queuedWrites.q
+  writeFailures.q
 EndStructure
 ```
 

@@ -25,7 +25,7 @@ If FindString(summary, ~"\"sentMessages\":1", 1) = 0
 EndIf
 
 JSONRPC_Diagnostics_Reset(@connection)
-If JSONRPC_Diagnostics_Summary(@connection) <> ~"{\"receivedMessages\":0,\"sentMessages\":0,\"errors\":0,\"timeouts\":0,\"orphanResponses\":0,\"batches\":0,\"cancellations\":0}"
+If JSONRPC_Diagnostics_Summary(@connection) <> ~"{\"receivedMessages\":0,\"sentMessages\":0,\"errors\":0,\"timeouts\":0,\"orphanResponses\":0,\"batches\":0,\"cancellations\":0,\"queuedWrites\":0,\"writeFailures\":0}"
   PrintN("reset failed")
   End 1
 EndIf

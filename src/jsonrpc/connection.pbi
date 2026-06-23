@@ -12,6 +12,7 @@ Enumeration
   #JSONRPC_Connection_ErrorInvalidParams
   #JSONRPC_Connection_ErrorOrphanResponse
   #JSONRPC_Connection_ErrorTimeout
+  #JSONRPC_Connection_ErrorWriteFailed
 EndEnumeration
 
 Enumeration
@@ -49,6 +50,8 @@ Structure JSONRPC_Diagnostics
   orphanResponses.q
   batches.q
   cancellations.q
+  queuedWrites.q
+  writeFailures.q
 EndStructure
 
 Structure JSONRPC_Connection
@@ -58,6 +61,7 @@ Structure JSONRPC_Connection
   writerMutex.i
   *writer.JSONRPC_Writer
   nextId.q
+  List writeQueue.s()
   Map pending.JSONRPC_PendingRequest()
   Map cancellations.JSONRPC_CancellationToken()
   lastMatchedIdText.s
@@ -75,6 +79,9 @@ EndStructure
 
 Declare.i JSONRPC_Connection_Init(*connection.JSONRPC_Connection, *writer.JSONRPC_Writer = 0)
 Declare.i JSONRPC_Connection_Close(*connection.JSONRPC_Connection)
+Declare.i JSONRPC_Connection_QueueBody(*connection.JSONRPC_Connection, body.s)
+Declare.i JSONRPC_Connection_FlushWrites(*connection.JSONRPC_Connection)
+Declare.i JSONRPC_Connection_PendingWriteCount(*connection.JSONRPC_Connection)
 Declare.i JSONRPC_Connection_SendBody(*connection.JSONRPC_Connection, body.s)
 Declare.i JSONRPC_Connection_IsRunning(*connection.JSONRPC_Connection)
 Declare.i JSONRPC_Connection_IsClosing(*connection.JSONRPC_Connection)
@@ -119,6 +126,7 @@ Procedure.i JSONRPC_Connection_Init(*connection.JSONRPC_Connection, *writer.JSON
   *connection\writerMutex = CreateMutex()
   *connection\writer = *writer
   *connection\nextId = 1
+  ClearList(*connection\writeQueue())
   ClearMap(*connection\pending())
   ClearMap(*connection\cancellations())
   *connection\lastMatchedIdText = ""
@@ -132,6 +140,8 @@ Procedure.i JSONRPC_Connection_Init(*connection.JSONRPC_Connection, *writer.JSON
   *connection\diagnostics\orphanResponses = 0
   *connection\diagnostics\batches = 0
   *connection\diagnostics\cancellations = 0
+  *connection\diagnostics\queuedWrites = 0
+  *connection\diagnostics\writeFailures = 0
   *connection\eventHandler = 0
   *connection\lastEventCode = #JSONRPC_Connection_EventNone
   *connection\lastEventDetail = ""
@@ -159,6 +169,7 @@ Procedure.i JSONRPC_Connection_Close(*connection.JSONRPC_Connection)
     JSONRPC_Writer_Close(*connection\writer)
   EndIf
 
+  ClearList(*connection\writeQueue())
   ClearMap(*connection\pending())
   ClearMap(*connection\cancellations())
   *connection\lastMatchedIdText = ""
@@ -178,7 +189,22 @@ Procedure.i JSONRPC_Connection_Close(*connection.JSONRPC_Connection)
   ProcedureReturn #True
 EndProcedure
 
-Procedure.i JSONRPC_Connection_SendBody(*connection.JSONRPC_Connection, body.s)
+Procedure.i JSONRPC_Connection_QueueBody(*connection.JSONRPC_Connection, body.s)
+  If *connection\closed Or *connection\closing
+    JSONRPC_Connection_SetError(*connection, #JSONRPC_Connection_ErrorClosed, "Connection is closed.")
+    ProcedureReturn #False
+  EndIf
+
+  AddElement(*connection\writeQueue())
+  *connection\writeQueue() = body
+  *connection\diagnostics\queuedWrites + 1
+  JSONRPC_Connection_SetError(*connection, #JSONRPC_Connection_ErrorNone, "")
+  ProcedureReturn #True
+EndProcedure
+
+Procedure.i JSONRPC_Connection_FlushWrites(*connection.JSONRPC_Connection)
+  Protected ok.i = #True
+
   If *connection\closed Or *connection\closing
     JSONRPC_Connection_SetError(*connection, #JSONRPC_Connection_ErrorClosed, "Connection is closed.")
     ProcedureReturn #False
@@ -186,6 +212,8 @@ Procedure.i JSONRPC_Connection_SendBody(*connection.JSONRPC_Connection, body.s)
 
   If *connection\writer = 0
     JSONRPC_Connection_SetError(*connection, #JSONRPC_Connection_ErrorNoWriter, "Connection has no writer.")
+    *connection\diagnostics\writeFailures + ListSize(*connection\writeQueue())
+    ClearList(*connection\writeQueue())
     ProcedureReturn #False
   EndIf
 
@@ -193,23 +221,44 @@ Procedure.i JSONRPC_Connection_SendBody(*connection.JSONRPC_Connection, body.s)
     LockMutex(*connection\writerMutex)
   EndIf
 
-  If JSONRPC_Writer_Write(*connection\writer, body)
-    *connection\diagnostics\sentMessages + 1
-  Else
-    JSONRPC_Connection_SetError(*connection, #JSONRPC_Connection_ErrorNoWriter, JSONRPC_Writer_GetLastErrorMessage(*connection\writer))
-    If *connection\writerMutex <> 0
-      UnlockMutex(*connection\writerMutex)
+  While FirstElement(*connection\writeQueue())
+    If JSONRPC_Writer_Write(*connection\writer, *connection\writeQueue())
+      *connection\diagnostics\sentMessages + 1
+      DeleteElement(*connection\writeQueue())
+    Else
+      *connection\diagnostics\writeFailures + 1
+      DeleteElement(*connection\writeQueue())
+      JSONRPC_Connection_SetError(*connection, #JSONRPC_Connection_ErrorWriteFailed, JSONRPC_Writer_GetLastErrorMessage(*connection\writer))
+      ok = #False
+      Break
     EndIf
-
-    ProcedureReturn #False
-  EndIf
+  Wend
 
   If *connection\writerMutex <> 0
     UnlockMutex(*connection\writerMutex)
   EndIf
 
-  JSONRPC_Connection_SetError(*connection, #JSONRPC_Connection_ErrorNone, "")
-  ProcedureReturn #True
+  If ok
+    JSONRPC_Connection_SetError(*connection, #JSONRPC_Connection_ErrorNone, "")
+  EndIf
+
+  ProcedureReturn ok
+EndProcedure
+
+Procedure.i JSONRPC_Connection_PendingWriteCount(*connection.JSONRPC_Connection)
+  If *connection = 0
+    ProcedureReturn 0
+  EndIf
+
+  ProcedureReturn ListSize(*connection\writeQueue())
+EndProcedure
+
+Procedure.i JSONRPC_Connection_SendBody(*connection.JSONRPC_Connection, body.s)
+  If JSONRPC_Connection_QueueBody(*connection, body) = #False
+    ProcedureReturn #False
+  EndIf
+
+  ProcedureReturn JSONRPC_Connection_FlushWrites(*connection)
 EndProcedure
 
 Procedure.i JSONRPC_Connection_IsRunning(*connection.JSONRPC_Connection)

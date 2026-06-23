@@ -19,6 +19,8 @@ Procedure JSONRPC_Diagnostics_Reset(*connection.JSONRPC_Connection)
   *connection\diagnostics\orphanResponses = 0
   *connection\diagnostics\batches = 0
   *connection\diagnostics\cancellations = 0
+  *connection\diagnostics\queuedWrites = 0
+  *connection\diagnostics\writeFailures = 0
 EndProcedure
 
 Procedure JSONRPC_Diagnostics_Copy(*connection.JSONRPC_Connection, *diagnostics.JSONRPC_Diagnostics)
@@ -33,6 +35,8 @@ Procedure JSONRPC_Diagnostics_Copy(*connection.JSONRPC_Connection, *diagnostics.
   *diagnostics\orphanResponses = *connection\diagnostics\orphanResponses
   *diagnostics\batches = *connection\diagnostics\batches
   *diagnostics\cancellations = *connection\diagnostics\cancellations
+  *diagnostics\queuedWrites = *connection\diagnostics\queuedWrites
+  *diagnostics\writeFailures = *connection\diagnostics\writeFailures
 EndProcedure
 
 Procedure.s JSONRPC_Diagnostics_Summary(*connection.JSONRPC_Connection)
@@ -46,5 +50,7 @@ Procedure.s JSONRPC_Diagnostics_Summary(*connection.JSONRPC_Connection)
                   ~",\"timeouts\":" + Str(*connection\diagnostics\timeouts) +
                   ~",\"orphanResponses\":" + Str(*connection\diagnostics\orphanResponses) +
                   ~",\"batches\":" + Str(*connection\diagnostics\batches) +
-                  ~",\"cancellations\":" + Str(*connection\diagnostics\cancellations) + "}"
+                  ~",\"cancellations\":" + Str(*connection\diagnostics\cancellations) +
+                  ~",\"queuedWrites\":" + Str(*connection\diagnostics\queuedWrites) +
+                  ~",\"writeFailures\":" + Str(*connection\diagnostics\writeFailures) + "}"
 EndProcedure

@@ -102,7 +102,11 @@ cancellation_token_src="$ROOT/examples/021-handler-cancellation-tokens/cancellat
 cancellation_token_out_dir="$ROOT/.build/examples/021-handler-cancellation-tokens"
 cancellation_token_out="$cancellation_token_out_dir/cancellation_token_probe"
 
-mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir" "$outbound_out_dir" "$timeout_out_dir" "$batch_out_dir" "$cancel_out_dir" "$diagnostics_out_dir" "$stress_out_dir" "$stdio_runtime_out_dir" "$mcp_lifecycle_out_dir" "$mcp_tools_list_out_dir" "$mcp_tools_call_out_dir" "$package_out_dir" "$io_out_dir" "$byte_buffer_out_dir" "$events_out_dir" "$handler_lifecycle_out_dir" "$cancellation_token_out_dir"
+write_queue_src="$ROOT/examples/022-write-queue-close-semantics/write_queue_probe.pb"
+write_queue_out_dir="$ROOT/.build/examples/022-write-queue-close-semantics"
+write_queue_out="$write_queue_out_dir/write_queue_probe"
+
+mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir" "$outbound_out_dir" "$timeout_out_dir" "$batch_out_dir" "$cancel_out_dir" "$diagnostics_out_dir" "$stress_out_dir" "$stdio_runtime_out_dir" "$mcp_lifecycle_out_dir" "$mcp_tools_list_out_dir" "$mcp_tools_call_out_dir" "$package_out_dir" "$io_out_dir" "$byte_buffer_out_dir" "$events_out_dir" "$handler_lifecycle_out_dir" "$cancellation_token_out_dir" "$write_queue_out_dir"
 
 "$PB_COMPILER" "$foundation_src" --console --thread --output "$foundation_out"
 printf 'Built console scenario: %s\n' "$foundation_out"
@@ -178,3 +182,6 @@ printf 'Built handler registration lifecycle scenario: %s\n' "$handler_lifecycle
 
 "$PB_COMPILER" "$cancellation_token_src" --console --thread --output "$cancellation_token_out"
 printf 'Built handler cancellation tokens scenario: %s\n' "$cancellation_token_out"
+
+"$PB_COMPILER" "$write_queue_src" --console --thread --output "$write_queue_out"
+printf 'Built write queue close semantics scenario: %s\n' "$write_queue_out"
