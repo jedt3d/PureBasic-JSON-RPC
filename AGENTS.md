@@ -12,6 +12,18 @@ This repository is building a PureBasic JSON-RPC 2.0 library. Every agent or con
 - Keep the base JSON-RPC layer transport-agnostic and do not mix Language Server Protocol behavior into the core library.
 - Treat future MCP server development in PureBasic as the primary target implementation context, while keeping the library useful for general JSON-RPC 2.0 applications.
 
+## Target Implementation Context
+
+This project is not only a generic JSON-RPC exercise. The main intended use is to make future MCP server development practical in PureBasic.
+
+Agents and contributors should use that context when making product and engineering decisions:
+
+- Prefer APIs that make MCP server request/response, notification, stdio, and long-running tool-process workflows straightforward.
+- Keep the core JSON-RPC layer independent from MCP-specific method names or schemas unless a later milestone explicitly adds an MCP adapter layer.
+- Choose examples that can naturally grow toward MCP server scenarios, while still proving general JSON-RPC correctness.
+- Document behavior in a way that a future PureBasic MCP server author can follow without reverse-engineering transport, framing, cancellation, or memory ownership rules.
+- Do not narrow the library so much that it cannot support other JSON-RPC 2.0 applications; MCP is the primary context, not the only allowed use.
+
 ## Milestone Workflow
 
 Every feature milestone must follow this cycle:
