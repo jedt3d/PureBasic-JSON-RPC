@@ -3,17 +3,19 @@ EnableExplicit
 XIncludeFile "../../../src/jsonrpc/mcp_tools.pbi"
 
 UseSQLiteDatabase()
+UseZipPacker()
 
 #MCP_SQLiteAdmin_DefaultMaxOutputChars = 24000
 #MCP_SQLiteAdmin_DefaultMaxRows = 50
 #MCP_SQLiteAdmin_DefaultExportMaxRows = 5000
 #MCP_SQLiteAdmin_MaxExportRows = 10000
 #MCP_SQLiteAdmin_Database = 0
+#MCP_SQLiteAdmin_OdsMimeType$ = "application/vnd.oasis.opendocument.spreadsheet"
 
 #MCP_SQLiteAdmin_BootstrapSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"overwrite\":{\"type\":\"boolean\"}},\"additionalProperties\":false}"
 #MCP_SQLiteAdmin_InspectSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"includeSystem\":{\"type\":\"boolean\"}},\"additionalProperties\":false}"
 #MCP_SQLiteAdmin_QuerySchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"sql\":{\"type\":\"string\"},\"maxRows\":{\"type\":\"integer\"}},\"required\":[\"sql\"],\"additionalProperties\":false}"
-#MCP_SQLiteAdmin_ExportSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"sql\":{\"type\":\"string\"},\"outputPath\":{\"type\":\"string\"},\"format\":{\"type\":\"string\",\"enum\":[\"csv\"]},\"maxRows\":{\"type\":\"integer\"},\"overwrite\":{\"type\":\"boolean\"}},\"required\":[\"sql\",\"outputPath\"],\"additionalProperties\":false}"
+#MCP_SQLiteAdmin_ExportSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"sql\":{\"type\":\"string\"},\"outputPath\":{\"type\":\"string\"},\"format\":{\"type\":\"string\",\"enum\":[\"csv\",\"ods\"]},\"maxRows\":{\"type\":\"integer\"},\"overwrite\":{\"type\":\"boolean\"}},\"required\":[\"sql\",\"outputPath\"],\"additionalProperties\":false}"
 #MCP_SQLiteAdmin_ExecuteSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"sql\":{\"type\":\"string\"}},\"required\":[\"sql\"],\"additionalProperties\":false}"
 #MCP_SQLiteAdmin_BackupSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"backupPath\":{\"type\":\"string\"},\"overwrite\":{\"type\":\"boolean\"}},\"required\":[\"backupPath\"],\"additionalProperties\":false}"
 #MCP_SQLiteAdmin_MaintenanceSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"operation\":{\"type\":\"string\",\"enum\":[\"quick_check\",\"integrity_check\",\"vacuum\"]}},\"required\":[\"operation\"],\"additionalProperties\":false}"
@@ -67,6 +69,7 @@ EndProcedure
 
 Procedure MCP_SQLiteAdmin_SetConfig(allowedRoot.s = "", defaultDbPath.s = "", maxOutputChars.i = #MCP_SQLiteAdmin_DefaultMaxOutputChars)
   UseSQLiteDatabase()
+  UseZipPacker()
 
   If allowedRoot = ""
     allowedRoot = MCP_SQLiteAdmin_DefaultAllowedRoot()
@@ -365,6 +368,159 @@ Procedure.s MCP_SQLiteAdmin_CsvField(text.s)
   ProcedureReturn #DQUOTE$ + ReplaceString(text, #DQUOTE$, #DQUOTE$ + #DQUOTE$) + #DQUOTE$
 EndProcedure
 
+Procedure.s MCP_SQLiteAdmin_XmlEscape(text.s)
+  text = ReplaceString(text, "&", "&amp;")
+  text = ReplaceString(text, "<", "&lt;")
+  text = ReplaceString(text, ">", "&gt;")
+  text = ReplaceString(text, #DQUOTE$, "&quot;")
+  text = ReplaceString(text, "'", "&apos;")
+
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_OdsText(text.s)
+  Protected normalized.s
+  Protected result.s
+  Protected index.i
+  Protected parts.i
+
+  normalized = ReplaceString(ReplaceString(text, #CRLF$, #LF$), #CR$, #LF$)
+  parts = CountString(normalized, #LF$) + 1
+
+  For index = 1 To parts
+    If index > 1
+      result + "<text:line-break/>"
+    EndIf
+    result + MCP_SQLiteAdmin_XmlEscape(StringField(normalized, index, #LF$))
+  Next
+
+  ProcedureReturn result
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_OdsTextCell(text.s)
+  ProcedureReturn "<table:table-cell office:value-type=" + #DQUOTE$ + "string" + #DQUOTE$ + "><text:p>" + MCP_SQLiteAdmin_OdsText(text) + "</text:p></table:table-cell>"
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_OdsCell(column.i)
+  If CheckDatabaseNull(#MCP_SQLiteAdmin_Database, column)
+    ProcedureReturn MCP_SQLiteAdmin_OdsTextCell("")
+  EndIf
+
+  ProcedureReturn MCP_SQLiteAdmin_OdsTextCell(GetDatabaseString(#MCP_SQLiteAdmin_Database, column))
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_OdsContentStart(columns.i)
+  Protected xml.s
+
+  xml = "<?xml version=" + #DQUOTE$ + "1.0" + #DQUOTE$ + " encoding=" + #DQUOTE$ + "UTF-8" + #DQUOTE$ + "?>" + #LF$
+  xml + "<office:document-content xmlns:office=" + #DQUOTE$ + "urn:oasis:names:tc:opendocument:xmlns:office:1.0" + #DQUOTE$
+  xml + " xmlns:table=" + #DQUOTE$ + "urn:oasis:names:tc:opendocument:xmlns:table:1.0" + #DQUOTE$
+  xml + " xmlns:text=" + #DQUOTE$ + "urn:oasis:names:tc:opendocument:xmlns:text:1.0" + #DQUOTE$
+  xml + " office:version=" + #DQUOTE$ + "1.2" + #DQUOTE$ + ">" + #LF$
+  xml + "<office:body><office:spreadsheet><table:table table:name=" + #DQUOTE$ + "QueryResult" + #DQUOTE$ + ">" + #LF$
+  If columns > 0
+    xml + "<table:table-column table:number-columns-repeated=" + #DQUOTE$ + Str(columns) + #DQUOTE$ + "/>" + #LF$
+  EndIf
+
+  ProcedureReturn xml
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_OdsContentEnd()
+  ProcedureReturn "</table:table></office:spreadsheet></office:body></office:document-content>" + #LF$
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_OdsStyles()
+  Protected xml.s
+
+  xml = "<?xml version=" + #DQUOTE$ + "1.0" + #DQUOTE$ + " encoding=" + #DQUOTE$ + "UTF-8" + #DQUOTE$ + "?>" + #LF$
+  xml + "<office:document-styles xmlns:office=" + #DQUOTE$ + "urn:oasis:names:tc:opendocument:xmlns:office:1.0" + #DQUOTE$
+  xml + " xmlns:style=" + #DQUOTE$ + "urn:oasis:names:tc:opendocument:xmlns:style:1.0" + #DQUOTE$
+  xml + " xmlns:text=" + #DQUOTE$ + "urn:oasis:names:tc:opendocument:xmlns:text:1.0" + #DQUOTE$
+  xml + " xmlns:table=" + #DQUOTE$ + "urn:oasis:names:tc:opendocument:xmlns:table:1.0" + #DQUOTE$
+  xml + " office:version=" + #DQUOTE$ + "1.2" + #DQUOTE$ + "><office:styles/></office:document-styles>" + #LF$
+
+  ProcedureReturn xml
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_OdsMeta()
+  Protected xml.s
+
+  xml = "<?xml version=" + #DQUOTE$ + "1.0" + #DQUOTE$ + " encoding=" + #DQUOTE$ + "UTF-8" + #DQUOTE$ + "?>" + #LF$
+  xml + "<office:document-meta xmlns:office=" + #DQUOTE$ + "urn:oasis:names:tc:opendocument:xmlns:office:1.0" + #DQUOTE$
+  xml + " xmlns:meta=" + #DQUOTE$ + "urn:oasis:names:tc:opendocument:xmlns:meta:1.0" + #DQUOTE$
+  xml + " office:version=" + #DQUOTE$ + "1.2" + #DQUOTE$ + "><office:meta><meta:generator>PureBasic JSON-RPC SQLite Admin MCP</meta:generator></office:meta></office:document-meta>" + #LF$
+
+  ProcedureReturn xml
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_OdsManifest()
+  Protected xml.s
+
+  xml = "<?xml version=" + #DQUOTE$ + "1.0" + #DQUOTE$ + " encoding=" + #DQUOTE$ + "UTF-8" + #DQUOTE$ + "?>" + #LF$
+  xml + "<manifest:manifest xmlns:manifest=" + #DQUOTE$ + "urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" + #DQUOTE$
+  xml + " manifest:version=" + #DQUOTE$ + "1.2" + #DQUOTE$ + ">" + #LF$
+  xml + "<manifest:file-entry manifest:full-path=" + #DQUOTE$ + "/" + #DQUOTE$ + " manifest:media-type=" + #DQUOTE$ + #MCP_SQLiteAdmin_OdsMimeType$ + #DQUOTE$ + "/>" + #LF$
+  xml + "<manifest:file-entry manifest:full-path=" + #DQUOTE$ + "content.xml" + #DQUOTE$ + " manifest:media-type=" + #DQUOTE$ + "text/xml" + #DQUOTE$ + "/>" + #LF$
+  xml + "<manifest:file-entry manifest:full-path=" + #DQUOTE$ + "styles.xml" + #DQUOTE$ + " manifest:media-type=" + #DQUOTE$ + "text/xml" + #DQUOTE$ + "/>" + #LF$
+  xml + "<manifest:file-entry manifest:full-path=" + #DQUOTE$ + "meta.xml" + #DQUOTE$ + " manifest:media-type=" + #DQUOTE$ + "text/xml" + #DQUOTE$ + "/>" + #LF$
+  xml + "</manifest:manifest>" + #LF$
+
+  ProcedureReturn xml
+EndProcedure
+
+Procedure.i MCP_SQLiteAdmin_AddPackUtf8String(pack.i, packedName.s, text.s)
+  Protected byteLength.i
+  Protected ok.i
+  Protected *buffer
+
+  byteLength = StringByteLength(text, #PB_UTF8)
+  *buffer = AllocateMemory(byteLength + 1)
+  If *buffer = 0
+    ProcedureReturn #False
+  EndIf
+
+  If byteLength > 0
+    PokeS(*buffer, text, -1, #PB_UTF8 | #PB_String_NoZero)
+  EndIf
+
+  ok = AddPackMemory(pack, *buffer, byteLength, packedName)
+  FreeMemory(*buffer)
+
+  ProcedureReturn Bool(ok <> 0)
+EndProcedure
+
+Procedure.i MCP_SQLiteAdmin_WriteOdsPackage(outputPath.s, contentXml.s)
+  Protected pack.i
+  Protected ok.i
+
+  pack = CreatePack(#PB_Any, outputPath, #PB_PackerPlugin_Zip, 0)
+  If pack = 0
+    ProcedureReturn #False
+  EndIf
+
+  ok = MCP_SQLiteAdmin_AddPackUtf8String(pack, "mimetype", #MCP_SQLiteAdmin_OdsMimeType$)
+  If ok
+    ok = MCP_SQLiteAdmin_AddPackUtf8String(pack, "META-INF/manifest.xml", MCP_SQLiteAdmin_OdsManifest())
+  EndIf
+  If ok
+    ok = MCP_SQLiteAdmin_AddPackUtf8String(pack, "content.xml", contentXml)
+  EndIf
+  If ok
+    ok = MCP_SQLiteAdmin_AddPackUtf8String(pack, "styles.xml", MCP_SQLiteAdmin_OdsStyles())
+  EndIf
+  If ok
+    ok = MCP_SQLiteAdmin_AddPackUtf8String(pack, "meta.xml", MCP_SQLiteAdmin_OdsMeta())
+  EndIf
+
+  ClosePack(pack)
+
+  If ok = #False
+    DeleteFile(outputPath)
+  EndIf
+
+  ProcedureReturn ok
+EndProcedure
+
 Procedure.s MCP_SQLiteAdmin_CsvCell(column.i)
   If CheckDatabaseNull(#MCP_SQLiteAdmin_Database, column)
     ProcedureReturn MCP_SQLiteAdmin_CsvField("")
@@ -575,6 +731,84 @@ Procedure.i MCP_SQLiteAdmin_RunCsvExport(dbPath.s, sql.s, outputPath.s, maxRows.
   *result\ok = #True
   *result\isError = #False
   *result\text = ~"{\"path\":\"" + JSONRPC_Protocol_EscapeString(outputPath) + ~"\",\"format\":\"csv\",\"encoding\":\"UTF-8 with BOM\",\"quotedFields\":true,\"lineEnding\":\"CRLF\",\"exportedRows\":" + Str(exportedRows) + ~",\"truncated\":" + MCP_SQLiteAdmin_BoolJson(truncated) + "}"
+  ProcedureReturn #True
+EndProcedure
+
+Procedure.i MCP_SQLiteAdmin_RunOdsExport(dbPath.s, sql.s, outputPath.s, maxRows.i, overwrite.i, *result.MCP_SQLiteAdmin_Result)
+  Protected dbResult.MCP_SQLiteAdmin_Result
+  Protected columns.i
+  Protected column.i
+  Protected exportedRows.i
+  Protected truncated.i
+  Protected outputDirectory.s
+  Protected contentXml.s
+
+  MCP_SQLiteAdmin_ResetResult(*result)
+  If maxRows <= 0
+    maxRows = #MCP_SQLiteAdmin_DefaultExportMaxRows
+  EndIf
+
+  If maxRows > #MCP_SQLiteAdmin_MaxExportRows
+    maxRows = #MCP_SQLiteAdmin_MaxExportRows
+  EndIf
+
+  outputDirectory = GetPathPart(outputPath)
+  If MCP_SQLiteAdmin_EnsureDirectory(outputDirectory) = #False
+    *result\text = "Unable to create ODS export directory: " + outputDirectory
+    ProcedureReturn #False
+  EndIf
+
+  If FileSize(outputPath) >= 0 And overwrite = #False
+    *result\text = "ODS export file already exists. Set overwrite=true to replace it."
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_SQLiteAdmin_OpenDatabase(dbPath, #False, @dbResult) = #False
+    *result\text = dbResult\text
+    ProcedureReturn #False
+  EndIf
+
+  If DatabaseQuery(#MCP_SQLiteAdmin_Database, sql) = 0
+    *result\text = DatabaseError()
+    CloseDatabase(#MCP_SQLiteAdmin_Database)
+    ProcedureReturn #False
+  EndIf
+
+  columns = DatabaseColumns(#MCP_SQLiteAdmin_Database)
+  contentXml = MCP_SQLiteAdmin_OdsContentStart(columns)
+  contentXml + "<table:table-row>"
+  For column = 0 To columns - 1
+    contentXml + MCP_SQLiteAdmin_OdsTextCell(DatabaseColumnName(#MCP_SQLiteAdmin_Database, column))
+  Next
+  contentXml + "</table:table-row>" + #LF$
+
+  While NextDatabaseRow(#MCP_SQLiteAdmin_Database)
+    If exportedRows >= maxRows
+      truncated = #True
+      Break
+    EndIf
+
+    contentXml + "<table:table-row>"
+    For column = 0 To columns - 1
+      contentXml + MCP_SQLiteAdmin_OdsCell(column)
+    Next
+    contentXml + "</table:table-row>" + #LF$
+    exportedRows + 1
+  Wend
+
+  contentXml + MCP_SQLiteAdmin_OdsContentEnd()
+
+  FinishDatabaseQuery(#MCP_SQLiteAdmin_Database)
+  CloseDatabase(#MCP_SQLiteAdmin_Database)
+
+  If MCP_SQLiteAdmin_WriteOdsPackage(outputPath, contentXml) = #False
+    *result\text = "Unable to create ODS export package: " + outputPath
+    ProcedureReturn #False
+  EndIf
+
+  *result\ok = #True
+  *result\isError = #False
+  *result\text = ~"{\"path\":\"" + JSONRPC_Protocol_EscapeString(outputPath) + ~"\",\"format\":\"ods\",\"mediaType\":\"" + #MCP_SQLiteAdmin_OdsMimeType$ + ~"\",\"encoding\":\"UTF-8 XML\",\"sheet\":\"QueryResult\",\"stringCells\":true,\"exportedRows\":" + Str(exportedRows) + ~",\"truncated\":" + MCP_SQLiteAdmin_BoolJson(truncated) + "}"
   ProcedureReturn #True
 EndProcedure
 
@@ -794,13 +1028,19 @@ Procedure.i MCP_SQLiteAdmin_ExportHandler(argumentsValue, *context.JSONRPC_Reque
     ProcedureReturn #True
   EndIf
 
-  If LCase(format) <> "csv"
-    MCP_SQLiteAdmin_SetInvalidParams(*result, "sqlite/export currently supports only csv format")
+  format = LCase(format)
+  If format <> "csv" And format <> "ods"
+    MCP_SQLiteAdmin_SetInvalidParams(*result, "sqlite/export supports csv and ods formats")
     ProcedureReturn #True
   EndIf
 
-  If LCase(Right(outputInput, 4)) <> ".csv"
+  If format = "csv" And LCase(Right(outputInput, 4)) <> ".csv"
     MCP_SQLiteAdmin_SetInvalidParams(*result, "outputPath must end with .csv")
+    ProcedureReturn #True
+  EndIf
+
+  If format = "ods" And LCase(Right(outputInput, 4)) <> ".ods"
+    MCP_SQLiteAdmin_SetInvalidParams(*result, "outputPath must end with .ods")
     ProcedureReturn #True
   EndIf
 
@@ -810,7 +1050,11 @@ Procedure.i MCP_SQLiteAdmin_ExportHandler(argumentsValue, *context.JSONRPC_Reque
     ProcedureReturn #True
   EndIf
 
-  MCP_SQLiteAdmin_RunCsvExport(dbPath, sql, outputPath, maxRows, overwrite, @toolResult)
+  If format = "ods"
+    MCP_SQLiteAdmin_RunOdsExport(dbPath, sql, outputPath, maxRows, overwrite, @toolResult)
+  Else
+    MCP_SQLiteAdmin_RunCsvExport(dbPath, sql, outputPath, maxRows, overwrite, @toolResult)
+  EndIf
   MCP_SQLiteAdmin_SetMCPResult(*result, toolResult\text, Bool(toolResult\ok = #False))
   ProcedureReturn #True
 EndProcedure
@@ -1104,7 +1348,7 @@ Procedure.i MCP_SQLiteAdmin_Register(*dispatcher.JSONRPC_Dispatcher, *registry.M
   If MCP_SQLiteAdmin_RegisterOne(*registry, "sqlite/query", "SQLite Query", "Run row-returning SQL with bounded JSON text output.", #MCP_SQLiteAdmin_QuerySchema$, @MCP_SQLiteAdmin_QueryHandler()) = #False
     ProcedureReturn #False
   EndIf
-  If MCP_SQLiteAdmin_RegisterOne(*registry, "sqlite/export", "SQLite Export", "Export a row-returning query to a canonical UTF-8 CSV file.", #MCP_SQLiteAdmin_ExportSchema$, @MCP_SQLiteAdmin_ExportHandler()) = #False
+  If MCP_SQLiteAdmin_RegisterOne(*registry, "sqlite/export", "SQLite Export", "Export a row-returning query to canonical CSV or ODS.", #MCP_SQLiteAdmin_ExportSchema$, @MCP_SQLiteAdmin_ExportHandler()) = #False
     ProcedureReturn #False
   EndIf
   If MCP_SQLiteAdmin_RegisterOne(*registry, "sqlite/execute", "SQLite Execute", "Run non-row SQL statements intentionally.", #MCP_SQLiteAdmin_ExecuteSchema$, @MCP_SQLiteAdmin_ExecuteHandler()) = #False

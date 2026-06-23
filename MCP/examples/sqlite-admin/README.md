@@ -88,7 +88,7 @@ Run the compiled dispatcher scenario:
 - `sqlite/bootstrap`: create or recreate the demo/admin database.
 - `sqlite/inspect`: list schema metadata from `sqlite_schema`.
 - `sqlite/query`: run row-returning SQL such as `SELECT` or `PRAGMA`.
-- `sqlite/export`: export a row-returning query to canonical UTF-8 CSV.
+- `sqlite/export`: export a row-returning query to canonical UTF-8 CSV or ODS.
 - `sqlite/execute`: run intentional non-row SQL such as DDL, writes, `VACUUM`,
   and PRAGMA updates.
 - `sqlite/backup`: copy a SQLite file to another approved path.
@@ -108,22 +108,28 @@ SQLite's built-in `NOCASE`, `LIKE`, `upper()`, and `lower()` are not complete
 Unicode case-folding systems without ICU or a custom collation. This example
 does not add ICU or localized UI text.
 
-## CSV Export
+## CSV And ODS Export
 
-`sqlite/export` currently supports CSV only. The tool writes a UTF-8 CSV file
-with a BOM, includes a header row, uses CRLF row endings, double-quotes every
-field, doubles embedded quote characters, and preserves embedded commas,
-newlines, and multilingual text inside quoted fields. Null values are exported
-as empty quoted fields.
+`sqlite/export` supports two implemented formats:
 
-Future spreadsheet formats are intentionally separate work. Rough effort from
-easiest to hardest in PureBasic is:
+- `csv`: UTF-8 CSV with a BOM, a header row, CRLF row endings, every field
+  double-quoted, embedded quote characters doubled, and embedded commas,
+  newlines, and multilingual text preserved inside quoted fields. Null values
+  are exported as empty quoted fields.
+- `ods`: OpenDocument Spreadsheet. The server writes a ZIP-based ODS package
+  with `mimetype`, `META-INF/manifest.xml`, `content.xml`, `styles.xml`, and
+  `meta.xml`. The exported sheet is named `QueryResult`, uses UTF-8 XML, and
+  writes every result value as a string cell in v1.
 
-1. CSV: plain UTF-8 text, implemented now.
-2. ODS/OpenDocument Spreadsheet: ZIP plus XML files, likely easier than XLSX
-   for a minimal table writer and importable by LibreOffice and Excel.
+Future XLSX support is intentionally separate work. Current effort from easiest
+to hardest in PureBasic is:
+
+1. CSV: plain UTF-8 text, implemented.
+2. ODS/OpenDocument Spreadsheet: ZIP plus XML files, implemented as a minimal
+   table writer and importable by LibreOffice/OpenOffice and many spreadsheet
+   tools.
 3. XLSX: ZIP plus the larger OOXML workbook relationship model, useful but more
-   code to create correctly.
+   code to create correctly; planned after ODS is stable.
 
 ## Tutorial
 
