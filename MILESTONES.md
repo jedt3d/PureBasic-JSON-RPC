@@ -34,7 +34,7 @@ Acceptance criteria:
 9. Batch handling. Completed in `feature/008-batch-handling`.
 10. Cooperative `$/cancelRequest` support. Completed in `feature/009-cancellation`.
 11. Diagnostics counters. Completed in `feature/010-diagnostics`.
-12. Stress tests and memory lifecycle tests.
+12. Stress tests and memory lifecycle tests. Completed in `feature/011-stress-memory`.
 
 ## 001-framing
 
@@ -204,4 +204,20 @@ Acceptance criteria:
 
 - PureUnit covers send/receive/error counters, timeout/orphan/batch/cancel counters, and reset behavior.
 - `examples/010-diagnostics/diagnostics_probe.pb` builds and runs.
+- `./tools/check.sh` passes.
+
+## 011-stress-memory
+
+Branch: `feature/011-stress-memory`
+
+Purpose:
+
+- Add bounded repeated parse and dispatch stress coverage.
+- Exercise malformed messages, timeout cleanup, notification-only batches, and cancellation cleanup.
+- Confirm stress loops leave no pending request state.
+
+Acceptance criteria:
+
+- PureUnit covers malformed-message loops, timeout cleanup loops, batch/cancellation loops, and the reusable stress helper.
+- `examples/011-stress-memory/stress_probe.pb` builds and runs.
 - `./tools/check.sh` passes.

@@ -52,7 +52,11 @@ diagnostics_src="$ROOT/examples/010-diagnostics/diagnostics_probe.pb"
 diagnostics_out_dir="$ROOT/.build/examples/010-diagnostics"
 diagnostics_out="$diagnostics_out_dir/diagnostics_probe"
 
-mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir" "$outbound_out_dir" "$timeout_out_dir" "$batch_out_dir" "$cancel_out_dir" "$diagnostics_out_dir"
+stress_src="$ROOT/examples/011-stress-memory/stress_probe.pb"
+stress_out_dir="$ROOT/.build/examples/011-stress-memory"
+stress_out="$stress_out_dir/stress_probe"
+
+mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir" "$outbound_out_dir" "$timeout_out_dir" "$batch_out_dir" "$cancel_out_dir" "$diagnostics_out_dir" "$stress_out_dir"
 
 "$PB_COMPILER" "$foundation_src" --console --thread --output "$foundation_out"
 printf 'Built console scenario: %s\n' "$foundation_out"
@@ -86,3 +90,6 @@ printf 'Built cancellation scenario: %s\n' "$cancel_out"
 
 "$PB_COMPILER" "$diagnostics_src" --console --thread --output "$diagnostics_out"
 printf 'Built diagnostics scenario: %s\n' "$diagnostics_out"
+
+"$PB_COMPILER" "$stress_src" --console --thread --output "$stress_out"
+printf 'Built stress memory scenario: %s\n' "$stress_out"

@@ -15,6 +15,7 @@ Current pages:
 - [008 Batch Handling](008-batch-handling.md)
 - [009 Cooperative Cancellation](009-cancellation.md)
 - [010 Diagnostics Counters](010-diagnostics.md)
+- [011 Stress And Memory Lifecycle](011-stress-memory.md)
 
 Future API pages should document:
 
