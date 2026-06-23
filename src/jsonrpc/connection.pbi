@@ -34,6 +34,16 @@ Structure JSONRPC_CancellationToken
   requested.i
 EndStructure
 
+Structure JSONRPC_Diagnostics
+  receivedMessages.q
+  sentMessages.q
+  errors.q
+  timeouts.q
+  orphanResponses.q
+  batches.q
+  cancellations.q
+EndStructure
+
 Structure JSONRPC_Connection
   running.i
   closing.i
@@ -47,6 +57,7 @@ Structure JSONRPC_Connection
   lastResponseBody.s
   lastTimedOutIdText.s
   lastCancelledIdText.s
+  diagnostics.JSONRPC_Diagnostics
   lastErrorCode.i
   lastErrorMessage.s
 EndStructure
@@ -90,6 +101,13 @@ Procedure.i JSONRPC_Connection_Init(*connection.JSONRPC_Connection, *writer.JSON
   *connection\lastResponseBody = ""
   *connection\lastTimedOutIdText = ""
   *connection\lastCancelledIdText = ""
+  *connection\diagnostics\receivedMessages = 0
+  *connection\diagnostics\sentMessages = 0
+  *connection\diagnostics\errors = 0
+  *connection\diagnostics\timeouts = 0
+  *connection\diagnostics\orphanResponses = 0
+  *connection\diagnostics\batches = 0
+  *connection\diagnostics\cancellations = 0
   JSONRPC_Connection_SetError(*connection, #JSONRPC_Connection_ErrorNone, "")
 
   If *connection\writerMutex = 0
@@ -148,6 +166,7 @@ Procedure.i JSONRPC_Connection_SendBody(*connection.JSONRPC_Connection, body.s)
 
   *connection\writer\captured + body
   *connection\writer\writeCount + 1
+  *connection\diagnostics\sentMessages + 1
 
   If *connection\writerMutex <> 0
     UnlockMutex(*connection\writerMutex)

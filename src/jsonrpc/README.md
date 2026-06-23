@@ -13,5 +13,6 @@ Current library includes:
 - `outbound.pbi` also owns pending request timeout cleanup.
 - `batch.pbi` - sequential JSON-RPC batch dispatch.
 - `cancel.pbi` - cooperative `$/cancelRequest` token handling.
+- `diagnostics.pbi` - connection diagnostics counters and summary helpers.
 
 PureUnit tests live under `tests/unit/`. PureUnit 1.4 currently does not discover `ProcedureUnit` tests reliably when module implementations are included from colocated test files, so the first library slice uses prefixed procedures such as `JSONRPC_Framing_BuildFrame()`.

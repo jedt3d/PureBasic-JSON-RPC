@@ -19,6 +19,7 @@ Procedure.i JSONRPC_Cancel_Request(*connection.JSONRPC_Connection, idText.s)
   *connection\cancellations()\idText = idText
   *connection\cancellations()\requested = #True
   *connection\lastCancelledIdText = idText
+  *connection\diagnostics\cancellations + 1
 
   ProcedureReturn #True
 EndProcedure
