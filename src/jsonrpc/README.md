@@ -1,6 +1,9 @@
 # JSON-RPC Library Source
 
-This folder will contain the PureBasic JSON-RPC library implementation.
+This folder contains the PureBasic JSON-RPC library implementation.
 
-Milestone `000-project-foundation` intentionally does not implement protocol behavior. The next milestone should start with framed message reader/writer tests and then add the smallest library code needed to pass them.
+Current library includes:
 
+- `framing.pbi` - `Content-Length` frame writing and incremental frame reading.
+
+PureUnit tests live under `tests/unit/`. PureUnit 1.4 currently does not discover `ProcedureUnit` tests reliably when module implementations are included from colocated test files, so the first library slice uses prefixed procedures such as `JSONRPC_Framing_BuildFrame()`.

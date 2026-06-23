@@ -5,6 +5,7 @@ This folder contains public API documentation for the PureBasic JSON-RPC 2.0 lib
 Current pages:
 
 - [000 Project Foundation](000-project-foundation.md)
+- [001 Framing](001-framing.md)
 
 Future API pages should document:
 
@@ -14,4 +15,3 @@ Future API pages should document:
 - error codes
 - threading and cancellation behavior
 - examples
-

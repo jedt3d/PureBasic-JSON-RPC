@@ -8,12 +8,18 @@ pb_prepare_dirs
 pb_create_local_homes
 pb_require_tools
 
-example_src="$ROOT/examples/000-project-foundation/console_probe.pb"
-example_out_dir="$ROOT/.build/examples/000-project-foundation"
-example_out="$example_out_dir/console_probe"
+foundation_src="$ROOT/examples/000-project-foundation/console_probe.pb"
+foundation_out_dir="$ROOT/.build/examples/000-project-foundation"
+foundation_out="$foundation_out_dir/console_probe"
 
-mkdir -p "$example_out_dir"
+framing_src="$ROOT/examples/001-framing/framing_probe.pb"
+framing_out_dir="$ROOT/.build/examples/001-framing"
+framing_out="$framing_out_dir/framing_probe"
 
-"$PB_COMPILER" "$example_src" --console --thread --output "$example_out"
+mkdir -p "$foundation_out_dir" "$framing_out_dir"
 
-printf 'Built console scenario: %s\n' "$example_out"
+"$PB_COMPILER" "$foundation_src" --console --thread --output "$foundation_out"
+printf 'Built console scenario: %s\n' "$foundation_out"
+
+"$PB_COMPILER" "$framing_src" --console --thread --output "$framing_out"
+printf 'Built framing scenario: %s\n' "$framing_out"
