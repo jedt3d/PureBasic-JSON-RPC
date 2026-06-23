@@ -1,5 +1,9 @@
 # Milestones
 
+This file tracks the numbered JSON-RPC foundation milestones. The later
+MCP-focused example and export work is tracked in
+`docs/mcp-example-milestone-log.md`.
+
 ## 000-project-foundation
 
 Branch: `feature/000-project-foundation`
