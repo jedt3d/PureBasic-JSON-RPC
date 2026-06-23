@@ -7,6 +7,9 @@ Enumeration
   #JSONRPC_Connection_ErrorMutexCreateFailed
   #JSONRPC_Connection_ErrorNoWriter
   #JSONRPC_Connection_ErrorClosed
+  #JSONRPC_Connection_ErrorInvalidMethod
+  #JSONRPC_Connection_ErrorInvalidParams
+  #JSONRPC_Connection_ErrorOrphanResponse
 EndEnumeration
 
 Structure JSONRPC_FakeWriter
@@ -15,12 +18,21 @@ Structure JSONRPC_FakeWriter
   closed.i
 EndStructure
 
+Structure JSONRPC_PendingRequest
+  idText.s
+  method.s
+EndStructure
+
 Structure JSONRPC_Connection
   running.i
   closing.i
   closed.i
   writerMutex.i
   *writer.JSONRPC_FakeWriter
+  nextId.q
+  Map pending.JSONRPC_PendingRequest()
+  lastMatchedIdText.s
+  lastResponseBody.s
   lastErrorCode.i
   lastErrorMessage.s
 EndStructure
@@ -57,6 +69,10 @@ Procedure.i JSONRPC_Connection_Init(*connection.JSONRPC_Connection, *writer.JSON
   *connection\closed = #False
   *connection\writerMutex = CreateMutex()
   *connection\writer = *writer
+  *connection\nextId = 1
+  ClearMap(*connection\pending())
+  *connection\lastMatchedIdText = ""
+  *connection\lastResponseBody = ""
   JSONRPC_Connection_SetError(*connection, #JSONRPC_Connection_ErrorNone, "")
 
   If *connection\writerMutex = 0
@@ -79,6 +95,10 @@ Procedure.i JSONRPC_Connection_Close(*connection.JSONRPC_Connection)
   If *connection\writer <> 0
     JSONRPC_FakeWriter_Close(*connection\writer)
   EndIf
+
+  ClearMap(*connection\pending())
+  *connection\lastMatchedIdText = ""
+  *connection\lastResponseBody = ""
 
   If *connection\writerMutex <> 0
     FreeMutex(*connection\writerMutex)
@@ -136,4 +156,3 @@ EndProcedure
 Procedure.s JSONRPC_Connection_GetLastErrorMessage(*connection.JSONRPC_Connection)
   ProcedureReturn *connection\lastErrorMessage
 EndProcedure
-

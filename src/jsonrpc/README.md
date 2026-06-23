@@ -9,5 +9,6 @@ Current library includes:
 - `connection.pbi` - connection lifecycle and fake writer support.
 - `protocol.pbi` - JSON-RPC 2.0 message inspection and standard response builders.
 - `dispatch.pbi` - request and notification handler registration and dispatch.
+- `outbound.pbi` - outbound request ids, notifications, and pending response matching.
 
 PureUnit tests live under `tests/unit/`. PureUnit 1.4 currently does not discover `ProcedureUnit` tests reliably when module implementations are included from colocated test files, so the first library slice uses prefixed procedures such as `JSONRPC_Framing_BuildFrame()`.

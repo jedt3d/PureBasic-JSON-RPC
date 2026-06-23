@@ -10,6 +10,7 @@ Current pages:
 - [003 Connection Lifecycle](003-connection-lifecycle.md)
 - [004 Protocol Errors](004-protocol-errors.md)
 - [005 Dispatch](005-dispatch.md)
+- [006 Outbound Requests](006-outbound-requests.md)
 
 Future API pages should document:
 
