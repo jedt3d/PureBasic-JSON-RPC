@@ -140,4 +140,5 @@ MCP/examples/sqlite-admin/TUTORIAL.md
 ```
 
 It explains the first session, safe administration workflow, SQL recipes,
-multilingual data behavior, and the responsible admin checklist.
+multilingual data behavior, multi-format CSV/ODS export workflow, and the
+responsible admin checklist.
