@@ -1,0 +1,19 @@
+.DS_Store
+
+# Project-local generated state
+.build/
+.local/
+.reports/
+
+# PureBasic compiler outputs
+purebasic.c
+*.app/
+*.dylib
+*.exe
+*.o
+*.so
+*.dll
+
+# Documentation build output
+docs/_build/
+
