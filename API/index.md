@@ -8,6 +8,7 @@ Current pages:
 - [001 Framing](001-framing.md)
 - [002 Transport Codecs](002-transport-codecs.md)
 - [003 Connection Lifecycle](003-connection-lifecycle.md)
+- [004 Protocol Errors](004-protocol-errors.md)
 
 Future API pages should document:
 

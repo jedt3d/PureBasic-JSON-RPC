@@ -26,7 +26,7 @@ Acceptance criteria:
 1. Framed message reader and writer. Completed in `feature/001-framing`.
 2. Transport codecs. Completed in `feature/002-transport-codecs`.
 3. Connection lifecycle. Completed in `feature/003-connection-lifecycle`.
-4. JSON parsing, validation, and standard errors.
+4. JSON parsing, validation, and standard errors. Completed in `feature/004-protocol-errors`.
 5. Request and notification registration.
 6. Inbound dispatch and response writing.
 7. Outbound request ids and pending-response tracking.
@@ -86,4 +86,21 @@ Acceptance criteria:
 
 - PureUnit covers create, close twice, missing writer, fake writer capture, and post-close rejection.
 - `examples/003-connection-lifecycle/connection_probe.pb` builds and runs.
+- `./tools/check.sh` passes.
+
+## 004-protocol-errors
+
+Branch: `feature/004-protocol-errors`
+
+Purpose:
+
+- Add JSON-RPC 2.0 message inspection.
+- Add standard error and result response builders.
+- Preserve ids where they can be safely detected.
+- Keep JSON parsing/freeing localized.
+
+Acceptance criteria:
+
+- PureUnit covers parse error, invalid request, invalid params, notifications, valid requests, response exclusivity, id preservation, result response, and method-not-found response.
+- `examples/004-protocol-errors/spec_examples_probe.pb` builds and runs.
 - `./tools/check.sh` passes.
