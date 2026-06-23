@@ -9,6 +9,10 @@ The public API documentation currently lives in the top-level `API/` folder so i
 
 harness
 purebasic-project-files
+project-request
+guideline
+milestones
+release-notes
 mcp-for-purebasic
 tutorial-building-with-purebasic-jsonrpc
 mcp-example-milestone-log

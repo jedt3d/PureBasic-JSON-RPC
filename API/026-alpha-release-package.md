@@ -30,8 +30,8 @@ The platform suffix follows the current host by default. Set `PB_PACKAGE_PLATFOR
 
 The package contains:
 
-- `README.md`, `LICENSE`, `GUIDELINE.md`, `AGENTS.md`, `MILESTONES.md`, `PROJECT REQUEST.md`, and `RELEASE_NOTES.md`
-- `API/` and `docs/`
+- `README.md`, `LICENSE`, and `AGENTS.md`
+- `API/` and `docs/`, including the project request, guideline, milestones, and release notes
 - `src/`, `tests/`, `examples/`, `MCP/`, and `tools/`
 - generated `PACKAGE_MANIFEST.txt` inside the package root
 - generated long-form PDF documentation as dist artifacts
