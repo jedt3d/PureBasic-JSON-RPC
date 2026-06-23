@@ -24,6 +24,7 @@ Current pages:
 - [017 Reader Writer Interfaces](017-reader-writer-interfaces.md)
 - [018 Byte Buffer Framing](018-byte-buffer-framing.md)
 - [019 Connection Events](019-connection-events.md)
+- [020 Handler Registration Lifecycle](020-handler-registration-lifecycle.md)
 
 Future API pages should document:
 
