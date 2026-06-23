@@ -12,6 +12,8 @@ Documentation and harness discipline:
   `-32600 Invalid Request` with `id: null` instead of reaching dispatch.
 - Added lifecycle stress coverage for repeated dispatch, batch, timeout,
   cancellation, write queue, trace, and close cleanup behavior.
+- Added security and robustness documentation plus a tracked-file path scanner
+  that prevents workstation-specific absolute paths from entering the project.
 - Added `tools/verify-docs.sh` to verify numbered routes have matching example
   READMEs, API pages, milestone sections, API index entries, docs API bridge
   entries, and required Sphinx navigation.
