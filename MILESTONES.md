@@ -38,6 +38,7 @@ Acceptance criteria:
 13. Stdio runtime pump. Completed in `feature/012-stdio-runtime-pump`.
 14. MCP lifecycle adapter. Completed in `feature/013-mcp-lifecycle`.
 15. MCP tools registry. Completed in `feature/014-mcp-tools-registry`.
+16. MCP tools call. Completed in `feature/015-mcp-tools-call`.
 
 ## 001-framing
 
@@ -271,4 +272,21 @@ Acceptance criteria:
 
 - PureUnit covers tool registration validation, listed tool metadata, empty registry, and list-changed notification shape.
 - `examples/014-mcp-tools-registry/mcp_tools_list_probe.pb` builds and runs.
+- `./tools/check.sh` passes.
+
+## 015-mcp-tools-call
+
+Branch: `feature/015-mcp-tools-call`
+
+Purpose:
+
+- Add MCP `tools/call` handler registration.
+- Pass tool arguments to registered handlers.
+- Add text result helper and execution-error result support.
+- Return JSON-RPC `-32602` for unknown tools or malformed call params.
+
+Acceptance criteria:
+
+- PureUnit covers successful tool call, unknown tool, invalid arguments, and tool execution error result.
+- `examples/015-mcp-tools-call/mcp_tools_call_probe.pb` builds and runs.
 - `./tools/check.sh` passes.
