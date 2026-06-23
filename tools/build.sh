@@ -44,7 +44,11 @@ batch_src="$ROOT/examples/008-batch-handling/batch_probe.pb"
 batch_out_dir="$ROOT/.build/examples/008-batch-handling"
 batch_out="$batch_out_dir/batch_probe"
 
-mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir" "$outbound_out_dir" "$timeout_out_dir" "$batch_out_dir"
+cancel_src="$ROOT/examples/009-cancellation/cancel_probe.pb"
+cancel_out_dir="$ROOT/.build/examples/009-cancellation"
+cancel_out="$cancel_out_dir/cancel_probe"
+
+mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir" "$outbound_out_dir" "$timeout_out_dir" "$batch_out_dir" "$cancel_out_dir"
 
 "$PB_COMPILER" "$foundation_src" --console --thread --output "$foundation_out"
 printf 'Built console scenario: %s\n' "$foundation_out"
@@ -72,3 +76,6 @@ printf 'Built timeout housekeeping scenario: %s\n' "$timeout_out"
 
 "$PB_COMPILER" "$batch_src" --console --thread --output "$batch_out"
 printf 'Built batch handling scenario: %s\n' "$batch_out"
+
+"$PB_COMPILER" "$cancel_src" --console --thread --output "$cancel_out"
+printf 'Built cancellation scenario: %s\n' "$cancel_out"

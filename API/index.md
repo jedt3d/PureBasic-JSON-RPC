@@ -13,6 +13,7 @@ Current pages:
 - [006 Outbound Requests](006-outbound-requests.md)
 - [007 Timeout Housekeeping](007-timeout-housekeeping.md)
 - [008 Batch Handling](008-batch-handling.md)
+- [009 Cooperative Cancellation](009-cancellation.md)
 
 Future API pages should document:
 

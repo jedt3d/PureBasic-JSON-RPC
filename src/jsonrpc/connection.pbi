@@ -29,6 +29,11 @@ Structure JSONRPC_PendingRequest
   deadlineMs.q
 EndStructure
 
+Structure JSONRPC_CancellationToken
+  idText.s
+  requested.i
+EndStructure
+
 Structure JSONRPC_Connection
   running.i
   closing.i
@@ -37,9 +42,11 @@ Structure JSONRPC_Connection
   *writer.JSONRPC_FakeWriter
   nextId.q
   Map pending.JSONRPC_PendingRequest()
+  Map cancellations.JSONRPC_CancellationToken()
   lastMatchedIdText.s
   lastResponseBody.s
   lastTimedOutIdText.s
+  lastCancelledIdText.s
   lastErrorCode.i
   lastErrorMessage.s
 EndStructure
@@ -78,9 +85,11 @@ Procedure.i JSONRPC_Connection_Init(*connection.JSONRPC_Connection, *writer.JSON
   *connection\writer = *writer
   *connection\nextId = 1
   ClearMap(*connection\pending())
+  ClearMap(*connection\cancellations())
   *connection\lastMatchedIdText = ""
   *connection\lastResponseBody = ""
   *connection\lastTimedOutIdText = ""
+  *connection\lastCancelledIdText = ""
   JSONRPC_Connection_SetError(*connection, #JSONRPC_Connection_ErrorNone, "")
 
   If *connection\writerMutex = 0
@@ -105,9 +114,11 @@ Procedure.i JSONRPC_Connection_Close(*connection.JSONRPC_Connection)
   EndIf
 
   ClearMap(*connection\pending())
+  ClearMap(*connection\cancellations())
   *connection\lastMatchedIdText = ""
   *connection\lastResponseBody = ""
   *connection\lastTimedOutIdText = ""
+  *connection\lastCancelledIdText = ""
 
   If *connection\writerMutex <> 0
     FreeMutex(*connection\writerMutex)
