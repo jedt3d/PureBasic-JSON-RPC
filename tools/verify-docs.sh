@@ -40,12 +40,19 @@ require_heading() {
 for example_dir in "$ROOT"/examples/[0-9][0-9][0-9]-*; do
   [ -d "$example_dir" ] || continue
   slug="$(basename -- "$example_dir")"
+  number="$(printf '%s\n' "$slug" | sed 's/-.*//')"
+  test_count="$(find "$ROOT/tests/unit" -maxdepth 1 -name "${number}_*.pb" -print | wc -l | tr -d ' ')"
 
   require_file "examples/$slug/README.md" "example README"
   require_file "API/$slug.md" "API page for $slug"
   require_heading "docs/milestones.md" "$slug" "milestone section for $slug"
   require_text "API/index.md" "($slug.md)" "API index entry for $slug"
   require_text "docs/api.md" "API/$slug.md" "docs API bridge entry for $slug"
+
+  if [ "$test_count" -eq 0 ]; then
+    printf 'Missing unit test file for numbered route %s: tests/unit/%s_*.pb\n' "$slug" "$number" >&2
+    failures=$((failures + 1))
+  fi
 done
 
 for api_page in "$ROOT"/API/[0-9][0-9][0-9]-*.md; do
@@ -66,6 +73,7 @@ for required_doc in \
   "milestones" \
   "release-notes" \
   "release-hardening-plan" \
+  "release-quality-gates" \
   "mcp-for-purebasic" \
   "tutorial-building-with-purebasic-jsonrpc" \
   "mcp-example-milestone-log" \
