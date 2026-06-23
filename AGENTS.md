@@ -37,8 +37,16 @@ Every feature milestone must follow this cycle:
 7. Add or update the folder's `.pbp` project file so target type, input file, output path, thread mode, and CPU target are explicit.
 8. Review security, memory lifecycle, and readability before closing the milestone.
 9. Update Markdown API documentation under `API/`.
-10. Run `./tools/check.sh`.
-11. Summarize verification results and any remaining risk.
+10. Update `docs/milestones.md` in the same route. If the work belongs to a companion track, update the companion log and keep the numbered milestone file clear about whether the work is primary, deferred, or completed.
+11. Update other routing documents touched by the change, such as `README.md`, `docs/index.md`, `docs/api.md`, `API/index.md`, `docs/release-notes.md`, `docs/harness.md`, or `docs/jsonrpc-foundation-gap-plan.md`.
+12. Run `./tools/verify-docs.sh` before the final check whenever a route adds, moves, renames, or completes a milestone, API page, example, release artifact, or major documentation page.
+13. Run `./tools/check.sh`.
+14. Summarize verification results and any remaining risk.
+
+The route is not complete until source, tests, examples, API docs, milestones,
+navigation, release notes, and harness expectations agree. Do not leave a
+completed implementation round without a matching milestone entry and index
+updates.
 
 ## Local Harness
 
@@ -47,6 +55,7 @@ Use the repository scripts instead of hard-coding local paths in feature work:
 ```sh
 ./tools/discover-purebasic.sh
 ./tools/verify-projects.sh
+./tools/verify-docs.sh
 ./tools/test.sh
 ./tools/build.sh
 ./tools/build-docs.sh
@@ -83,6 +92,9 @@ PureBasic project files (`.pbp`) are committed source-of-truth build metadata fo
 - Public API documentation belongs in `API/` as Markdown.
 - Long-form narrative documentation belongs in `docs/`; keep `docs/mcp-for-purebasic.md` and `docs/tutorial-building-with-purebasic-jsonrpc.md` as the beginner-to-practitioner path.
 - Each milestone must update API docs, even if the update says no public API was added.
+- Each numbered milestone must have matching entries in `docs/milestones.md`, `API/index.md`, and `docs/api.md`.
+- Each major planning or tutorial page under `docs/` must be added to the Sphinx toctree in `docs/index.md`.
+- When the project direction changes, update the route documents in the same branch instead of relying on chat history.
 - Documentation should be suitable for later Read the Docs compilation through the `docs/` entrypoint.
 - Generated documentation PDFs belong under `.build/` or release artifacts; do not commit PDF binaries.
 - Document method names, parameter shape, return shape, error behavior, ownership rules, and examples when API is added.
@@ -98,3 +110,5 @@ Before a milestone is considered complete:
 - Memory ownership has been reviewed.
 - Security and malformed-input behavior have been reviewed where relevant.
 - API docs are updated.
+- Milestones, documentation navigation, and release notes are updated where relevant.
+- `./tools/verify-docs.sh` passes.

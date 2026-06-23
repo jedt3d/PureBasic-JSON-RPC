@@ -13,6 +13,7 @@ project-request
 guideline
 milestones
 release-notes
+release-hardening-plan
 mcp-for-purebasic
 tutorial-building-with-purebasic-jsonrpc
 mcp-example-milestone-log

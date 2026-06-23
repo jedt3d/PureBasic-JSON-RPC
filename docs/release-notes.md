@@ -1,5 +1,18 @@
 # Release Notes
 
+## Unreleased
+
+Documentation and harness discipline:
+
+- Added `tools/verify-docs.sh` to verify numbered routes have matching example
+  READMEs, API pages, milestone sections, API index entries, docs API bridge
+  entries, and required Sphinx navigation.
+- Wired documentation route verification into `./tools/check.sh`.
+- Clarified in `AGENTS.md` and `docs/harness.md` that each route must update
+  milestones, documentation navigation, release notes, and other source-of-truth
+  documents before it is considered complete.
+- Added a JSON-RPC-first release hardening plan for rounds `027` through `032`.
+
 ## 0.1.0-alpha.1
 
 Initial macOS arm64 alpha target for the PureBasic JSON-RPC 2.0 library.

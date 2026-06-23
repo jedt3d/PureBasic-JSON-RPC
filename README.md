@@ -30,6 +30,7 @@ example configuration.
 ```sh
 ./tools/discover-purebasic.sh
 ./tools/verify-projects.sh
+./tools/verify-docs.sh
 ./tools/test.sh
 ./tools/build.sh
 ./tools/build-docs.sh
@@ -65,6 +66,10 @@ The package step also generates the long-form documentation PDFs in `.build/dist
 ## Documentation
 
 The API pages are reference documentation. The narrative path starts with `docs/mcp-for-purebasic.md` for the MCP and PureBasic overview, then `docs/tutorial-building-with-purebasic-jsonrpc.md` for the end-to-end tutorial. `./tools/build-docs.sh` builds Sphinx HTML and exactly two generated PDFs under `.build/docs-pdf/`.
+
+Planning and documentation routes are checked by `./tools/verify-docs.sh`. A
+numbered milestone is not considered complete until the example folder, API
+page, milestone section, API indexes, and Sphinx navigation are synchronized.
 
 ## PureBasic Project Files
 
