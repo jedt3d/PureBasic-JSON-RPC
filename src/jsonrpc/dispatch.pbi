@@ -11,6 +11,8 @@ Structure JSONRPC_RequestContext
   method.s
   idText.s
   hasId.i
+  cancellationIdText.s
+  cancellationRequested.i
   *connection.JSONRPC_Connection
 EndStructure
 
@@ -39,6 +41,8 @@ Declare.i JSONRPC_UnregisterRequest(*dispatcher.JSONRPC_Dispatcher, method.s)
 Declare.i JSONRPC_UnregisterNotification(*dispatcher.JSONRPC_Dispatcher, method.s)
 Declare.i JSONRPC_Dispatcher_HasRequest(*dispatcher.JSONRPC_Dispatcher, method.s)
 Declare.i JSONRPC_Dispatcher_HasNotification(*dispatcher.JSONRPC_Dispatcher, method.s)
+Declare.i JSONRPC_RequestContext_IsCancellationRequested(*context.JSONRPC_RequestContext)
+Declare.s JSONRPC_RequestContext_CancellationId(*context.JSONRPC_RequestContext)
 Declare.s JSONRPC_Dispatcher_Dispatch(*dispatcher.JSONRPC_Dispatcher, *connection.JSONRPC_Connection, body.s)
 Declare.i JSONRPC_Dispatcher_DispatchToConnection(*dispatcher.JSONRPC_Dispatcher, *connection.JSONRPC_Connection, body.s)
 
@@ -153,7 +157,29 @@ Procedure JSONRPC_Dispatcher_FillContext(*context.JSONRPC_RequestContext, *inspe
   *context\method = *inspect\method
   *context\idText = *inspect\idText
   *context\hasId = *inspect\hasId
+  *context\cancellationIdText = *inspect\idText
+  *context\cancellationRequested = JSONRPC_Connection_IsCancellationRequested(*connection, *inspect\idText)
   *context\connection = *connection
+EndProcedure
+
+Procedure.i JSONRPC_RequestContext_IsCancellationRequested(*context.JSONRPC_RequestContext)
+  If *context = 0
+    ProcedureReturn #False
+  EndIf
+
+  If *context\cancellationRequested
+    ProcedureReturn #True
+  EndIf
+
+  ProcedureReturn JSONRPC_Connection_IsCancellationRequested(*context\connection, *context\cancellationIdText)
+EndProcedure
+
+Procedure.s JSONRPC_RequestContext_CancellationId(*context.JSONRPC_RequestContext)
+  If *context = 0
+    ProcedureReturn ""
+  EndIf
+
+  ProcedureReturn *context\cancellationIdText
 EndProcedure
 
 Procedure.s JSONRPC_Dispatcher_Dispatch(*dispatcher.JSONRPC_Dispatcher, *connection.JSONRPC_Connection, body.s)
@@ -238,6 +264,10 @@ Procedure.s JSONRPC_Dispatcher_Dispatch(*dispatcher.JSONRPC_Dispatcher, *connect
   EndIf
 
   FreeJSON(json)
+
+  If *connection <> 0 And inspect\hasId
+    JSONRPC_Connection_ClearCancellation(*connection, inspect\idText)
+  EndIf
 
   If handlerOk = #False And handlerResult\ok = #False And handlerResult\errorCode = #JSONRPC_Error_Internal
     If *connection <> 0

@@ -25,3 +25,4 @@ Current API pages:
 - `API/018-byte-buffer-framing.md`
 - `API/019-connection-events.md`
 - `API/020-handler-registration-lifecycle.md`
+- `API/021-handler-cancellation-tokens.md`

@@ -86,6 +86,8 @@ Declare JSONRPC_Connection_EmitEvent(*connection.JSONRPC_Connection, eventCode.i
 Declare.i JSONRPC_Connection_GetLastEventCode(*connection.JSONRPC_Connection)
 Declare.s JSONRPC_Connection_GetLastEventDetail(*connection.JSONRPC_Connection)
 Declare.q JSONRPC_Connection_GetEventCount(*connection.JSONRPC_Connection)
+Declare.i JSONRPC_Connection_IsCancellationRequested(*connection.JSONRPC_Connection, idText.s)
+Declare.i JSONRPC_Connection_ClearCancellation(*connection.JSONRPC_Connection, idText.s)
 
 Procedure JSONRPC_Connection_EmitEvent(*connection.JSONRPC_Connection, eventCode.i, detail.s)
   If *connection = 0 Or eventCode = #JSONRPC_Connection_EventNone
@@ -258,4 +260,29 @@ Procedure.q JSONRPC_Connection_GetEventCount(*connection.JSONRPC_Connection)
   EndIf
 
   ProcedureReturn *connection\eventCount
+EndProcedure
+
+Procedure.i JSONRPC_Connection_IsCancellationRequested(*connection.JSONRPC_Connection, idText.s)
+  If *connection = 0 Or idText = ""
+    ProcedureReturn #False
+  EndIf
+
+  If FindMapElement(*connection\cancellations(), idText)
+    ProcedureReturn *connection\cancellations()\requested
+  EndIf
+
+  ProcedureReturn #False
+EndProcedure
+
+Procedure.i JSONRPC_Connection_ClearCancellation(*connection.JSONRPC_Connection, idText.s)
+  If *connection = 0 Or idText = ""
+    ProcedureReturn #False
+  EndIf
+
+  If FindMapElement(*connection\cancellations(), idText)
+    DeleteMapElement(*connection\cancellations())
+    ProcedureReturn #True
+  EndIf
+
+  ProcedureReturn #False
 EndProcedure

@@ -25,6 +25,7 @@ Current pages:
 - [018 Byte Buffer Framing](018-byte-buffer-framing.md)
 - [019 Connection Events](019-connection-events.md)
 - [020 Handler Registration Lifecycle](020-handler-registration-lifecycle.md)
+- [021 Handler Cancellation Tokens](021-handler-cancellation-tokens.md)
 
 Future API pages should document:
 
