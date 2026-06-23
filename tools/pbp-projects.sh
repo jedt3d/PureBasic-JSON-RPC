@@ -35,4 +35,7 @@ pbp_each_project_target() {
   "$callback" "examples/025-public-api-review/public_api_review.pbp" "api_review_probe" "console" ".build/examples/025-public-api-review/api_review_probe" "public API review scenario"
   "$callback" "examples/026-alpha-release-package/alpha_release_package.pbp" "alpha_package_probe" "console" ".build/examples/026-alpha-release-package/alpha_package_probe" "alpha release package scenario"
   "$callback" "MCP/examples/purebasic-check/purebasic_check.pbp" "purebasic/check stdio server" "console" ".build/MCP/examples/purebasic-check/purebasic_check_server" "MCP purebasic/check server"
+  "$callback" "MCP/examples/sqlite-admin/sqlite_admin.pbp" "sqlite-admin stdio server" "console" ".build/MCP/examples/sqlite-admin/sqlite_admin_server" "MCP sqlite admin server"
+  "$callback" "MCP/examples/sqlite-admin/sqlite_admin.pbp" "sqlite-admin bootstrap" "console" ".build/MCP/examples/sqlite-admin/sqlite_admin_bootstrap" "MCP sqlite admin bootstrap"
+  "$callback" "MCP/examples/sqlite-admin/sqlite_admin.pbp" "sqlite-admin probe" "console" ".build/MCP/examples/sqlite-admin/sqlite_admin_probe" "MCP sqlite admin probe"
 }

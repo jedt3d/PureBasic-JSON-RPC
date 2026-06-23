@@ -35,4 +35,7 @@ ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 "$ROOT/.build/examples/025-public-api-review/api_review_probe"
 "$ROOT/.build/examples/026-alpha-release-package/alpha_package_probe"
 "$ROOT/.build/MCP/examples/purebasic-check/purebasic_check_server" < "$ROOT/MCP/examples/purebasic-check/probe_smoke_input.ndjson" >/dev/null
+"$ROOT/.build/MCP/examples/sqlite-admin/sqlite_admin_server" < "$ROOT/MCP/examples/sqlite-admin/probe_smoke_input.ndjson" >/dev/null
+"$ROOT/.build/MCP/examples/sqlite-admin/sqlite_admin_server" < "$ROOT/MCP/examples/sqlite-admin/probe_input.ndjson" >/dev/null
+"$ROOT/.build/MCP/examples/sqlite-admin/sqlite_admin_probe"
 "$ROOT/tools/package-alpha.sh"

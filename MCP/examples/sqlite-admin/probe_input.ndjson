@@ -1,0 +1,8 @@
+{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"manual-probe","version":"0.1"}},"id":1}
+{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
+{"jsonrpc":"2.0","method":"tools/list","params":{},"id":2}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/bootstrap","arguments":{"dbPath":"probe.sqlite","overwrite":true}},"id":3}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/inspect","arguments":{"dbPath":"probe.sqlite","includeSystem":false}},"id":4}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/query","arguments":{"dbPath":"probe.sqlite","sql":"SELECT locale, title FROM admin_notes ORDER BY id","maxRows":10}},"id":5}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/recipe/list","arguments":{"dbPath":"probe.sqlite"}},"id":6}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/recipe/run","arguments":{"dbPath":"probe.sqlite","name":"notes-by-locale","parameters":{"locale":"ja"},"maxRows":5}},"id":7}
