@@ -1,6 +1,6 @@
 # PureBasic JSON-RPC 2.0
 
-PureBasic JSON-RPC 2.0 is a planned library for stream-framed, testable JSON-RPC communication in PureBasic 6.40.
+PureBasic JSON-RPC 2.0 is an alpha-stage library for stream-framed, testable JSON-RPC communication in PureBasic 6.40.
 
 The implementation is guided by:
 
@@ -12,7 +12,7 @@ The implementation is guided by:
 
 ## Target Implementation
 
-The primary target for this library is future MCP server development in the PureBasic programming language.
+The primary target for this library is MCP server development in the PureBasic programming language.
 
 The implementation should stay general-purpose enough for other JSON-RPC 2.0 use cases, but MCP server development is the main product context that should guide API shape, examples, tests, and documentation.
 
@@ -58,7 +58,7 @@ The package step also generates the long-form documentation PDFs in `.build/dist
 - `docs/` - Read the Docs/Sphinx entrypoint.
 - `examples/` - sequential scenario applications, one folder per milestone.
 - `MCP/` - MCP-focused example projects without numeric prefixes.
-- `src/jsonrpc/` - future library source.
+- `src/jsonrpc/` - library source.
 - `tests/unit/` - PureUnit tests close to the library workflow.
 - `tools/` - local discovery, build, test, and verification scripts.
 
@@ -74,5 +74,5 @@ The root project file is `PureBasic-JSON-RPC.pbp`. Every buildable scenario or M
 
 - PureBasic `6.40`
 - PureUnit from the PureBasic SDK
-- macOS ARM64 is verified by this first milestone; x64 compatibility remains a required design target for later milestones.
+- macOS ARM64 is the verified local target; macOS x64 remains a build-as-is and design target.
 - The alpha source package defaults to the current host platform label, verified locally as macOS ARM64.
