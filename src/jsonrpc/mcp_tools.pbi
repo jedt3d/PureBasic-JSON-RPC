@@ -44,7 +44,7 @@ Procedure.i MCP_ToolNameIsValid(name.s)
 
   For index = 1 To Len(name)
     charCode = Asc(Mid(name, index, 1))
-    If (charCode >= 'A' And charCode <= 'Z') Or (charCode >= 'a' And charCode <= 'z') Or (charCode >= '0' And charCode <= '9') Or charCode = '_' Or charCode = '-' Or charCode = '.'
+    If (charCode >= 'A' And charCode <= 'Z') Or (charCode >= 'a' And charCode <= 'z') Or (charCode >= '0' And charCode <= '9') Or charCode = '_' Or charCode = '-' Or charCode = '.' Or charCode = '/'
       Continue
     EndIf
 

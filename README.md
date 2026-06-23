@@ -48,6 +48,7 @@ Create the local alpha source package:
 - `API/` - public API documentation in Markdown.
 - `docs/` - Read the Docs/Sphinx entrypoint.
 - `examples/` - sequential scenario applications, one folder per milestone.
+- `MCP/` - MCP-focused example projects without numeric prefixes.
 - `src/jsonrpc/` - future library source.
 - `tests/unit/` - PureUnit tests close to the library workflow.
 - `tools/` - local discovery, build, test, and verification scripts.

@@ -33,4 +33,5 @@ ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 "$ROOT/.build/examples/024-compliance-suite/compliance_probe"
 "$ROOT/.build/examples/025-public-api-review/api_review_probe"
 "$ROOT/.build/examples/026-alpha-release-package/alpha_package_probe"
+"$ROOT/.build/MCP/examples/purebasic-check/purebasic_check_server" < "$ROOT/MCP/examples/purebasic-check/probe_smoke_input.ndjson" >/dev/null
 "$ROOT/tools/package-alpha.sh"

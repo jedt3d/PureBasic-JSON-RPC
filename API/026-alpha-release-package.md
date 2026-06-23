@@ -28,7 +28,7 @@ The package contains:
 
 - `README.md`, `LICENSE`, `GUIDELINE.md`, `AGENTS.md`, `MILESTONES.md`, `PROJECT REQUEST.md`, and `RELEASE_NOTES.md`
 - `API/` and `docs/`
-- `src/`, `tests/`, `examples/`, and `tools/`
+- `src/`, `tests/`, `examples/`, `MCP/`, and `tools/`
 - generated `PACKAGE_MANIFEST.txt` inside the package root
 
 Generated build directories such as `.build/`, `.local/`, and `.reports/` are not included.
