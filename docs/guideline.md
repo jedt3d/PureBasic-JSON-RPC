@@ -160,7 +160,7 @@ The framing layer reads bytes and emits complete JSON body strings. It must not 
 
 ### PureBasic-style state
 
-```purebasic
+```text
 Structure JSONRPC_FrameState
   *buffer
   bufferSize.i
@@ -191,7 +191,7 @@ EndStructure
 
 Pseudocode:
 
-```purebasic
+```text
 Procedure JSONRPC_PushBytes(*state.JSONRPC_FrameState, *chunk, chunkLength.i)
   AppendBytesToRingBuffer(*state, *chunk, chunkLength)
 
@@ -253,7 +253,7 @@ This separation makes the framework easier to test because a fake reader and fak
 
 ### Public interface
 
-```purebasic
+```text
 JSONRPC_CreateConnection(*reader, *writer)
 JSONRPC_Listen(*connection)
 JSONRPC_Close(*connection)
@@ -275,7 +275,7 @@ JSONRPC_Close(*connection)
 
 Writer pseudocode:
 
-```purebasic
+```text
 Procedure JSONRPC_WriteMessage(*writer.JSONRPC_Writer, body.s)
   bodyLength.i = UTF8ByteLength(body)
   header.s = "Content-Length: " + Str(bodyLength) + #CRLF$ + #CRLF$
@@ -312,7 +312,7 @@ The connection should know:
 
 ### PureBasic-style structure
 
-```purebasic
+```text
 Structure JSONRPC_Connection
   *reader.JSONRPC_Reader
   *writer.JSONRPC_Writer
@@ -338,7 +338,7 @@ EndStructure
 
 Pseudocode:
 
-```purebasic
+```text
 Procedure JSONRPC_Listen(*connection.JSONRPC_Connection)
   *connection\running = #True
   StartReader(*connection\reader)
@@ -385,14 +385,14 @@ Requests and notifications should be registered separately because they have dif
 
 ### Public interface
 
-```purebasic
+```text
 JSONRPC_RegisterRequest(method.s, *handler)
 JSONRPC_RegisterNotification(method.s, *handler)
 ```
 
 ### Handler structures
 
-```purebasic
+```text
 Prototype.i JSONRPC_RequestHandler(*params, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
 Prototype.i JSONRPC_NotificationHandler(*params, *context.JSONRPC_RequestContext)
 
@@ -415,7 +415,7 @@ EndStructure
 
 ### Registration pseudocode
 
-```purebasic
+```text
 Procedure JSONRPC_RegisterRequest(*connection.JSONRPC_Connection, method.s, *handler)
   If method = ""
     ProcedureReturn #False
@@ -443,7 +443,7 @@ EndProcedure
 
 A method map avoids a long chain of string comparisons such as:
 
-```purebasic
+```text
 If method = "a"
 ElseIf method = "b"
 ElseIf method = "c"
@@ -477,14 +477,14 @@ When the framework sends an outbound request, it must remember the request id un
 
 ### Public interface
 
-```purebasic
+```text
 JSONRPC_SendRequest(method.s, *params, timeoutMs.i)
 JSONRPC_SendNotification(method.s, *params)
 ```
 
 ### Pending request structure
 
-```purebasic
+```text
 Structure JSONRPC_PendingRequest
   idText.s
   method.s
@@ -507,7 +507,7 @@ EndStructure
 
 Pseudocode:
 
-```purebasic
+```text
 Procedure.s JSONRPC_SendRequest(*connection.JSONRPC_Connection, method.s, *params, timeoutMs.i)
   idText.s = JSONRPC_NextRequestId(*connection)
   body.s = BuildRequestJSON(method, *params, idText)
@@ -563,14 +563,14 @@ Cancellation deserves special care. In LSP-style systems, cancellation is common
 
 ### Public interface
 
-```purebasic
+```text
 JSONRPC_SendNotification(method.s, *params)
 JSONRPC_CancelRequest(id.s)
 ```
 
 ### Cancellation token
 
-```purebasic
+```text
 Structure JSONRPC_CancellationToken
   idText.s
   cancelled.i
@@ -590,7 +590,7 @@ EndStructure
 
 Pseudocode:
 
-```purebasic
+```text
 Procedure JSONRPC_CancelRequest(*connection.JSONRPC_Connection, idText.s)
   params = BuildCancelParams(idText)
   JSONRPC_SendNotification(*connection, "$/cancelRequest", params)
@@ -655,7 +655,7 @@ Sequential batch processing is easier to reason about and is usually sufficient 
 
 Pseudocode:
 
-```purebasic
+```text
 Procedure JSONRPC_ProcessBatch(*connection.JSONRPC_Connection, jsonRoot)
   If JSONArraySize(jsonRoot) = 0
     JSONRPC_WriteMessage(*connection\writer, BuildError(-32600, "Invalid Request", #Null))
@@ -703,7 +703,7 @@ This prevents long-lived business logic from accidentally holding references to 
 
 ### Processing pseudocode
 
-```purebasic
+```text
 Procedure JSONRPC_ProcessRawMessage(*connection.JSONRPC_Connection, body.s)
   jsonId.i = ParseJSON(#PB_Any, body)
 

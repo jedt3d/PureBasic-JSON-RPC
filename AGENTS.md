@@ -1,6 +1,6 @@
 # Agent Guidelines
 
-This repository is building a PureBasic JSON-RPC 2.0 library. Every agent or contributor must treat `GUIDELINE.md` and `PROJECT REQUEST.md` as the project source of truth.
+This repository is building a PureBasic JSON-RPC 2.0 library. Every agent or contributor must treat `docs/guideline.md` and `docs/project-request.md` as the project source of truth.
 
 ## First Principles
 

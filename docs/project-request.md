@@ -2,7 +2,7 @@
 
 ## Objective
 
-Build a PureBasic JSON-RPC 2.0 library based on the architecture described in `GUIDELINE.md`.
+Build a PureBasic JSON-RPC 2.0 library based on the architecture described in `guideline.md`.
 
 The library should be reliable, testable, memory-conscious, and suitable for long-running tools, agent integrations, editor integrations, and service communication. The implementation should follow the JSON-RPC 2.0 official specification and take architectural inspiration from Microsoft’s `vscode-jsonrpc`.
 
@@ -14,7 +14,7 @@ Before implementing library features, first establish a strong AI development ha
 
 Use these as primary sources:
 
-- `GUIDELINE.md` in this repository
+- `guideline.md` in this documentation folder
 - Official JSON-RPC 2.0 specification: `https://www.jsonrpc.org/specification`
 - Microsoft `vscode-jsonrpc` repository/package as an architectural reference
 - Official PureBasic 6.40 documentation `https://www.purebasic.com/documentation/`

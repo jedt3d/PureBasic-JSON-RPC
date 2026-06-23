@@ -2,7 +2,7 @@
 
 This document records the unnumbered MCP example and release-support work that
 continued after the core JSON-RPC milestone sequence. It is a companion to
-`MILESTONES.md`, which tracks the numbered foundation rounds from `000` through
+`milestones.md`, which tracks the numbered foundation rounds from `000` through
 `016`.
 
 The source of truth for this log is the Git history. Commit hashes are included

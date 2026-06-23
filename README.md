@@ -4,8 +4,8 @@ PureBasic JSON-RPC 2.0 is an alpha-stage library for stream-framed, testable JSO
 
 The implementation is guided by:
 
-- `GUIDELINE.md`
-- `PROJECT REQUEST.md`
+- `docs/guideline.md`
+- `docs/project-request.md`
 - the official JSON-RPC 2.0 specification
 - the architecture of Microsoft's `vscode-jsonrpc`
 - the PureBasic 6.40 compiler and SDK PureUnit runner
@@ -55,7 +55,7 @@ The package step also generates the long-form documentation PDFs in `.build/dist
 - `AGENTS.md` - required guidance for AI agents and contributors.
 - `LICENSE` - MIT license for the source package.
 - `API/` - public API documentation in Markdown.
-- `docs/` - Read the Docs/Sphinx entrypoint.
+- `docs/` - Read the Docs/Sphinx entrypoint, project request, guideline, milestones, and release notes.
 - `examples/` - sequential scenario applications, one folder per milestone.
 - `MCP/` - MCP-focused example projects without numeric prefixes.
 - `src/jsonrpc/` - library source.
