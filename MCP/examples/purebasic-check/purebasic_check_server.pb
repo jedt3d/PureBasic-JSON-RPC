@@ -37,3 +37,10 @@ Repeat
     ServerWriteProtocol(response)
   EndIf
 Until line = ""
+; IDE Options = PureBasic 6.40 - C Backend (MacOS X - arm64)
+; ExecutableFormat = Console
+; CursorPosition = 5
+; Folding = -
+; EnableXP
+; DPIAware
+; Executable = purebasic_check_server

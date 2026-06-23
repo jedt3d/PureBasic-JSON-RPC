@@ -14,6 +14,14 @@ Build from the project root:
 ./tools/build.sh
 ```
 
+Open the PureBasic project file in the IDE:
+
+```text
+MCP/examples/purebasic-check/purebasic_check.pbp
+```
+
+The project target `purebasic/check stdio server` is explicitly configured as a console executable because MCP stdio servers must read stdin and write protocol messages to stdout.
+
 Run the compiled server:
 
 ```sh

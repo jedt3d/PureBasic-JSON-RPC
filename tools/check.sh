@@ -2,8 +2,12 @@
 set -eu
 
 ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+. "$ROOT/tools/pb-env.sh"
+PB_IDE="${PB_IDE:-$(CDPATH= cd -- "$PB_INSTALL_HOME/.." && pwd)/MacOS/PureBasic}"
 
 "$ROOT/tools/discover-purebasic.sh"
+grep 'format exe="console"' "$ROOT/MCP/examples/purebasic-check/purebasic_check.pbp" >/dev/null
+"$PB_IDE" --build "$ROOT/MCP/examples/purebasic-check/purebasic_check.pbp" --target "purebasic/check stdio server" --readonly --quiet
 "$ROOT/tools/test.sh"
 "$ROOT/tools/build.sh"
 "$ROOT/.build/examples/000-project-foundation/console_probe"
