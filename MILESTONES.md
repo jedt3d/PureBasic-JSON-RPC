@@ -31,7 +31,7 @@ Acceptance criteria:
 6. Inbound dispatch and response writing. Started in `feature/005-dispatch`.
 7. Outbound request ids and pending-response tracking. Completed in `feature/006-outbound-requests`.
 8. Timeout housekeeping. Completed in `feature/007-timeout-housekeeping`.
-9. Batch handling.
+9. Batch handling. Completed in `feature/008-batch-handling`.
 10. Cooperative `$/cancelRequest` support.
 11. Diagnostics counters.
 12. Stress tests and memory lifecycle tests.
@@ -154,4 +154,21 @@ Acceptance criteria:
 
 - PureUnit covers default deadline, custom timeout expiry, fresh request preservation, and matched-response cleanup.
 - `examples/007-timeout-housekeeping/timeout_probe.pb` builds and runs.
+- `./tools/check.sh` passes.
+
+## 008-batch-handling
+
+Branch: `feature/008-batch-handling`
+
+Purpose:
+
+- Add sequential JSON-RPC batch dispatch.
+- Return invalid request for empty batches.
+- Suppress notification responses inside batches.
+- Return arrays only when at least one batch item requires a response.
+
+Acceptance criteria:
+
+- PureUnit covers empty batch, notification-only batch, mixed batch, single-message fallback, and connection writing.
+- `examples/008-batch-handling/batch_probe.pb` builds and runs.
 - `./tools/check.sh` passes.
