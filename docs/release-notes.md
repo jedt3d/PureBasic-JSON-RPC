@@ -8,6 +8,8 @@ Documentation and harness discipline:
   readiness under `docs/release-quality-gates.md`.
 - Added a JSON-RPC compliance matrix and expanded the reusable compliance runner
   with additional protocol edge cases.
+- Hardened invalid `id` handling so object, array, and boolean ids return
+  `-32600 Invalid Request` with `id: null` instead of reaching dispatch.
 - Added `tools/verify-docs.sh` to verify numbered routes have matching example
   READMEs, API pages, milestone sections, API index entries, docs API bridge
   entries, and required Sphinx navigation.

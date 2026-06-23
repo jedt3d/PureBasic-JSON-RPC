@@ -33,3 +33,4 @@ Current API pages:
 - `API/026-alpha-release-package.md`
 - `API/027-release-quality-gates.md`
 - `API/028-compliance-matrix.md`
+- `API/029-negative-tests.md`
