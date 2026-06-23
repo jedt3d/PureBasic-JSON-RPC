@@ -23,7 +23,7 @@ Acceptance criteria:
 
 ## Planned Build Order
 
-1. Framed message reader and writer.
+1. Framed message reader and writer. Completed in `feature/001-framing`.
 2. Connection lifecycle.
 3. JSON parsing, validation, and standard errors.
 4. Request and notification registration.
@@ -35,3 +35,20 @@ Acceptance criteria:
 10. Diagnostics counters.
 11. Stress tests and memory lifecycle tests.
 
+## 001-framing
+
+Branch: `feature/001-framing`
+
+Purpose:
+
+- Add the first reusable `Content-Length` framing helpers.
+- Build frames with UTF-8 byte lengths.
+- Incrementally collect stream chunks and extract complete message bodies.
+- Preserve bytes after the first message for subsequent reads.
+- Reject missing, duplicate, invalid, or oversized `Content-Length` headers.
+
+Acceptance criteria:
+
+- PureUnit covers fragmented headers, fragmented bodies, multiple frames, Unicode byte lengths, invalid lengths, and body limits.
+- `examples/001-framing/framing_probe.pb` builds and runs.
+- `./tools/check.sh` passes.

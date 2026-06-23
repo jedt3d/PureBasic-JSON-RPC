@@ -13,7 +13,7 @@ report_file="$report_dir/index.html"
 mkdir -p "$report_dir"
 
 if [ "$#" -eq 0 ]; then
-  set -- "$ROOT/tests/unit/000_project_foundation.pb"
+  set -- "$ROOT/tests/unit/000_project_foundation.pb" "$ROOT/tests/unit/001_framing.pb"
 fi
 
 "$PUREUNIT" --compiler "$PB_COMPILER" --verbose --report "$report_file" "$@"
