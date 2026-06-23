@@ -118,7 +118,11 @@ api_review_src="$ROOT/examples/025-public-api-review/api_review_probe.pb"
 api_review_out_dir="$ROOT/.build/examples/025-public-api-review"
 api_review_out="$api_review_out_dir/api_review_probe"
 
-mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir" "$outbound_out_dir" "$timeout_out_dir" "$batch_out_dir" "$cancel_out_dir" "$diagnostics_out_dir" "$stress_out_dir" "$stdio_runtime_out_dir" "$mcp_lifecycle_out_dir" "$mcp_tools_list_out_dir" "$mcp_tools_call_out_dir" "$package_out_dir" "$io_out_dir" "$byte_buffer_out_dir" "$events_out_dir" "$handler_lifecycle_out_dir" "$cancellation_token_out_dir" "$write_queue_out_dir" "$trace_out_dir" "$compliance_out_dir" "$api_review_out_dir"
+alpha_package_src="$ROOT/examples/026-alpha-release-package/alpha_package_probe.pb"
+alpha_package_out_dir="$ROOT/.build/examples/026-alpha-release-package"
+alpha_package_out="$alpha_package_out_dir/alpha_package_probe"
+
+mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir" "$outbound_out_dir" "$timeout_out_dir" "$batch_out_dir" "$cancel_out_dir" "$diagnostics_out_dir" "$stress_out_dir" "$stdio_runtime_out_dir" "$mcp_lifecycle_out_dir" "$mcp_tools_list_out_dir" "$mcp_tools_call_out_dir" "$package_out_dir" "$io_out_dir" "$byte_buffer_out_dir" "$events_out_dir" "$handler_lifecycle_out_dir" "$cancellation_token_out_dir" "$write_queue_out_dir" "$trace_out_dir" "$compliance_out_dir" "$api_review_out_dir" "$alpha_package_out_dir"
 
 "$PB_COMPILER" "$foundation_src" --console --thread --output "$foundation_out"
 printf 'Built console scenario: %s\n' "$foundation_out"
@@ -206,3 +210,6 @@ printf 'Built compliance suite scenario: %s\n' "$compliance_out"
 
 "$PB_COMPILER" "$api_review_src" --console --thread --output "$api_review_out"
 printf 'Built public API review scenario: %s\n' "$api_review_out"
+
+"$PB_COMPILER" "$alpha_package_src" --console --thread --output "$alpha_package_out"
+printf 'Built alpha release package scenario: %s\n' "$alpha_package_out"

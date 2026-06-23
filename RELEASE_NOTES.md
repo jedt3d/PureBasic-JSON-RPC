@@ -12,6 +12,7 @@ Highlights:
 - JSON-RPC compliance runner.
 - MCP-oriented adapter previews for lifecycle and tools.
 - Console, shared library, and app compile templates.
+- Alpha source package generation with tarball manifest and SHA-256 checksum.
 
 Status:
 

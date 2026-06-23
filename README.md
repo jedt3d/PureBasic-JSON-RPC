@@ -18,7 +18,7 @@ The implementation should stay general-purpose enough for other JSON-RPC 2.0 use
 
 ## Current Milestone
 
-The current alpha target is `0.1.0-alpha.1`, with generic JSON-RPC foundation work completed through round `025-public-api-review`.
+The current alpha target is `0.1.0-alpha.1`, with generic JSON-RPC foundation work completed through round `026-alpha-release-package`.
 
 ## Quick Start
 
@@ -33,6 +33,12 @@ Or run the full local check:
 
 ```sh
 ./tools/check.sh
+```
+
+Create the local alpha source package:
+
+```sh
+./tools/package-alpha.sh
 ```
 
 ## Repository Layout
@@ -50,3 +56,4 @@ Or run the full local check:
 - PureBasic `6.40`
 - PureUnit from the PureBasic SDK
 - macOS ARM64 is verified by this first milestone; x64 compatibility remains a required design target for later milestones.
+- The alpha source package defaults to the current host platform label, verified locally as macOS ARM64.
