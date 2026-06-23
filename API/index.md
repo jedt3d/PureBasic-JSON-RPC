@@ -9,6 +9,7 @@ Current pages:
 - [002 Transport Codecs](002-transport-codecs.md)
 - [003 Connection Lifecycle](003-connection-lifecycle.md)
 - [004 Protocol Errors](004-protocol-errors.md)
+- [005 Dispatch](005-dispatch.md)
 
 Future API pages should document:
 

@@ -28,7 +28,11 @@ protocol_src="$ROOT/examples/004-protocol-errors/spec_examples_probe.pb"
 protocol_out_dir="$ROOT/.build/examples/004-protocol-errors"
 protocol_out="$protocol_out_dir/spec_examples_probe"
 
-mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir"
+dispatch_src="$ROOT/examples/005-dispatch/dispatch_probe.pb"
+dispatch_out_dir="$ROOT/.build/examples/005-dispatch"
+dispatch_out="$dispatch_out_dir/dispatch_probe"
+
+mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir"
 
 "$PB_COMPILER" "$foundation_src" --console --thread --output "$foundation_out"
 printf 'Built console scenario: %s\n' "$foundation_out"
@@ -44,3 +48,6 @@ printf 'Built connection scenario: %s\n' "$connection_out"
 
 "$PB_COMPILER" "$protocol_src" --console --thread --output "$protocol_out"
 printf 'Built protocol errors scenario: %s\n' "$protocol_out"
+
+"$PB_COMPILER" "$dispatch_src" --console --thread --output "$dispatch_out"
+printf 'Built dispatch scenario: %s\n' "$dispatch_out"
