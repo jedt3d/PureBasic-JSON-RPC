@@ -1,0 +1,3 @@
+EnableExplicit
+
+XIncludeFile "stress.pbi"

@@ -27,3 +27,4 @@ Current API pages:
 - `API/020-handler-registration-lifecycle.md`
 - `API/021-handler-cancellation-tokens.md`
 - `API/022-write-queue-close-semantics.md`
+- `API/023-trace-logger-hooks.md`

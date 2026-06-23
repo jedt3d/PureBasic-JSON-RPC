@@ -25,9 +25,18 @@ Enumeration
   #JSONRPC_Connection_EventDispose
 EndEnumeration
 
+Enumeration
+  #JSONRPC_Trace_Off = 0
+  #JSONRPC_Trace_Errors
+  #JSONRPC_Trace_Headers
+  #JSONRPC_Trace_Messages
+  #JSONRPC_Trace_Verbose
+EndEnumeration
+
 #JSONRPC_Connection_DefaultTimeoutMs = 30000
 
 Prototype JSONRPC_ConnectionEventHandler(*connection, eventCode.i, detail.s)
+Prototype JSONRPC_TraceLogger(*connection, traceLevel.i, message.s)
 
 Structure JSONRPC_PendingRequest
   idText.s
@@ -75,6 +84,10 @@ Structure JSONRPC_Connection
   lastEventCode.i
   lastEventDetail.s
   eventCount.q
+  traceLevel.i
+  tracePayloads.i
+  traceLogger.JSONRPC_TraceLogger
+  traceCaptured.s
 EndStructure
 
 Declare.i JSONRPC_Connection_Init(*connection.JSONRPC_Connection, *writer.JSONRPC_Writer = 0)
@@ -95,6 +108,56 @@ Declare.s JSONRPC_Connection_GetLastEventDetail(*connection.JSONRPC_Connection)
 Declare.q JSONRPC_Connection_GetEventCount(*connection.JSONRPC_Connection)
 Declare.i JSONRPC_Connection_IsCancellationRequested(*connection.JSONRPC_Connection, idText.s)
 Declare.i JSONRPC_Connection_ClearCancellation(*connection.JSONRPC_Connection, idText.s)
+Declare JSONRPC_Trace_Set(*connection.JSONRPC_Connection, traceLevel.i, includePayloads.i = #False)
+Declare JSONRPC_Trace_SetLogger(*connection.JSONRPC_Connection, logger.JSONRPC_TraceLogger)
+Declare JSONRPC_Trace_Log(*connection.JSONRPC_Connection, traceLevel.i, message.s)
+Declare.s JSONRPC_Trace_GetCaptured(*connection.JSONRPC_Connection)
+Declare JSONRPC_Trace_Clear(*connection.JSONRPC_Connection)
+
+Procedure JSONRPC_Trace_Set(*connection.JSONRPC_Connection, traceLevel.i, includePayloads.i = #False)
+  If *connection = 0
+    ProcedureReturn
+  EndIf
+
+  *connection\traceLevel = traceLevel
+  *connection\tracePayloads = Bool(includePayloads)
+EndProcedure
+
+Procedure JSONRPC_Trace_SetLogger(*connection.JSONRPC_Connection, logger.JSONRPC_TraceLogger)
+  If *connection <> 0
+    *connection\traceLogger = logger
+  EndIf
+EndProcedure
+
+Procedure JSONRPC_Trace_Log(*connection.JSONRPC_Connection, traceLevel.i, message.s)
+  If *connection = 0 Or traceLevel <= #JSONRPC_Trace_Off Or *connection\traceLevel < traceLevel
+    ProcedureReturn
+  EndIf
+
+  If *connection\traceCaptured <> ""
+    *connection\traceCaptured + #LF$
+  EndIf
+
+  *connection\traceCaptured + message
+
+  If *connection\traceLogger <> 0
+    *connection\traceLogger(*connection, traceLevel, message)
+  EndIf
+EndProcedure
+
+Procedure.s JSONRPC_Trace_GetCaptured(*connection.JSONRPC_Connection)
+  If *connection = 0
+    ProcedureReturn ""
+  EndIf
+
+  ProcedureReturn *connection\traceCaptured
+EndProcedure
+
+Procedure JSONRPC_Trace_Clear(*connection.JSONRPC_Connection)
+  If *connection <> 0
+    *connection\traceCaptured = ""
+  EndIf
+EndProcedure
 
 Procedure JSONRPC_Connection_EmitEvent(*connection.JSONRPC_Connection, eventCode.i, detail.s)
   If *connection = 0 Or eventCode = #JSONRPC_Connection_EventNone
@@ -115,6 +178,7 @@ Procedure JSONRPC_Connection_SetError(*connection.JSONRPC_Connection, code.i, me
   *connection\lastErrorMessage = message
 
   If code <> #JSONRPC_Connection_ErrorNone
+    JSONRPC_Trace_Log(*connection, #JSONRPC_Trace_Errors, "error: " + message)
     JSONRPC_Connection_EmitEvent(*connection, #JSONRPC_Connection_EventError, message)
   EndIf
 EndProcedure
@@ -146,6 +210,10 @@ Procedure.i JSONRPC_Connection_Init(*connection.JSONRPC_Connection, *writer.JSON
   *connection\lastEventCode = #JSONRPC_Connection_EventNone
   *connection\lastEventDetail = ""
   *connection\eventCount = 0
+  *connection\traceLevel = #JSONRPC_Trace_Off
+  *connection\tracePayloads = #False
+  *connection\traceLogger = 0
+  *connection\traceCaptured = ""
   JSONRPC_Connection_SetError(*connection, #JSONRPC_Connection_ErrorNone, "")
 
   If *connection\writerMutex = 0
@@ -198,6 +266,7 @@ Procedure.i JSONRPC_Connection_QueueBody(*connection.JSONRPC_Connection, body.s)
   AddElement(*connection\writeQueue())
   *connection\writeQueue() = body
   *connection\diagnostics\queuedWrites + 1
+  JSONRPC_Trace_Log(*connection, #JSONRPC_Trace_Headers, "queued message bytes=" + Str(StringByteLength(body, #PB_UTF8)))
   JSONRPC_Connection_SetError(*connection, #JSONRPC_Connection_ErrorNone, "")
   ProcedureReturn #True
 EndProcedure
@@ -223,6 +292,12 @@ Procedure.i JSONRPC_Connection_FlushWrites(*connection.JSONRPC_Connection)
 
   While FirstElement(*connection\writeQueue())
     If JSONRPC_Writer_Write(*connection\writer, *connection\writeQueue())
+      If *connection\tracePayloads
+        JSONRPC_Trace_Log(*connection, #JSONRPC_Trace_Messages, "sent: " + *connection\writeQueue())
+      Else
+        JSONRPC_Trace_Log(*connection, #JSONRPC_Trace_Messages, "sent message bytes=" + Str(StringByteLength(*connection\writeQueue(), #PB_UTF8)))
+      EndIf
+
       *connection\diagnostics\sentMessages + 1
       DeleteElement(*connection\writeQueue())
     Else

@@ -27,6 +27,7 @@ Current pages:
 - [020 Handler Registration Lifecycle](020-handler-registration-lifecycle.md)
 - [021 Handler Cancellation Tokens](021-handler-cancellation-tokens.md)
 - [022 Write Queue Close Semantics](022-write-queue-close-semantics.md)
+- [023 Trace Logger Hooks](023-trace-logger-hooks.md)
 
 Future API pages should document:
 
