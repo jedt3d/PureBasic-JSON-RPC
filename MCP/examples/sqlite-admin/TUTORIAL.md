@@ -362,6 +362,257 @@ spreadsheet applications can import it. XLSX is still valuable, but it asks us
 to build a larger packaging and relationship model correctly, so it comes after
 the ODS path is proven by builds and tests.
 
+## 11B. Export The Same Query To Multiple Formats
+
+In real administration work, export is rarely a single-file decision. You may
+want a strict CSV for another script, an ODS spreadsheet for a colleague, and a
+saved SQL recipe so the export can be repeated next week. The important habit is
+to keep the SQL stable and change only the export format and output path.
+
+Think about the export as three layers:
+
+```text
+SQL query
+  -> one reviewed SELECT statement
+  -> bounded by maxRows
+  -> exported into one or more file formats
+```
+
+The `sqlite/export` tool intentionally uses the same input shape for both CSV
+and ODS:
+
+```json
+{
+  "dbPath": "demo.sqlite",
+  "sql": "SELECT id, locale, title FROM admin_notes ORDER BY id",
+  "outputPath": "exports/admin-notes.csv",
+  "format": "csv",
+  "maxRows": 5000,
+  "overwrite": true
+}
+```
+
+Only two fields usually change between formats:
+
+- `format`, such as `csv` or `ods`;
+- `outputPath`, whose extension must match the selected format.
+
+That design matters when an AI model is helping you. You can ask the model to
+prepare one query, review that query, and then ask it to export the exact same
+query twice. If the CSV and ODS were produced from different SQL strings, later
+comparison becomes noisy and trust goes down.
+
+### Step 1: Preview The Query
+
+Before exporting, run the query through `sqlite/query` with a small `maxRows`.
+This is the moment to catch missing filters, surprising sort order, or columns
+that should not leave the database.
+
+```json
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/query","arguments":{"dbPath":"demo.sqlite","sql":"SELECT id, locale, title FROM admin_notes ORDER BY id","maxRows":5}},"id":52}
+```
+
+Read the returned columns and the first few rows. For sensitive data, this is
+also where you remove private columns before generating files.
+
+### Step 2: Export CSV For Interchange
+
+CSV is the right first export when another program, shell script, database
+loader, or spreadsheet import flow needs plain text.
+
+```json
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/export","arguments":{"dbPath":"demo.sqlite","sql":"SELECT id, locale, title FROM admin_notes ORDER BY id","outputPath":"exports/admin-notes.csv","format":"csv","maxRows":5000,"overwrite":true}},"id":53}
+```
+
+The response text should include:
+
+```json
+{
+  "format": "csv",
+  "encoding": "UTF-8 with BOM",
+  "quotedFields": true,
+  "lineEnding": "CRLF",
+  "exportedRows": 4,
+  "truncated": false
+}
+```
+
+Those fields are not decoration. They are the contract. Every field is quoted,
+embedded quotes are doubled, multilingual text remains UTF-8, and row endings
+are predictable for spreadsheet tools.
+
+To inspect the result on macOS:
+
+```sh
+sed -n '1,5p' .local/sqlite-admin/exports/admin-notes.csv
+```
+
+You should see a header row followed by data rows. The fields will be wrapped in
+double quotes even when quoting was not strictly necessary.
+
+### Step 3: Export ODS For Spreadsheet Users
+
+ODS is better when the receiver expects a spreadsheet document rather than a
+text file. It is also easier to hand to someone using LibreOffice or OpenOffice,
+because the file already has a spreadsheet package structure.
+
+```json
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/export","arguments":{"dbPath":"demo.sqlite","sql":"SELECT id, locale, title FROM admin_notes ORDER BY id","outputPath":"exports/admin-notes.ods","format":"ods","maxRows":5000,"overwrite":true}},"id":54}
+```
+
+The response text should include:
+
+```json
+{
+  "format": "ods",
+  "mediaType": "application/vnd.oasis.opendocument.spreadsheet",
+  "encoding": "UTF-8 XML",
+  "sheet": "QueryResult",
+  "stringCells": true,
+  "exportedRows": 4,
+  "truncated": false
+}
+```
+
+The first ODS implementation writes every value as a string cell. That is
+intentional. Administration exports should preserve what SQLite returned rather
+than guessing which values are dates, numbers, identifiers, formulas, or text.
+Later versions can add typed cells, but the safe v1 behavior is exact text.
+
+To inspect the ODS package without opening a spreadsheet app:
+
+```sh
+unzip -l .local/sqlite-admin/exports/admin-notes.ods
+unzip -p .local/sqlite-admin/exports/admin-notes.ods mimetype
+unzip -p .local/sqlite-admin/exports/admin-notes.ods content.xml | sed -n '1,8p'
+```
+
+The package should contain:
+
+```text
+mimetype
+META-INF/manifest.xml
+content.xml
+styles.xml
+meta.xml
+```
+
+The `mimetype` content should be exactly:
+
+```text
+application/vnd.oasis.opendocument.spreadsheet
+```
+
+### Step 4: Compare The Two Exports
+
+CSV and ODS are different containers, so you do not compare the files byte for
+byte. Compare their intent:
+
+```text
+same SQL
+same maxRows
+same exportedRows
+same truncated flag
+same visible columns
+same row order
+```
+
+If `exportedRows` differs, check that both calls used the same SQL and the same
+`maxRows`. If one response says `truncated: true`, treat the export as a sample,
+not a complete extract.
+
+A useful naming convention is:
+
+```text
+exports/<topic>-<date>.csv
+exports/<topic>-<date>.ods
+```
+
+For example:
+
+```text
+exports/admin-notes-2026-06-23.csv
+exports/admin-notes-2026-06-23.ods
+```
+
+The server does not create dates in filenames for you. Ask the MCP client or
+your own workflow to choose names that make sense for audit and handoff.
+
+### Step 5: Save The Export Query As A Recipe
+
+Once an export query is useful, save it. Recipes keep the SQL close to the
+database and make repeated exports less error-prone.
+
+```json
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/recipe/save","arguments":{"dbPath":"demo.sqlite","name":"export-admin-notes","description":"Export admin note summary columns in stable order","category":"exports","sql":"SELECT id, locale, title FROM admin_notes ORDER BY id","parameterNotes":"No parameters"}},"id":55}
+```
+
+Later, you can run the recipe to preview the rows:
+
+```json
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/recipe/run","arguments":{"dbPath":"demo.sqlite","name":"export-admin-notes","maxRows":5}},"id":56}
+```
+
+The current `sqlite/export` tool accepts raw SQL, not a recipe name. The
+practical pattern is:
+
+```text
+save recipe -> run recipe for preview -> copy reviewed SQL into sqlite/export
+```
+
+That keeps export mechanics simple while still giving you a catalog of reviewed
+queries.
+
+### Choosing The Format
+
+Use this quick decision table:
+
+| Need | Prefer | Why |
+| --- | --- | --- |
+| Import into another program | CSV | Plain text, easy to parse, stable quoting |
+| Open in LibreOffice or OpenOffice | ODS | Native spreadsheet package |
+| Send a human-readable spreadsheet | ODS | Fewer import prompts than CSV |
+| Inspect in a terminal | CSV | Works with `sed`, `head`, `awk`, and scripts |
+| Preserve exact returned text | CSV or ODS | Both formats write SQLite values as text |
+| Excel-native workbook features | Future XLSX | Not implemented yet |
+
+When you are unsure, export both CSV and ODS from the same reviewed SQL. CSV is
+the audit-friendly interchange artifact; ODS is the spreadsheet-friendly
+artifact.
+
+### Common Mistakes
+
+The export tool rejects several mistakes before writing files:
+
+- `format: "ods"` with an output path ending in `.csv`;
+- `format: "csv"` with an output path ending in `.ods`;
+- paths that try to escape the allowed SQLite root;
+- overwriting an existing file without `overwrite: true`;
+- invalid JSON argument types, such as a string where `maxRows` should be an
+  integer.
+
+SQLite errors, such as a misspelled table name, are returned as MCP tool results
+with `isError: true`. Argument errors, such as a mismatched extension, are
+returned as JSON-RPC invalid params errors. That distinction is useful when you
+are debugging an MCP client: invalid params means the tool call shape is wrong;
+`isError: true` means the call shape was accepted but the database/export work
+failed.
+
+### A Good Client Prompt
+
+When using an MCP host with this server, give the model a precise export task:
+
+```text
+Inspect demo.sqlite, prepare a SELECT query for admin note id, locale, and
+title ordered by id, show me the query for review, then export the same reviewed
+query to exports/admin-notes.csv and exports/admin-notes.ods with maxRows 5000.
+Do not run sqlite/execute.
+```
+
+That prompt asks for review before export, fixes the output formats, and blocks
+write SQL. It is the kind of instruction that keeps an AI-assisted database
+session calm and auditable.
+
 ## 12. Run Write SQL Intentionally
 
 Use `sqlite/execute` for non-row SQL:
