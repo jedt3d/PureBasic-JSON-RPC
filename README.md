@@ -44,6 +44,7 @@ Create the local alpha source package:
 ## Repository Layout
 
 - `AGENTS.md` - required guidance for AI agents and contributors.
+- `LICENSE` - MIT license for the source package.
 - `API/` - public API documentation in Markdown.
 - `docs/` - Read the Docs/Sphinx entrypoint.
 - `examples/` - sequential scenario applications, one folder per milestone.

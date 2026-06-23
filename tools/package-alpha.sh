@@ -43,6 +43,7 @@ rm -rf "$stage"
 mkdir -p "$stage" "$dist_root"
 
 copy_required_path "README.md"
+copy_required_path "LICENSE"
 copy_required_path "GUIDELINE.md"
 copy_required_path "AGENTS.md"
 copy_required_path "MILESTONES.md"
