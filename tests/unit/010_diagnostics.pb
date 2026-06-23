@@ -75,7 +75,7 @@ ProcedureUnit DiagnosticsResetClearsCounters()
   JSONRPC_Diagnostics_Copy(@connection, @snapshot)
 
   Assert(snapshot\sentMessages = 0, "Reset should clear sent messages.")
-  AssertString(JSONRPC_Diagnostics_Summary(@connection), ~"{\"receivedMessages\":0,\"sentMessages\":0,\"errors\":0,\"timeouts\":0,\"orphanResponses\":0,\"batches\":0,\"cancellations\":0}", "Summary should be compact JSON.")
+  AssertString(JSONRPC_Diagnostics_Summary(@connection), ~"{\"receivedMessages\":0,\"sentMessages\":0,\"errors\":0,\"timeouts\":0,\"orphanResponses\":0,\"batches\":0,\"cancellations\":0,\"queuedWrites\":0,\"writeFailures\":0}", "Summary should be compact JSON.")
 
   JSONRPC_Connection_Close(@connection)
 EndProcedureUnit

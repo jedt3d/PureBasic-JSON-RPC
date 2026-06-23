@@ -26,6 +26,7 @@ Current pages:
 - [019 Connection Events](019-connection-events.md)
 - [020 Handler Registration Lifecycle](020-handler-registration-lifecycle.md)
 - [021 Handler Cancellation Tokens](021-handler-cancellation-tokens.md)
+- [022 Write Queue Close Semantics](022-write-queue-close-semantics.md)
 
 Future API pages should document:
 
