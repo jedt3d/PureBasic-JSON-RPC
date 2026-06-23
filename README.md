@@ -10,6 +10,12 @@ The implementation is guided by:
 - the architecture of Microsoft's `vscode-jsonrpc`
 - the PureBasic 6.40 compiler and SDK PureUnit runner
 
+## Target Implementation
+
+The primary target for this library is future MCP server development in the PureBasic programming language.
+
+The implementation should stay general-purpose enough for other JSON-RPC 2.0 use cases, but MCP server development is the main product context that should guide API shape, examples, tests, and documentation.
+
 ## Current Milestone
 
 The first milestone is `000-project-foundation`. It establishes the AI/contributor harness, PureBasic discovery, PureUnit execution, example application convention, documentation layout, and quality gates before protocol implementation begins.
@@ -44,4 +50,3 @@ Or run the full local check:
 - PureBasic `6.40`
 - PureUnit from the PureBasic SDK
 - macOS ARM64 is verified by this first milestone; x64 compatibility remains a required design target for later milestones.
-
