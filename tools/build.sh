@@ -72,7 +72,17 @@ mcp_tools_call_src="$ROOT/examples/015-mcp-tools-call/mcp_tools_call_probe.pb"
 mcp_tools_call_out_dir="$ROOT/.build/examples/015-mcp-tools-call"
 mcp_tools_call_out="$mcp_tools_call_out_dir/mcp_tools_call_probe"
 
-mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir" "$outbound_out_dir" "$timeout_out_dir" "$batch_out_dir" "$cancel_out_dir" "$diagnostics_out_dir" "$stress_out_dir" "$stdio_runtime_out_dir" "$mcp_lifecycle_out_dir" "$mcp_tools_list_out_dir" "$mcp_tools_call_out_dir"
+package_src="$ROOT/examples/016-packaging-docs/package_probe.pb"
+package_console_src="$ROOT/examples/016-packaging-docs/console_template.pb"
+package_shared_src="$ROOT/examples/016-packaging-docs/shared_library_template.pb"
+package_app_src="$ROOT/examples/016-packaging-docs/app_template.pb"
+package_out_dir="$ROOT/.build/examples/016-packaging-docs"
+package_out="$package_out_dir/package_probe"
+package_console_out="$package_out_dir/console_template"
+package_shared_out="$package_out_dir/shared_library_template.dylib"
+package_app_out="$package_out_dir/app_template"
+
+mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir" "$outbound_out_dir" "$timeout_out_dir" "$batch_out_dir" "$cancel_out_dir" "$diagnostics_out_dir" "$stress_out_dir" "$stdio_runtime_out_dir" "$mcp_lifecycle_out_dir" "$mcp_tools_list_out_dir" "$mcp_tools_call_out_dir" "$package_out_dir"
 
 "$PB_COMPILER" "$foundation_src" --console --thread --output "$foundation_out"
 printf 'Built console scenario: %s\n' "$foundation_out"
@@ -121,3 +131,15 @@ printf 'Built MCP tools list scenario: %s\n' "$mcp_tools_list_out"
 
 "$PB_COMPILER" "$mcp_tools_call_src" --console --thread --output "$mcp_tools_call_out"
 printf 'Built MCP tools call scenario: %s\n' "$mcp_tools_call_out"
+
+"$PB_COMPILER" "$package_src" --console --thread --output "$package_out"
+printf 'Built packaging docs scenario: %s\n' "$package_out"
+
+"$PB_COMPILER" "$package_console_src" --console --thread --output "$package_console_out"
+printf 'Built console template: %s\n' "$package_console_out"
+
+"$PB_COMPILER" "$package_shared_src" --dylib "$package_shared_out" --thread
+printf 'Built shared library template: %s\n' "$package_shared_out"
+
+"$PB_COMPILER" "$package_app_src" --thread --output "$package_app_out"
+printf 'Built app template: %s\n' "$package_app_out"
