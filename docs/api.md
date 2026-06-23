@@ -29,3 +29,4 @@ Current API pages:
 - `API/022-write-queue-close-semantics.md`
 - `API/023-trace-logger-hooks.md`
 - `API/024-compliance-suite.md`
+- `API/025-public-api-review.md`

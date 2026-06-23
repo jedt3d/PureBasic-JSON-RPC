@@ -29,6 +29,7 @@ Current pages:
 - [022 Write Queue Close Semantics](022-write-queue-close-semantics.md)
 - [023 Trace Logger Hooks](023-trace-logger-hooks.md)
 - [024 Compliance Suite](024-compliance-suite.md)
+- [025 Public API Review](025-public-api-review.md)
 
 Future API pages should document:
 

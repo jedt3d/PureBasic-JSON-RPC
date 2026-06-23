@@ -18,7 +18,7 @@ The implementation should stay general-purpose enough for other JSON-RPC 2.0 use
 
 ## Current Milestone
 
-The first milestone is `000-project-foundation`. It establishes the AI/contributor harness, PureBasic discovery, PureUnit execution, example application convention, documentation layout, and quality gates before protocol implementation begins.
+The current alpha target is `0.1.0-alpha.1`, with generic JSON-RPC foundation work completed through round `025-public-api-review`.
 
 ## Quick Start
 
