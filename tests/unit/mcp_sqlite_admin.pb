@@ -360,6 +360,98 @@ ProcedureUnit SQLiteAdminOdsExportRespectsOverwriteRowLimitAndExtension()
   Assert(FindString(response, ~"\"code\":-32602", 1) > 0, "ODS export should require an .ods outputPath.")
 EndProcedureUnit
 
+ProcedureUnit SQLiteAdminXlsxExportWritesOpenXmlPackage()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected dbName.s
+  Protected outputName.s
+  Protected outputPath.s
+  Protected response.s
+  Protected sql.s
+  Protected contentTypes.s
+  Protected rootRels.s
+  Protected workbook.s
+  Protected workbookRels.s
+  Protected sheet.s
+
+  SQLiteAdmin_Prepare(@dispatcher, @registry)
+  dbName = SQLiteAdmin_TestDb("xlsx")
+  outputName = "exports/" + dbName + ".xlsx"
+  outputPath = SQLiteAdmin_TestRoot() + outputName
+  SQLiteAdmin_Bootstrap(@dispatcher, dbName)
+
+  sql = "SELECT id, locale, title, body FROM admin_notes ORDER BY id"
+  response = SQLiteAdmin_Call(@dispatcher, "sqlite/export", SQLiteAdmin_ExportArgsWithFormat(dbName, sql, outputName, "xlsx", 10, #True), 129)
+  Assert(FindString(response, ~"\"isError\":false", 1) > 0, "XLSX export should succeed: " + response)
+  Assert(FindString(response, ~"\\\"format\\\":\\\"xlsx", 1) > 0, "XLSX export should report xlsx format.")
+  Assert(FindString(response, ~"\\\"mediaType\\\":\\\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 1) > 0, "XLSX export should report the spreadsheet media type.")
+  Assert(FindString(response, ~"\\\"macroFree\\\":true", 1) > 0, "XLSX export should report macro-free output.")
+  Assert(FileSize(outputPath) > 0, "XLSX export file should exist.")
+
+  Assert(SQLiteAdmin_FirstPackEntry(outputPath) = "[Content_Types].xml", "XLSX package should place content types first.")
+  contentTypes = SQLiteAdmin_ReadPackEntry(outputPath, "[Content_Types].xml")
+  Assert(FindString(contentTypes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml", 1) > 0, "XLSX content types should describe workbook part.")
+  Assert(FindString(contentTypes, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml", 1) > 0, "XLSX content types should describe worksheet part.")
+
+  rootRels = SQLiteAdmin_ReadPackEntry(outputPath, "_rels/.rels")
+  Assert(FindString(rootRels, "officeDocument", 1) > 0, "XLSX root relationships should point at the workbook.")
+
+  workbook = SQLiteAdmin_ReadPackEntry(outputPath, "xl/workbook.xml")
+  Assert(FindString(workbook, ~"name=\"QueryResult\"", 1) > 0, "XLSX workbook should name the sheet.")
+  Assert(FindString(workbook, ~"r:id=\"rId1\"", 1) > 0, "XLSX workbook should bind sheet relationship.")
+
+  workbookRels = SQLiteAdmin_ReadPackEntry(outputPath, "xl/_rels/workbook.xml.rels")
+  Assert(FindString(workbookRels, "worksheets/sheet1.xml", 1) > 0, "XLSX workbook relationships should include sheet1.")
+  Assert(FindString(workbookRels, "styles.xml", 1) > 0, "XLSX workbook relationships should include styles.")
+
+  sheet = SQLiteAdmin_ReadPackEntry(outputPath, "xl/worksheets/sheet1.xml")
+  Assert(FindString(sheet, ~"<c r=\"A1\" t=\"inlineStr\"", 1) > 0, "XLSX worksheet should use inline string cells.")
+  Assert(FindString(sheet, "<t xml:space=" + #DQUOTE$ + "preserve" + #DQUOTE$ + ">id</t>", 1) > 0, "XLSX worksheet should include column headers.")
+  Assert(FindString(sheet, MCP_SQLiteAdmin_ThaiHello(), 1) > 0, "XLSX worksheet should preserve Thai UTF-8 text.")
+  Assert(FindString(sheet, MCP_SQLiteAdmin_JapaneseHello(), 1) > 0, "XLSX worksheet should preserve Japanese UTF-8 text.")
+  Assert(FindString(sheet, MCP_SQLiteAdmin_FrenchResume(), 1) > 0, "XLSX worksheet should preserve accented UTF-8 text.")
+EndProcedureUnit
+
+ProcedureUnit SQLiteAdminXlsxExportEscapesAndRespectsOverwriteRowLimitAndExtension()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected dbName.s
+  Protected outputName.s
+  Protected outputPath.s
+  Protected response.s
+  Protected sql.s
+  Protected sheet.s
+
+  SQLiteAdmin_Prepare(@dispatcher, @registry)
+  dbName = SQLiteAdmin_TestDb("xlsx-limit")
+  outputName = "exports/" + dbName + ".xlsx"
+  outputPath = SQLiteAdmin_TestRoot() + outputName
+  SQLiteAdmin_Bootstrap(@dispatcher, dbName)
+
+  response = SQLiteAdmin_Call(@dispatcher, "sqlite/execute", SQLiteAdmin_ExecuteArgs(dbName, "CREATE TABLE xlsx_items (id INTEGER PRIMARY KEY, note TEXT)"), 130)
+  Assert(FindString(response, ~"\"isError\":false", 1) > 0, "XLSX setup table should be created.")
+  response = SQLiteAdmin_Call(@dispatcher, "sqlite/execute", SQLiteAdmin_ExecuteArgs(dbName, "INSERT INTO xlsx_items(id,note) VALUES (1,'<tag & " + #DQUOTE$ + "quote" + #DQUOTE$ + ">')"), 131)
+  Assert(FindString(response, ~"\"isError\":false", 1) > 0, "XLSX XML-sensitive row should insert.")
+  response = SQLiteAdmin_Call(@dispatcher, "sqlite/execute", SQLiteAdmin_ExecuteArgs(dbName, "INSERT INTO xlsx_items(id,note) VALUES (2,'second row')"), 132)
+  Assert(FindString(response, ~"\"isError\":false", 1) > 0, "XLSX second row should insert.")
+
+  sql = "SELECT id, note FROM xlsx_items ORDER BY id"
+  response = SQLiteAdmin_Call(@dispatcher, "sqlite/export", SQLiteAdmin_ExportArgsWithFormat(dbName, sql, outputName, "xlsx", 1, #True), 133)
+  Assert(FindString(response, ~"\"isError\":false", 1) > 0, "Limited XLSX export should succeed.")
+  Assert(FindString(response, ~"\\\"exportedRows\\\":1", 1) > 0, "XLSX export should report exported row count.")
+  Assert(FindString(response, ~"\\\"truncated\\\":true", 1) > 0, "XLSX export should report truncation.")
+
+  sheet = SQLiteAdmin_ReadPackEntry(outputPath, "xl/worksheets/sheet1.xml")
+  Assert(FindString(sheet, "&lt;tag &amp; &quot;quote&quot;&gt;", 1) > 0, "XLSX worksheet should XML-escape text values.")
+  Assert(FindString(sheet, "second row", 1) = 0, "Limited XLSX should omit rows beyond maxRows.")
+
+  response = SQLiteAdmin_Call(@dispatcher, "sqlite/export", SQLiteAdmin_ExportArgsWithFormat(dbName, sql, outputName, "xlsx", 1, #False), 134)
+  Assert(FindString(response, ~"\"isError\":true", 1) > 0, "XLSX export should not overwrite without overwrite=true.")
+
+  response = SQLiteAdmin_Call(@dispatcher, "sqlite/export", SQLiteAdmin_ExportArgsWithFormat(dbName, sql, "exports/not-xlsx.txt", "xlsx", 1, #True), 135)
+  Assert(FindString(response, ~"\"code\":-32602", 1) > 0, "XLSX export should require an .xlsx outputPath.")
+EndProcedureUnit
+
 ProcedureUnit SQLiteAdminExecuteCanWriteData()
   Protected dispatcher.JSONRPC_Dispatcher
   Protected registry.MCP_ToolRegistry
