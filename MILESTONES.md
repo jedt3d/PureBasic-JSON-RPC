@@ -39,6 +39,7 @@ Acceptance criteria:
 14. MCP lifecycle adapter. Completed in `feature/013-mcp-lifecycle`.
 15. MCP tools registry. Completed in `feature/014-mcp-tools-registry`.
 16. MCP tools call. Completed in `feature/015-mcp-tools-call`.
+17. Packaging and ReadTheDocs pass. Completed in `feature/016-packaging-docs`.
 
 ## 001-framing
 
@@ -289,4 +290,21 @@ Acceptance criteria:
 
 - PureUnit covers successful tool call, unknown tool, invalid arguments, and tool execution error result.
 - `examples/015-mcp-tools-call/mcp_tools_call_probe.pb` builds and runs.
+- `./tools/check.sh` passes.
+
+## 016-packaging-docs
+
+Branch: `feature/016-packaging-docs`
+
+Purpose:
+
+- Add consolidated include `src/jsonrpc/jsonrpc.pbi`.
+- Add console, shared library, and app compile templates.
+- Add ReadTheDocs navigation to the API index.
+
+Acceptance criteria:
+
+- PureUnit covers consolidated include exposure.
+- `examples/016-packaging-docs/package_probe.pb` builds and runs.
+- Console, shared library, and app templates compile.
 - `./tools/check.sh` passes.
