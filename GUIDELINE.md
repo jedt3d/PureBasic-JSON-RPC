@@ -41,6 +41,7 @@ The important point is that JSON-RPC defines the message shape, not the transpor
 * Use JSON-RPC 2.0 error objects consistently.
 * Keep JSON parsing and freeing localized so memory ownership is obvious.
 * Make concurrency explicit with queues, mutexes, worker threads, and cooperative cancellation.
+* Keep buildable scenario and MCP example applications controlled by committed PureBasic project files (`.pbp`) so target type is explicit and reproducible.
 
 ### Non-goals
 
@@ -50,6 +51,7 @@ The important point is that JSON-RPC defines the message shape, not the transpor
 * Do not forcibly terminate worker threads for cancellation.
 * Do not assume a single read operation contains a complete message.
 * Do not optimize for benchmark numbers before correctness and leak safety are proven.
+* Do not make raw compiler flags the only record of whether a target is console, shared-library, or executable/application.
 
 ### CTO view
 

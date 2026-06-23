@@ -24,6 +24,7 @@ The current alpha target is `0.1.0-alpha.1`, with generic JSON-RPC foundation wo
 
 ```sh
 ./tools/discover-purebasic.sh
+./tools/verify-projects.sh
 ./tools/test.sh
 ./tools/build.sh
 ./.build/examples/000-project-foundation/console_probe
@@ -52,6 +53,10 @@ Create the local alpha source package:
 - `src/jsonrpc/` - future library source.
 - `tests/unit/` - PureUnit tests close to the library workflow.
 - `tools/` - local discovery, build, test, and verification scripts.
+
+## PureBasic Project Files
+
+Every buildable scenario or MCP example has a committed `.pbp` project file. These files are the source of truth for target type: console application, GUI executable/application, or shared library. The harness verifies them with `./tools/verify-projects.sh` and builds them through `PureBasic --build`.
 
 ## Required Toolchain
 

@@ -8,6 +8,7 @@ The public API documentation currently lives in the top-level `API/` folder so i
 :maxdepth: 2
 
 harness
+purebasic-project-files
 api
 api-stability
 jsonrpc-foundation-gap-plan

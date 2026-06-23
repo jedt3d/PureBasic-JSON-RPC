@@ -45,7 +45,7 @@ The agent must understand that PureBasic can compile into different target types
 - macOS application / Windows `.exe`
 - Shared library
 
-Because this project is a library, the build system and examples should make those distinctions explicit.
+Because this project is a library, the build system and examples should make those distinctions explicit through committed PureBasic project files (`.pbp`). Scenario and MCP example project files are the source of truth for target type, source file, output path, thread mode, and current CPU target.
 
 ## Development Workflow
 
@@ -59,10 +59,11 @@ Each feature must be developed as a small milestone using this cycle:
 6. Keep the library code and unit tests close together in the same relevant source area.
 7. Create a separate example/testing application for the scenario.
 8. Place each scenario app in a sequentially numbered folder, preferably matching the feature branch name.
-9. Review the code for security, memory leaks, readability, and maintainability.
-10. Fix issues found during review.
-11. Create or update official API documentation in the `API/` folder as Markdown.
-12. Ensure documentation is structured so it can later be compiled by Read the Docs.
+9. Add or update the scenario's `.pbp` project target.
+10. Review the code for security, memory leaks, readability, and maintainability.
+11. Fix issues found during review.
+12. Create or update official API documentation in the `API/` folder as Markdown.
+13. Ensure documentation is structured so it can later be compiled by Read the Docs.
 
 ## Quality Requirements
 

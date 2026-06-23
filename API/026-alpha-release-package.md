@@ -35,4 +35,4 @@ Generated build directories such as `.build/`, `.local/`, and `.reports/` are no
 
 ## Verification
 
-`tools/check.sh` now runs the alpha release probe and package script after PureUnit tests and scenario builds.
+`tools/check.sh` now verifies PureBasic `.pbp` project metadata, runs the alpha release probe, and runs the package script after PureUnit tests and scenario builds.

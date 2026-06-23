@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 6.40">
+  <section name="targets">
+    <target name="package_probe" enabled="1" default="1">
+      <inputfile value="package_probe.pb"/>
+      <outputfile value="../../.build/examples/016-packaging-docs/package_probe"/>
+      <executable value="../../.build/examples/016-packaging-docs/package_probe"/>
+      <options thread="1" dpiaware="1" optimizer="0"/>
+      <compiler version="PureBasic 6.40 - C Backend (MacOS X - arm64)"/>
+      <format exe="console" cpu="1"/>
+    </target>
+    <target name="console_template" enabled="1" default="0">
+      <inputfile value="console_template.pb"/>
+      <outputfile value="../../.build/examples/016-packaging-docs/console_template"/>
+      <executable value="../../.build/examples/016-packaging-docs/console_template"/>
+      <options thread="1" dpiaware="1" optimizer="0"/>
+      <compiler version="PureBasic 6.40 - C Backend (MacOS X - arm64)"/>
+      <format exe="console" cpu="1"/>
+    </target>
+    <target name="shared_library_template" enabled="1" default="0">
+      <inputfile value="shared_library_template.pb"/>
+      <outputfile value="../../.build/examples/016-packaging-docs/shared_library_template.dylib"/>
+      <executable value="../../.build/examples/016-packaging-docs/shared_library_template.dylib"/>
+      <options thread="1" dpiaware="1" optimizer="0"/>
+      <compiler version="PureBasic 6.40 - C Backend (MacOS X - arm64)"/>
+      <format exe="shared" cpu="1"/>
+    </target>
+    <target name="app_template" enabled="1" default="0">
+      <inputfile value="app_template.pb"/>
+      <outputfile value="../../.build/examples/016-packaging-docs/app_template"/>
+      <executable value="../../.build/examples/016-packaging-docs/app_template"/>
+      <options thread="1" dpiaware="1" optimizer="0"/>
+      <compiler version="PureBasic 6.40 - C Backend (MacOS X - arm64)"/>
+      <format exe="executable" cpu="1"/>
+    </target>
+  </section>
+  <section name="files">
+    <file name="app_template.pb"/>
+    <file name="console_template.pb"/>
+    <file name="package_probe.pb"/>
+    <file name="shared_library_template.pb"/>
+  </section>
+</project>

@@ -12,13 +12,15 @@ Purpose:
 - Add build, test, and check scripts.
 - Add the first PureUnit smoke test.
 - Add the first scenario console application.
+- Add committed `.pbp` project metadata for buildable scenario targets.
 - Add API and Read the Docs scaffolding.
 
 Acceptance criteria:
 
 - `./tools/discover-purebasic.sh` detects PureBasic 6.40 and PureUnit.
 - `./tools/test.sh` runs the PureUnit smoke test.
-- `./tools/build.sh` builds `examples/000-project-foundation/console_probe.pb`.
+- `./tools/verify-projects.sh` verifies `.pbp` target metadata.
+- `./tools/build.sh` builds scenario targets through their `.pbp` files.
 - `./tools/check.sh` performs discovery, tests, build, and runs the example.
 
 ## Planned Build Order

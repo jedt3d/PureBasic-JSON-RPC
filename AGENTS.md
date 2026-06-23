@@ -34,10 +34,11 @@ Every feature milestone must follow this cycle:
 4. Add PureUnit tests before or alongside implementation.
 5. Keep library code and tests close to the relevant source area.
 6. Create a sequential example folder under `examples/NNN-short-slug/`.
-7. Review security, memory lifecycle, and readability before closing the milestone.
-8. Update Markdown API documentation under `API/`.
-9. Run `./tools/check.sh`.
-10. Summarize verification results and any remaining risk.
+7. Add or update the folder's `.pbp` project file so target type, input file, output path, thread mode, and CPU target are explicit.
+8. Review security, memory lifecycle, and readability before closing the milestone.
+9. Update Markdown API documentation under `API/`.
+10. Run `./tools/check.sh`.
+11. Summarize verification results and any remaining risk.
 
 ## Local Harness
 
@@ -45,6 +46,7 @@ Use the repository scripts instead of hard-coding local paths in feature work:
 
 ```sh
 ./tools/discover-purebasic.sh
+./tools/verify-projects.sh
 ./tools/test.sh
 ./tools/build.sh
 ./tools/check.sh
@@ -52,11 +54,13 @@ Use the repository scripts instead of hard-coding local paths in feature work:
 
 The discovery script creates ignored project-local homes under `.local/` and records the detected PureBasic and PureUnit paths. Generated files under `.local/`, `.build/`, and `.reports/` must not be committed.
 
+PureBasic project files (`.pbp`) are committed source-of-truth build metadata for scenario and MCP example applications. The harness builds project targets through the PureBasic IDE command-line builder (`PureBasic --build ... --target ...`) so Console, GUI executable, and shared-library target types are controlled in one place. Do not replace `.pbp` project targets with ad hoc compiler flags in `tools/build.sh`.
+
 ## PureBasic Rules
 
 - Use `EnableExplicit` in new PureBasic files.
 - Use compiler constants to guard platform-specific code.
-- Treat console applications, GUI applications, and shared libraries as separate build targets.
+- Treat console applications, GUI applications, and shared libraries as separate `.pbp` build targets.
 - For library modules, prefer include files (`.pbi`) and small testable procedures.
 - Every `ParseJSON()` or `CreateJSON()` ownership path must have a matching `FreeJSON()` when a handle is no longer needed.
 - Use bounded buffers for stream framing and document maximum sizes.

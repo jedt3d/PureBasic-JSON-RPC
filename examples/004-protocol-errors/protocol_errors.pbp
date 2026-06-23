@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 6.40">
+  <section name="targets">
+    <target name="spec_examples_probe" enabled="1" default="1">
+      <inputfile value="spec_examples_probe.pb"/>
+      <outputfile value="../../.build/examples/004-protocol-errors/spec_examples_probe"/>
+      <executable value="../../.build/examples/004-protocol-errors/spec_examples_probe"/>
+      <options thread="1" dpiaware="1" optimizer="0"/>
+      <compiler version="PureBasic 6.40 - C Backend (MacOS X - arm64)"/>
+      <format exe="console" cpu="1"/>
+    </target>
+  </section>
+  <section name="files">
+    <file name="spec_examples_probe.pb"/>
+  </section>
+</project>
