@@ -12,6 +12,7 @@ Current pages:
 - [005 Dispatch](005-dispatch.md)
 - [006 Outbound Requests](006-outbound-requests.md)
 - [007 Timeout Housekeeping](007-timeout-housekeeping.md)
+- [008 Batch Handling](008-batch-handling.md)
 
 Future API pages should document:
 

@@ -40,7 +40,11 @@ timeout_src="$ROOT/examples/007-timeout-housekeeping/timeout_probe.pb"
 timeout_out_dir="$ROOT/.build/examples/007-timeout-housekeeping"
 timeout_out="$timeout_out_dir/timeout_probe"
 
-mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir" "$outbound_out_dir" "$timeout_out_dir"
+batch_src="$ROOT/examples/008-batch-handling/batch_probe.pb"
+batch_out_dir="$ROOT/.build/examples/008-batch-handling"
+batch_out="$batch_out_dir/batch_probe"
+
+mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir" "$outbound_out_dir" "$timeout_out_dir" "$batch_out_dir"
 
 "$PB_COMPILER" "$foundation_src" --console --thread --output "$foundation_out"
 printf 'Built console scenario: %s\n' "$foundation_out"
@@ -65,3 +69,6 @@ printf 'Built outbound requests scenario: %s\n' "$outbound_out"
 
 "$PB_COMPILER" "$timeout_src" --console --thread --output "$timeout_out"
 printf 'Built timeout housekeeping scenario: %s\n' "$timeout_out"
+
+"$PB_COMPILER" "$batch_src" --console --thread --output "$batch_out"
+printf 'Built batch handling scenario: %s\n' "$batch_out"
