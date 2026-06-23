@@ -23,6 +23,7 @@ Current pages:
 - [016 Packaging And ReadTheDocs](016-packaging-docs.md)
 - [017 Reader Writer Interfaces](017-reader-writer-interfaces.md)
 - [018 Byte Buffer Framing](018-byte-buffer-framing.md)
+- [019 Connection Events](019-connection-events.md)
 
 Future API pages should document:
 

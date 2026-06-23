@@ -92,6 +92,7 @@ Procedure.i JSONRPC_Connection_MatchResponse(*connection.JSONRPC_Connection, bod
 
   If FindMapElement(*connection\pending(), inspect\idText) = #False
     JSONRPC_Connection_SetError(*connection, #JSONRPC_Connection_ErrorOrphanResponse, "Response did not match a pending request.")
+    JSONRPC_Connection_EmitEvent(*connection, #JSONRPC_Connection_EventOrphanResponse, inspect\idText)
     *connection\diagnostics\orphanResponses + 1
     *connection\diagnostics\errors + 1
     ProcedureReturn #False

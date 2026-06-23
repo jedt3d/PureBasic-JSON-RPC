@@ -90,7 +90,11 @@ byte_buffer_src="$ROOT/examples/018-byte-buffer-framing/byte_buffer_probe.pb"
 byte_buffer_out_dir="$ROOT/.build/examples/018-byte-buffer-framing"
 byte_buffer_out="$byte_buffer_out_dir/byte_buffer_probe"
 
-mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir" "$outbound_out_dir" "$timeout_out_dir" "$batch_out_dir" "$cancel_out_dir" "$diagnostics_out_dir" "$stress_out_dir" "$stdio_runtime_out_dir" "$mcp_lifecycle_out_dir" "$mcp_tools_list_out_dir" "$mcp_tools_call_out_dir" "$package_out_dir" "$io_out_dir" "$byte_buffer_out_dir"
+events_src="$ROOT/examples/019-connection-events/events_probe.pb"
+events_out_dir="$ROOT/.build/examples/019-connection-events"
+events_out="$events_out_dir/events_probe"
+
+mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir" "$outbound_out_dir" "$timeout_out_dir" "$batch_out_dir" "$cancel_out_dir" "$diagnostics_out_dir" "$stress_out_dir" "$stdio_runtime_out_dir" "$mcp_lifecycle_out_dir" "$mcp_tools_list_out_dir" "$mcp_tools_call_out_dir" "$package_out_dir" "$io_out_dir" "$byte_buffer_out_dir" "$events_out_dir"
 
 "$PB_COMPILER" "$foundation_src" --console --thread --output "$foundation_out"
 printf 'Built console scenario: %s\n' "$foundation_out"
@@ -157,3 +161,6 @@ printf 'Built reader writer interfaces scenario: %s\n' "$io_out"
 
 "$PB_COMPILER" "$byte_buffer_src" --console --thread --output "$byte_buffer_out"
 printf 'Built byte buffer framing scenario: %s\n' "$byte_buffer_out"
+
+"$PB_COMPILER" "$events_src" --console --thread --output "$events_out"
+printf 'Built connection events scenario: %s\n' "$events_out"
