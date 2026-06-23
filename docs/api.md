@@ -22,3 +22,4 @@ Current API pages:
 - `API/015-mcp-tools-call.md`
 - `API/016-packaging-docs.md`
 - `API/017-reader-writer-interfaces.md`
+- `API/018-byte-buffer-framing.md`
