@@ -30,6 +30,9 @@ EndStructure
 
 Declare JSONRPC_Protocol_ResetResult(*result.JSONRPC_ProtocolResult)
 Declare.i JSONRPC_Protocol_Inspect(body.s, *result.JSONRPC_ProtocolResult)
+Declare.i JSONRPC_Protocol_IsValidParamsJson(paramsJson.s)
+Declare.s JSONRPC_Protocol_BuildRequest(method.s, paramsJson.s, idText.s)
+Declare.s JSONRPC_Protocol_BuildNotification(method.s, paramsJson.s)
 Declare.s JSONRPC_Protocol_BuildErrorResponse(errorCode.i, message.s, idText.s)
 Declare.s JSONRPC_Protocol_BuildResultResponse(resultJson.s, idText.s)
 Declare.s JSONRPC_Protocol_BuildMethodNotFoundResponse(idText.s)
@@ -205,6 +208,47 @@ Procedure.i JSONRPC_Protocol_Inspect(body.s, *result.JSONRPC_ProtocolResult)
   ProcedureReturn #False
 EndProcedure
 
+Procedure.i JSONRPC_Protocol_IsValidParamsJson(paramsJson.s)
+  Protected json.i
+  Protected root
+  Protected valid.i
+
+  If paramsJson = ""
+    ProcedureReturn #True
+  EndIf
+
+  json = ParseJSON(#PB_Any, paramsJson)
+  If json = 0
+    ProcedureReturn #False
+  EndIf
+
+  root = JSONValue(json)
+  valid = Bool(JSONType(root) = #PB_JSON_Object Or JSONType(root) = #PB_JSON_Array)
+  FreeJSON(json)
+
+  ProcedureReturn valid
+EndProcedure
+
+Procedure.s JSONRPC_Protocol_ParamsFragment(paramsJson.s)
+  If paramsJson = ""
+    ProcedureReturn ""
+  EndIf
+
+  ProcedureReturn ~",\"params\":" + paramsJson
+EndProcedure
+
+Procedure.s JSONRPC_Protocol_BuildRequest(method.s, paramsJson.s, idText.s)
+  If idText = ""
+    idText = "null"
+  EndIf
+
+  ProcedureReturn ~"{\"jsonrpc\":\"2.0\",\"method\":\"" + JSONRPC_Protocol_EscapeString(method) + ~"\"" + JSONRPC_Protocol_ParamsFragment(paramsJson) + ~",\"id\":" + idText + "}"
+EndProcedure
+
+Procedure.s JSONRPC_Protocol_BuildNotification(method.s, paramsJson.s)
+  ProcedureReturn ~"{\"jsonrpc\":\"2.0\",\"method\":\"" + JSONRPC_Protocol_EscapeString(method) + ~"\"" + JSONRPC_Protocol_ParamsFragment(paramsJson) + "}"
+EndProcedure
+
 Procedure.s JSONRPC_Protocol_BuildErrorResponse(errorCode.i, message.s, idText.s)
   If idText = ""
     idText = "null"
@@ -228,4 +272,3 @@ EndProcedure
 Procedure.s JSONRPC_Protocol_BuildMethodNotFoundResponse(idText.s)
   ProcedureReturn JSONRPC_Protocol_BuildErrorResponse(#JSONRPC_Error_MethodNotFound, "Method not found", idText)
 EndProcedure
-

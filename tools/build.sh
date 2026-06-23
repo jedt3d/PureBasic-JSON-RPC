@@ -32,7 +32,11 @@ dispatch_src="$ROOT/examples/005-dispatch/dispatch_probe.pb"
 dispatch_out_dir="$ROOT/.build/examples/005-dispatch"
 dispatch_out="$dispatch_out_dir/dispatch_probe"
 
-mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir"
+outbound_src="$ROOT/examples/006-outbound-requests/outbound_probe.pb"
+outbound_out_dir="$ROOT/.build/examples/006-outbound-requests"
+outbound_out="$outbound_out_dir/outbound_probe"
+
+mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir" "$outbound_out_dir"
 
 "$PB_COMPILER" "$foundation_src" --console --thread --output "$foundation_out"
 printf 'Built console scenario: %s\n' "$foundation_out"
@@ -51,3 +55,6 @@ printf 'Built protocol errors scenario: %s\n' "$protocol_out"
 
 "$PB_COMPILER" "$dispatch_src" --console --thread --output "$dispatch_out"
 printf 'Built dispatch scenario: %s\n' "$dispatch_out"
+
+"$PB_COMPILER" "$outbound_src" --console --thread --output "$outbound_out"
+printf 'Built outbound requests scenario: %s\n' "$outbound_out"

@@ -29,7 +29,7 @@ Acceptance criteria:
 4. JSON parsing, validation, and standard errors. Completed in `feature/004-protocol-errors`.
 5. Request and notification registration. Completed in `feature/005-dispatch`.
 6. Inbound dispatch and response writing. Started in `feature/005-dispatch`.
-7. Outbound request ids and pending-response tracking.
+7. Outbound request ids and pending-response tracking. Completed in `feature/006-outbound-requests`.
 8. Timeout housekeeping.
 9. Batch handling.
 10. Cooperative `$/cancelRequest` support.
@@ -119,4 +119,22 @@ Acceptance criteria:
 
 - PureUnit covers request response, dispatch-to-connection writing, notification params/no-response behavior, unknown request, unknown notification, and handler invalid params.
 - `examples/005-dispatch/dispatch_probe.pb` builds and runs.
+- `./tools/check.sh` passes.
+
+## 006-outbound-requests
+
+Branch: `feature/006-outbound-requests`
+
+Purpose:
+
+- Add outbound request and notification builders.
+- Add connection-level request id allocation.
+- Track pending outbound requests until a matching response arrives.
+- Ignore orphan responses without disturbing pending requests.
+- Clear pending state during connection close.
+
+Acceptance criteria:
+
+- PureUnit covers request send, notification send, response matching, orphan response handling, invalid params rejection, and close cleanup.
+- `examples/006-outbound-requests/outbound_probe.pb` builds and runs.
 - `./tools/check.sh` passes.
