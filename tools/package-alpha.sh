@@ -32,6 +32,12 @@ stage="$package_root/$package_name"
 tarball="$dist_root/$package_name.tar.gz"
 checksum="$tarball.sha256"
 manifest="$dist_root/$package_name.manifest.txt"
+overview_pdf_src="$ROOT/.build/docs-pdf/mcp-for-purebasic.pdf"
+tutorial_pdf_src="$ROOT/.build/docs-pdf/tutorial-building-with-purebasic-jsonrpc.pdf"
+overview_pdf="$dist_root/$package_name-mcp-for-purebasic.pdf"
+tutorial_pdf="$dist_root/$package_name-tutorial.pdf"
+overview_pdf_checksum="$overview_pdf.sha256"
+tutorial_pdf_checksum="$tutorial_pdf.sha256"
 
 copy_required_path() {
   rel="$1"
@@ -41,6 +47,8 @@ copy_required_path() {
 
 rm -rf "$stage"
 mkdir -p "$stage" "$dist_root"
+
+"$ROOT/tools/build-docs.sh"
 
 copy_required_path "README.md"
 copy_required_path "LICENSE"
@@ -67,11 +75,36 @@ copy_required_path "tools"
   find "$stage" -type f | sed "s|$stage/||" | LC_ALL=C sort
 } > "$stage/PACKAGE_MANIFEST.txt"
 
-rm -f "$tarball" "$checksum" "$manifest"
+rm -f "$tarball" "$checksum" "$manifest" "$overview_pdf" "$tutorial_pdf" "$overview_pdf_checksum" "$tutorial_pdf_checksum"
 (cd "$package_root" && tar -czf "$tarball" "$package_name")
-find "$stage" -type f | sed "s|$stage/||" | LC_ALL=C sort > "$manifest"
+cp "$overview_pdf_src" "$overview_pdf"
+cp "$tutorial_pdf_src" "$tutorial_pdf"
+
+{
+  printf 'Package: %s\n' "$package_name"
+  printf 'Version: %s\n' "$version"
+  printf 'Status: %s\n' "$status"
+  printf 'Platform: %s\n' "$platform"
+  printf 'Generated-By: tools/package-alpha.sh\n'
+  printf '\nSource package files:\n'
+  find "$stage" -type f | sed "s|$stage/||" | LC_ALL=C sort
+  printf '\nRelease artifacts:\n'
+  printf '%s\n' "$(basename "$tarball")"
+  printf '%s\n' "$(basename "$checksum")"
+  printf '%s\n' "$(basename "$overview_pdf")"
+  printf '%s\n' "$(basename "$overview_pdf_checksum")"
+  printf '%s\n' "$(basename "$tutorial_pdf")"
+  printf '%s\n' "$(basename "$tutorial_pdf_checksum")"
+} > "$manifest"
+
 (cd "$dist_root" && shasum -a 256 "$(basename "$tarball")" > "$(basename "$checksum")")
+(cd "$dist_root" && shasum -a 256 "$(basename "$overview_pdf")" > "$(basename "$overview_pdf_checksum")")
+(cd "$dist_root" && shasum -a 256 "$(basename "$tutorial_pdf")" > "$(basename "$tutorial_pdf_checksum")")
 
 printf 'Alpha package: %s\n' "$tarball"
 printf 'Checksum: %s\n' "$checksum"
 printf 'Manifest: %s\n' "$manifest"
+printf 'Overview PDF: %s\n' "$overview_pdf"
+printf 'Overview PDF checksum: %s\n' "$overview_pdf_checksum"
+printf 'Tutorial PDF: %s\n' "$tutorial_pdf"
+printf 'Tutorial PDF checksum: %s\n' "$tutorial_pdf_checksum"

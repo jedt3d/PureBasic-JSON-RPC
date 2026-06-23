@@ -9,6 +9,7 @@ The local harness standardizes PureBasic discovery, PureUnit execution, `.pbp` p
 ./tools/verify-projects.sh
 ./tools/test.sh
 ./tools/build.sh
+./tools/build-docs.sh
 ./tools/check.sh
 ```
 
@@ -35,6 +36,7 @@ Raw `pbcompiler` flags should not be the source of truth for scenario target typ
 
 - `.local/` - project-local toolchain homes and summaries.
 - `.build/` - compiled example outputs.
+- `.build/docs-html/` and `.build/docs-pdf/` - generated documentation output.
 - `.reports/` - PureUnit reports.
 
 These folders are ignored by Git.
@@ -44,3 +46,4 @@ These folders are ignored by Git.
 - PureBasic version must be `6.40`.
 - PureUnit must come from the PureBasic SDK.
 - Console, GUI application, and shared library targets must be treated as distinct `.pbp` build targets.
+- Long-form Markdown docs must build through Sphinx and produce exactly two PDFs through `tools/build-docs.sh`.

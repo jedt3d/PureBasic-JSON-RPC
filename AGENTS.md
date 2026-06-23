@@ -49,6 +49,7 @@ Use the repository scripts instead of hard-coding local paths in feature work:
 ./tools/verify-projects.sh
 ./tools/test.sh
 ./tools/build.sh
+./tools/build-docs.sh
 ./tools/check.sh
 ```
 
@@ -78,8 +79,10 @@ PureBasic project files (`.pbp`) are committed source-of-truth build metadata fo
 ## Documentation Rules
 
 - Public API documentation belongs in `API/` as Markdown.
+- Long-form narrative documentation belongs in `docs/`; keep `docs/mcp-for-purebasic.md` and `docs/tutorial-building-with-purebasic-jsonrpc.md` as the beginner-to-practitioner path.
 - Each milestone must update API docs, even if the update says no public API was added.
 - Documentation should be suitable for later Read the Docs compilation through the `docs/` entrypoint.
+- Generated documentation PDFs belong under `.build/` or release artifacts; do not commit PDF binaries.
 - Document method names, parameter shape, return shape, error behavior, ownership rules, and examples when API is added.
 
 ## Quality Gates

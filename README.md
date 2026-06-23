@@ -27,6 +27,7 @@ The current alpha target is `0.1.0-alpha.1`, with generic JSON-RPC foundation wo
 ./tools/verify-projects.sh
 ./tools/test.sh
 ./tools/build.sh
+./tools/build-docs.sh
 ./.build/examples/000-project-foundation/console_probe
 ```
 
@@ -42,6 +43,8 @@ Create the local alpha source package:
 ./tools/package-alpha.sh
 ```
 
+The package step also generates the long-form documentation PDFs in `.build/dist/`.
+
 ## Repository Layout
 
 - `AGENTS.md` - required guidance for AI agents and contributors.
@@ -53,6 +56,10 @@ Create the local alpha source package:
 - `src/jsonrpc/` - future library source.
 - `tests/unit/` - PureUnit tests close to the library workflow.
 - `tools/` - local discovery, build, test, and verification scripts.
+
+## Documentation
+
+The API pages are reference documentation. The narrative path starts with `docs/mcp-for-purebasic.md` for the MCP and PureBasic overview, then `docs/tutorial-building-with-purebasic-jsonrpc.md` for the end-to-end tutorial. `./tools/build-docs.sh` builds Sphinx HTML and exactly two generated PDFs under `.build/docs-pdf/`.
 
 ## PureBasic Project Files
 

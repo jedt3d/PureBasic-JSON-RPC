@@ -9,6 +9,8 @@ The public API documentation currently lives in the top-level `API/` folder so i
 
 harness
 purebasic-project-files
+mcp-for-purebasic
+tutorial-building-with-purebasic-jsonrpc
 api
 api-stability
 jsonrpc-foundation-gap-plan

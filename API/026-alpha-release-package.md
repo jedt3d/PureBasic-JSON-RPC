@@ -18,6 +18,10 @@ For the local macOS ARM64 target, the default output is:
 .build/dist/PureBasic-JSON-RPC-0.1.0-alpha.1-macos-arm64.tar.gz
 .build/dist/PureBasic-JSON-RPC-0.1.0-alpha.1-macos-arm64.tar.gz.sha256
 .build/dist/PureBasic-JSON-RPC-0.1.0-alpha.1-macos-arm64.manifest.txt
+.build/dist/PureBasic-JSON-RPC-0.1.0-alpha.1-macos-arm64-mcp-for-purebasic.pdf
+.build/dist/PureBasic-JSON-RPC-0.1.0-alpha.1-macos-arm64-mcp-for-purebasic.pdf.sha256
+.build/dist/PureBasic-JSON-RPC-0.1.0-alpha.1-macos-arm64-tutorial.pdf
+.build/dist/PureBasic-JSON-RPC-0.1.0-alpha.1-macos-arm64-tutorial.pdf.sha256
 ```
 
 The platform suffix follows the current host by default. Set `PB_PACKAGE_PLATFORM` to override it for a deliberate package label.
@@ -30,9 +34,10 @@ The package contains:
 - `API/` and `docs/`
 - `src/`, `tests/`, `examples/`, `MCP/`, and `tools/`
 - generated `PACKAGE_MANIFEST.txt` inside the package root
+- generated long-form PDF documentation as dist artifacts
 
 Generated build directories such as `.build/`, `.local/`, and `.reports/` are not included.
 
 ## Verification
 
-`tools/check.sh` now verifies PureBasic `.pbp` project metadata, runs the alpha release probe, and runs the package script after PureUnit tests and scenario builds.
+`tools/check.sh` now verifies PureBasic `.pbp` project metadata, runs the alpha release probe, builds long-form documentation PDFs, and runs the package script after PureUnit tests and scenario builds.
