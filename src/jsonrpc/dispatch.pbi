@@ -85,6 +85,7 @@ Procedure.s JSONRPC_Dispatcher_Dispatch(*dispatcher.JSONRPC_Dispatcher, *connect
   If JSONRPC_Protocol_Inspect(body, @inspect) = #False
     If *connection <> 0
       *connection\diagnostics\errors + 1
+      JSONRPC_Connection_EmitEvent(*connection, #JSONRPC_Connection_EventMalformedMessage, inspect\errorMessage)
     EndIf
 
     If inspect\requiresResponse
@@ -111,6 +112,8 @@ Procedure.s JSONRPC_Dispatcher_Dispatch(*dispatcher.JSONRPC_Dispatcher, *connect
     If FindMapElement(*dispatcher\notificationHandlers(), inspect\method)
       notificationHandler = *dispatcher\notificationHandlers()
       notificationHandler(paramsValue, @context)
+    ElseIf *connection <> 0
+      JSONRPC_Connection_EmitEvent(*connection, #JSONRPC_Connection_EventUnhandledNotification, inspect\method)
     EndIf
 
     FreeJSON(json)

@@ -8,7 +8,7 @@ Current library includes:
 - `byte_buffer.pbi` - explicit UTF-8 byte-counted buffer helper for codecs.
 - `framing.pbi` - `Content-Length` frame writing and incremental frame reading.
 - `codec.pbi` - MCP stdio newline-delimited message codec.
-- `connection.pbi` - connection lifecycle and generic writer support.
+- `connection.pbi` - connection lifecycle, events, and generic writer support.
 - `protocol.pbi` - JSON-RPC 2.0 message inspection and standard response builders.
 - `dispatch.pbi` - request and notification handler registration and dispatch.
 - `outbound.pbi` - outbound request ids, notifications, and pending response matching.

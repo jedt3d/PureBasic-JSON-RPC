@@ -23,3 +23,4 @@ Current API pages:
 - `API/016-packaging-docs.md`
 - `API/017-reader-writer-interfaces.md`
 - `API/018-byte-buffer-framing.md`
+- `API/019-connection-events.md`
