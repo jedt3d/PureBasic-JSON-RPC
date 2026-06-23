@@ -10,7 +10,10 @@ Enumeration
   #JSONRPC_Connection_ErrorInvalidMethod
   #JSONRPC_Connection_ErrorInvalidParams
   #JSONRPC_Connection_ErrorOrphanResponse
+  #JSONRPC_Connection_ErrorTimeout
 EndEnumeration
+
+#JSONRPC_Connection_DefaultTimeoutMs = 30000
 
 Structure JSONRPC_FakeWriter
   captured.s
@@ -21,6 +24,9 @@ EndStructure
 Structure JSONRPC_PendingRequest
   idText.s
   method.s
+  createdAtMs.q
+  timeoutMs.i
+  deadlineMs.q
 EndStructure
 
 Structure JSONRPC_Connection
@@ -33,6 +39,7 @@ Structure JSONRPC_Connection
   Map pending.JSONRPC_PendingRequest()
   lastMatchedIdText.s
   lastResponseBody.s
+  lastTimedOutIdText.s
   lastErrorCode.i
   lastErrorMessage.s
 EndStructure
@@ -73,6 +80,7 @@ Procedure.i JSONRPC_Connection_Init(*connection.JSONRPC_Connection, *writer.JSON
   ClearMap(*connection\pending())
   *connection\lastMatchedIdText = ""
   *connection\lastResponseBody = ""
+  *connection\lastTimedOutIdText = ""
   JSONRPC_Connection_SetError(*connection, #JSONRPC_Connection_ErrorNone, "")
 
   If *connection\writerMutex = 0
@@ -99,6 +107,7 @@ Procedure.i JSONRPC_Connection_Close(*connection.JSONRPC_Connection)
   ClearMap(*connection\pending())
   *connection\lastMatchedIdText = ""
   *connection\lastResponseBody = ""
+  *connection\lastTimedOutIdText = ""
 
   If *connection\writerMutex <> 0
     FreeMutex(*connection\writerMutex)

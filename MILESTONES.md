@@ -30,7 +30,7 @@ Acceptance criteria:
 5. Request and notification registration. Completed in `feature/005-dispatch`.
 6. Inbound dispatch and response writing. Started in `feature/005-dispatch`.
 7. Outbound request ids and pending-response tracking. Completed in `feature/006-outbound-requests`.
-8. Timeout housekeeping.
+8. Timeout housekeeping. Completed in `feature/007-timeout-housekeeping`.
 9. Batch handling.
 10. Cooperative `$/cancelRequest` support.
 11. Diagnostics counters.
@@ -137,4 +137,21 @@ Acceptance criteria:
 
 - PureUnit covers request send, notification send, response matching, orphan response handling, invalid params rejection, and close cleanup.
 - `examples/006-outbound-requests/outbound_probe.pb` builds and runs.
+- `./tools/check.sh` passes.
+
+## 007-timeout-housekeeping
+
+Branch: `feature/007-timeout-housekeeping`
+
+Purpose:
+
+- Add per-request timeout fields to pending outbound requests.
+- Use a default timeout of `30000` milliseconds.
+- Allow request-level timeout override.
+- Remove expired pending requests during cleanup.
+
+Acceptance criteria:
+
+- PureUnit covers default deadline, custom timeout expiry, fresh request preservation, and matched-response cleanup.
+- `examples/007-timeout-housekeeping/timeout_probe.pb` builds and runs.
 - `./tools/check.sh` passes.
