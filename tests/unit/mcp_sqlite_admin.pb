@@ -32,7 +32,7 @@ Procedure.s SQLiteAdmin_ExecuteArgs(dbName.s, sql.s)
   ProcedureReturn ~"{\"dbPath\":\"" + dbName + ~"\",\"sql\":\"" + JSONRPC_Protocol_EscapeString(sql) + ~"\"}"
 EndProcedure
 
-Procedure.s SQLiteAdmin_ExportArgs(dbName.s, sql.s, outputPath.s, maxRows.i, overwrite.i)
+Procedure.s SQLiteAdmin_ExportArgsWithFormat(dbName.s, sql.s, outputPath.s, format.s, maxRows.i, overwrite.i)
   Protected overwriteText.s
 
   If overwrite
@@ -41,7 +41,11 @@ Procedure.s SQLiteAdmin_ExportArgs(dbName.s, sql.s, outputPath.s, maxRows.i, ove
     overwriteText = "false"
   EndIf
 
-  ProcedureReturn ~"{\"dbPath\":\"" + dbName + ~"\",\"sql\":\"" + JSONRPC_Protocol_EscapeString(sql) + ~"\",\"outputPath\":\"" + JSONRPC_Protocol_EscapeString(outputPath) + ~"\",\"format\":\"csv\",\"maxRows\":" + Str(maxRows) + ~",\"overwrite\":" + overwriteText + "}"
+  ProcedureReturn ~"{\"dbPath\":\"" + dbName + ~"\",\"sql\":\"" + JSONRPC_Protocol_EscapeString(sql) + ~"\",\"outputPath\":\"" + JSONRPC_Protocol_EscapeString(outputPath) + ~"\",\"format\":\"" + format + ~"\",\"maxRows\":" + Str(maxRows) + ~",\"overwrite\":" + overwriteText + "}"
+EndProcedure
+
+Procedure.s SQLiteAdmin_ExportArgs(dbName.s, sql.s, outputPath.s, maxRows.i, overwrite.i)
+  ProcedureReturn SQLiteAdmin_ExportArgsWithFormat(dbName, sql, outputPath, "csv", maxRows, overwrite)
 EndProcedure
 
 Procedure.s SQLiteAdmin_ReadUtf8File(path.s)
@@ -65,6 +69,50 @@ Procedure.s SQLiteAdmin_ReadUtf8File(path.s)
   CloseFile(file)
 
   ProcedureReturn content
+EndProcedure
+
+Procedure.s SQLiteAdmin_FirstPackEntry(path.s)
+  Protected pack.i
+  Protected entry.s
+
+  pack = OpenPack(#PB_Any, path, #PB_PackerPlugin_Zip)
+  Assert(pack <> 0, "Expected readable ZIP package: " + path)
+  Assert(ExaminePack(pack), "Expected examinable ZIP package: " + path)
+  Assert(NextPackEntry(pack), "Expected at least one ZIP entry: " + path)
+  entry = PackEntryName(pack)
+  ClosePack(pack)
+
+  ProcedureReturn entry
+EndProcedure
+
+Procedure.s SQLiteAdmin_ReadPackEntry(path.s, entryName.s)
+  Protected pack.i
+  Protected size.i
+  Protected readBytes.i
+  Protected content.s
+  Protected *buffer
+
+  pack = OpenPack(#PB_Any, path, #PB_PackerPlugin_Zip)
+  Assert(pack <> 0, "Expected readable ZIP package: " + path)
+  Assert(ExaminePack(pack), "Expected examinable ZIP package: " + path)
+
+  While NextPackEntry(pack)
+    If PackEntryName(pack) = entryName
+      size = PackEntrySize(pack)
+      *buffer = AllocateMemory(size + 1)
+      Assert(*buffer <> 0, "Expected pack entry buffer allocation.")
+      readBytes = UncompressPackMemory(pack, *buffer, size)
+      Assert(readBytes = size, "Expected pack entry to uncompress fully: " + entryName)
+      content = PeekS(*buffer, size, #PB_UTF8 | #PB_ByteLength)
+      FreeMemory(*buffer)
+      ClosePack(pack)
+      ProcedureReturn content
+    EndIf
+  Wend
+
+  ClosePack(pack)
+  Assert(#False, "Expected pack entry: " + entryName)
+  ProcedureReturn ""
 EndProcedure
 
 Procedure.s SQLiteAdmin_TestDb(name.s)
@@ -234,6 +282,82 @@ ProcedureUnit SQLiteAdminCsvExportRespectsOverwriteAndRowLimit()
 
   response = SQLiteAdmin_Call(@dispatcher, "sqlite/export", SQLiteAdmin_ExportArgs(dbName, sql, "exports/not-csv.txt", 1, #True), 124)
   Assert(FindString(response, ~"\"code\":-32602", 1) > 0, "CSV export should require a .csv outputPath.")
+EndProcedureUnit
+
+ProcedureUnit SQLiteAdminOdsExportWritesOpenDocumentPackage()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected dbName.s
+  Protected outputName.s
+  Protected outputPath.s
+  Protected response.s
+  Protected sql.s
+  Protected mimetype.s
+  Protected manifest.s
+  Protected content.s
+
+  SQLiteAdmin_Prepare(@dispatcher, @registry)
+  dbName = SQLiteAdmin_TestDb("ods")
+  outputName = "exports/" + dbName + ".ods"
+  outputPath = SQLiteAdmin_TestRoot() + outputName
+  SQLiteAdmin_Bootstrap(@dispatcher, dbName)
+
+  sql = "SELECT id, locale, title, body FROM admin_notes ORDER BY id"
+  response = SQLiteAdmin_Call(@dispatcher, "sqlite/export", SQLiteAdmin_ExportArgsWithFormat(dbName, sql, outputName, "ods", 10, #True), 125)
+  Assert(FindString(response, ~"\"isError\":false", 1) > 0, "ODS export should succeed: " + response)
+  Assert(FindString(response, ~"\\\"format\\\":\\\"ods", 1) > 0, "ODS export should report ods format.")
+  Assert(FindString(response, ~"\\\"mediaType\\\":\\\"application/vnd.oasis.opendocument.spreadsheet", 1) > 0, "ODS export should report the OpenDocument spreadsheet media type.")
+  Assert(FileSize(outputPath) > 0, "ODS export file should exist.")
+
+  Assert(SQLiteAdmin_FirstPackEntry(outputPath) = "mimetype", "ODS package should place mimetype first.")
+  mimetype = SQLiteAdmin_ReadPackEntry(outputPath, "mimetype")
+  Assert(mimetype = #MCP_SQLiteAdmin_OdsMimeType$, "ODS mimetype should match the registered spreadsheet media type.")
+
+  manifest = SQLiteAdmin_ReadPackEntry(outputPath, "META-INF/manifest.xml")
+  Assert(FindString(manifest, ~"manifest:full-path=\"/\"", 1) > 0, "ODS manifest should describe the package root.")
+  Assert(FindString(manifest, #MCP_SQLiteAdmin_OdsMimeType$, 1) > 0, "ODS manifest should include the spreadsheet media type.")
+  Assert(FindString(manifest, ~"manifest:full-path=\"content.xml\"", 1) > 0, "ODS manifest should include content.xml.")
+
+  content = SQLiteAdmin_ReadPackEntry(outputPath, "content.xml")
+  Assert(FindString(content, "<office:spreadsheet>", 1) > 0, "ODS content should contain spreadsheet body.")
+  Assert(FindString(content, ~"<table:table table:name=\"QueryResult\"", 1) > 0, "ODS content should name the exported sheet.")
+  Assert(FindString(content, "<text:p>id</text:p>", 1) > 0, "ODS content should include column headers.")
+  Assert(FindString(content, MCP_SQLiteAdmin_ThaiHello(), 1) > 0, "ODS content should preserve Thai UTF-8 text.")
+  Assert(FindString(content, MCP_SQLiteAdmin_JapaneseHello(), 1) > 0, "ODS content should preserve Japanese UTF-8 text.")
+  Assert(FindString(content, MCP_SQLiteAdmin_FrenchResume(), 1) > 0, "ODS content should preserve accented UTF-8 text.")
+EndProcedureUnit
+
+ProcedureUnit SQLiteAdminOdsExportRespectsOverwriteRowLimitAndExtension()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected dbName.s
+  Protected outputName.s
+  Protected outputPath.s
+  Protected response.s
+  Protected sql.s
+  Protected content.s
+
+  SQLiteAdmin_Prepare(@dispatcher, @registry)
+  dbName = SQLiteAdmin_TestDb("ods-limit")
+  outputName = "exports/" + dbName + ".ods"
+  outputPath = SQLiteAdmin_TestRoot() + outputName
+  SQLiteAdmin_Bootstrap(@dispatcher, dbName)
+
+  sql = "SELECT id, locale, title FROM admin_notes ORDER BY id"
+  response = SQLiteAdmin_Call(@dispatcher, "sqlite/export", SQLiteAdmin_ExportArgsWithFormat(dbName, sql, outputName, "ods", 1, #True), 126)
+  Assert(FindString(response, ~"\"isError\":false", 1) > 0, "Limited ODS export should succeed.")
+  Assert(FindString(response, ~"\\\"exportedRows\\\":1", 1) > 0, "ODS export should report exported row count.")
+  Assert(FindString(response, ~"\\\"truncated\\\":true", 1) > 0, "ODS export should report truncation.")
+
+  content = SQLiteAdmin_ReadPackEntry(outputPath, "content.xml")
+  Assert(FindString(content, "<text:p>Welcome</text:p>", 1) > 0, "Limited ODS should contain the first row.")
+  Assert(FindString(content, MCP_SQLiteAdmin_ThaiHello(), 1) = 0, "Limited ODS should omit rows beyond maxRows.")
+
+  response = SQLiteAdmin_Call(@dispatcher, "sqlite/export", SQLiteAdmin_ExportArgsWithFormat(dbName, sql, outputName, "ods", 1, #False), 127)
+  Assert(FindString(response, ~"\"isError\":true", 1) > 0, "ODS export should not overwrite without overwrite=true.")
+
+  response = SQLiteAdmin_Call(@dispatcher, "sqlite/export", SQLiteAdmin_ExportArgsWithFormat(dbName, sql, "exports/not-ods.txt", "ods", 1, #True), 128)
+  Assert(FindString(response, ~"\"code\":-32602", 1) > 0, "ODS export should require an .ods outputPath.")
 EndProcedureUnit
 
 ProcedureUnit SQLiteAdminExecuteCanWriteData()

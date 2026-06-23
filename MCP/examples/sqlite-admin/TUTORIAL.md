@@ -290,7 +290,7 @@ The result text contains:
 Prefer `sqlite/query` for exploration. It keeps output bounded and makes it
 clear when a result was truncated.
 
-## 11A. Export Query Results To CSV
+## 11A. Export Query Results To CSV Or ODS
 
 Use `sqlite/export` when a query result should become a file that another tool
 can open:
@@ -322,18 +322,45 @@ That strictness prevents the most common CSV export bugs: mojibake in
 spreadsheet tools, commas splitting a value into extra columns, quotes breaking
 the row, and line breaks corrupting the next record.
 
-Spreadsheet-specific exports are future work. The practical format ranking for
-PureBasic is:
+ODS is the first native spreadsheet package supported by this example. Use
+`format: "ods"` and an `.ods` output path:
 
-```text
-CSV  -> easiest: plain UTF-8 text, implemented now
-ODS  -> medium: ZIP package plus simpler OpenDocument XML tables
-XLSX -> harder: ZIP package plus OOXML workbook relationships and shared parts
+```json
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/export","arguments":{"dbPath":"demo.sqlite","sql":"SELECT id, locale, title FROM admin_notes ORDER BY id","outputPath":"exports/admin-notes.ods","format":"ods","maxRows":5000,"overwrite":true}},"id":51}
 ```
 
-ODS is a good candidate for the next spreadsheet format because LibreOffice
-uses it natively and Excel can import it. XLSX is still valuable, but it asks us
-to build a larger packaging and relationship model correctly.
+The ODS writer creates a minimal OpenDocument Spreadsheet package:
+
+```text
+admin-notes.ods
+  mimetype
+  META-INF/manifest.xml
+  content.xml
+  styles.xml
+  meta.xml
+```
+
+The package declares the OpenDocument spreadsheet media type, stores spreadsheet
+rows in `content.xml`, and creates one sheet named `QueryResult`. In this first
+version, every exported value is written as a string cell. That keeps the writer
+predictable for administration output: IDs, dates, multilingual text, and SQL
+results arrive exactly as SQLite returned them, without formula evaluation or
+spreadsheet type guessing. Embedded XML-sensitive characters are escaped, and
+line breaks inside text values are represented as OpenDocument text line breaks.
+
+The practical format ranking for PureBasic is now:
+
+```text
+CSV  -> easiest: plain UTF-8 text, implemented
+ODS  -> medium: ZIP package plus simpler OpenDocument XML tables, implemented
+XLSX -> harder: ZIP package plus OOXML workbook relationships and shared parts, future work
+```
+
+ODS is useful when the receiver wants an actual spreadsheet file rather than a
+text interchange format. LibreOffice and OpenOffice use ODS natively, and many
+spreadsheet applications can import it. XLSX is still valuable, but it asks us
+to build a larger packaging and relationship model correctly, so it comes after
+the ODS path is proven by builds and tests.
 
 ## 12. Run Write SQL Intentionally
 
