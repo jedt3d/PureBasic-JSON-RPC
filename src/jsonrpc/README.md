@@ -14,7 +14,7 @@ Current library includes:
 - `outbound.pbi` - outbound request ids, notifications, and pending response matching.
 - `outbound.pbi` also owns pending request timeout cleanup.
 - `batch.pbi` - sequential JSON-RPC batch dispatch.
-- `cancel.pbi` - cooperative `$/cancelRequest` token handling.
+- `cancel.pbi` - cooperative `$/cancelRequest` token handling and handler-visible cancellation state.
 - `diagnostics.pbi` - connection diagnostics counters and summary helpers.
 - `stress.pbi` - bounded stress smoke helper for memory lifecycle paths.
 - `stdio_runtime.pbi` - newline-delimited stdio runtime pump.

@@ -25,28 +25,11 @@ Procedure.i JSONRPC_Cancel_Request(*connection.JSONRPC_Connection, idText.s)
 EndProcedure
 
 Procedure.i JSONRPC_Cancel_IsRequested(*connection.JSONRPC_Connection, idText.s)
-  If *connection = 0 Or idText = ""
-    ProcedureReturn #False
-  EndIf
-
-  If FindMapElement(*connection\cancellations(), idText)
-    ProcedureReturn *connection\cancellations()\requested
-  EndIf
-
-  ProcedureReturn #False
+  ProcedureReturn JSONRPC_Connection_IsCancellationRequested(*connection, idText)
 EndProcedure
 
 Procedure.i JSONRPC_Cancel_Clear(*connection.JSONRPC_Connection, idText.s)
-  If *connection = 0 Or idText = ""
-    ProcedureReturn #False
-  EndIf
-
-  If FindMapElement(*connection\cancellations(), idText)
-    DeleteMapElement(*connection\cancellations())
-    ProcedureReturn #True
-  EndIf
-
-  ProcedureReturn #False
+  ProcedureReturn JSONRPC_Connection_ClearCancellation(*connection, idText)
 EndProcedure
 
 Procedure.s JSONRPC_Cancel_GetLastCancelledIdText(*connection.JSONRPC_Connection)
