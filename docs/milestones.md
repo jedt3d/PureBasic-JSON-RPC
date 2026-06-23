@@ -70,7 +70,7 @@ should prioritize `src/jsonrpc/`, `tests/unit/`, protocol behavior, and release
 quality. The narrative rationale and verification habit are captured in
 `docs/release-hardening-plan.md`.
 
-27. Release quality gates. Planned as `feature/027-release-quality-gates`.
+27. Release quality gates. Completed in `feature/027-release-quality-gates`.
 28. JSON-RPC compliance matrix expansion. Planned as `feature/028-compliance-matrix`.
 29. Negative test expansion. Planned as `feature/029-negative-tests`.
 30. Stress and lifecycle testing. Planned as `feature/030-stress-lifecycle`.
@@ -531,7 +531,7 @@ Acceptance criteria:
 
 Branch: `feature/027-release-quality-gates`
 
-Status: planned
+Status: completed
 
 Purpose:
 

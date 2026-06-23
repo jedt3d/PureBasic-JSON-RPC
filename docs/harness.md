@@ -44,6 +44,7 @@ consistently across the repository documentation. It verifies that every
 - a matching `## NNN-slug` section in `docs/milestones.md`
 - an `API/index.md` entry
 - a `docs/api.md` bridge entry
+- at least one matching `tests/unit/NNN_*.pb` unit test file
 
 It also checks that the main Sphinx toctree includes required project documents
 and that planned hardening rounds `027` through `032` remain visible in
@@ -72,6 +73,7 @@ Some tools still need real system paths at runtime. The PureBasic installation p
 
 - PureBasic version must be `6.40`.
 - PureUnit must come from the PureBasic SDK.
+- `tools/test.sh` runs every `tests/unit/*.pb` file by default so new tests are not silently skipped.
 - Console, GUI application, and shared library targets must be treated as distinct `.pbp` build targets.
 - Long-form Markdown docs must build through Sphinx and produce exactly two PDFs through `tools/build-docs.sh`.
 - Numbered routes must keep API pages, milestone sections, documentation indexes, and Sphinx navigation synchronized through `tools/verify-docs.sh`.

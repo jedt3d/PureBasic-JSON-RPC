@@ -31,3 +31,4 @@ Current API pages:
 - `API/024-compliance-suite.md`
 - `API/025-public-api-review.md`
 - `API/026-alpha-release-package.md`
+- `API/027-release-quality-gates.md`
