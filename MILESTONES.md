@@ -27,8 +27,8 @@ Acceptance criteria:
 2. Transport codecs. Completed in `feature/002-transport-codecs`.
 3. Connection lifecycle. Completed in `feature/003-connection-lifecycle`.
 4. JSON parsing, validation, and standard errors. Completed in `feature/004-protocol-errors`.
-5. Request and notification registration.
-6. Inbound dispatch and response writing.
+5. Request and notification registration. Completed in `feature/005-dispatch`.
+6. Inbound dispatch and response writing. Started in `feature/005-dispatch`.
 7. Outbound request ids and pending-response tracking.
 8. Timeout housekeeping.
 9. Batch handling.
@@ -103,4 +103,20 @@ Acceptance criteria:
 
 - PureUnit covers parse error, invalid request, invalid params, notifications, valid requests, response exclusivity, id preservation, result response, and method-not-found response.
 - `examples/004-protocol-errors/spec_examples_probe.pb` builds and runs.
+- `./tools/check.sh` passes.
+
+## 005-dispatch
+
+Branch: `feature/005-dispatch`
+
+Purpose:
+
+- Add request and notification handler registration.
+- Add dispatch for requests, notifications, unknown methods, and handler errors.
+- Add response writing through the fake connection writer.
+
+Acceptance criteria:
+
+- PureUnit covers request response, dispatch-to-connection writing, notification params/no-response behavior, unknown request, unknown notification, and handler invalid params.
+- `examples/005-dispatch/dispatch_probe.pb` builds and runs.
 - `./tools/check.sh` passes.
