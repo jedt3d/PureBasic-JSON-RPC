@@ -35,6 +35,7 @@ Acceptance criteria:
 10. Cooperative `$/cancelRequest` support. Completed in `feature/009-cancellation`.
 11. Diagnostics counters. Completed in `feature/010-diagnostics`.
 12. Stress tests and memory lifecycle tests. Completed in `feature/011-stress-memory`.
+13. Stdio runtime pump. Completed in `feature/012-stdio-runtime-pump`.
 
 ## 001-framing
 
@@ -220,4 +221,20 @@ Acceptance criteria:
 
 - PureUnit covers malformed-message loops, timeout cleanup loops, batch/cancellation loops, and the reusable stress helper.
 - `examples/011-stress-memory/stress_probe.pb` builds and runs.
+- `./tools/check.sh` passes.
+
+## 012-stdio-runtime-pump
+
+Branch: `feature/012-stdio-runtime-pump`
+
+Purpose:
+
+- Add a reusable stdio message pump over the newline codec.
+- Route responses to pending request matching.
+- Route batches, requests, notifications, and cancellation messages through existing layers.
+
+Acceptance criteria:
+
+- PureUnit covers request dispatch, partial lines, response matching, batch dispatch, and cancellation notifications.
+- `examples/012-stdio-runtime-pump/stdio_runtime_probe.pb` builds and runs.
 - `./tools/check.sh` passes.

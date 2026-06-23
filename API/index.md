@@ -16,6 +16,7 @@ Current pages:
 - [009 Cooperative Cancellation](009-cancellation.md)
 - [010 Diagnostics Counters](010-diagnostics.md)
 - [011 Stress And Memory Lifecycle](011-stress-memory.md)
+- [012 Stdio Runtime Pump](012-stdio-runtime-pump.md)
 
 Future API pages should document:
 
