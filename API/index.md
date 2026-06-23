@@ -18,6 +18,7 @@ Current pages:
 - [011 Stress And Memory Lifecycle](011-stress-memory.md)
 - [012 Stdio Runtime Pump](012-stdio-runtime-pump.md)
 - [013 MCP Lifecycle Adapter](013-mcp-lifecycle.md)
+- [014 MCP Tools Registry](014-mcp-tools-registry.md)
 
 Future API pages should document:
 

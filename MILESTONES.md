@@ -37,6 +37,7 @@ Acceptance criteria:
 12. Stress tests and memory lifecycle tests. Completed in `feature/011-stress-memory`.
 13. Stdio runtime pump. Completed in `feature/012-stdio-runtime-pump`.
 14. MCP lifecycle adapter. Completed in `feature/013-mcp-lifecycle`.
+15. MCP tools registry. Completed in `feature/014-mcp-tools-registry`.
 
 ## 001-framing
 
@@ -254,4 +255,20 @@ Acceptance criteria:
 
 - PureUnit covers initialize result, missing protocol version, and initialized notification.
 - `examples/013-mcp-lifecycle/mcp_lifecycle_probe.pb` builds and runs.
+- `./tools/check.sh` passes.
+
+## 014-mcp-tools-registry
+
+Branch: `feature/014-mcp-tools-registry`
+
+Purpose:
+
+- Add MCP tool metadata registry.
+- Add `tools/list` handler registration.
+- Add `notifications/tools/list_changed` notification builder.
+
+Acceptance criteria:
+
+- PureUnit covers tool registration validation, listed tool metadata, empty registry, and list-changed notification shape.
+- `examples/014-mcp-tools-registry/mcp_tools_list_probe.pb` builds and runs.
 - `./tools/check.sh` passes.

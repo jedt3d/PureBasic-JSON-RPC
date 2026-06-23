@@ -64,7 +64,11 @@ mcp_lifecycle_src="$ROOT/examples/013-mcp-lifecycle/mcp_lifecycle_probe.pb"
 mcp_lifecycle_out_dir="$ROOT/.build/examples/013-mcp-lifecycle"
 mcp_lifecycle_out="$mcp_lifecycle_out_dir/mcp_lifecycle_probe"
 
-mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir" "$outbound_out_dir" "$timeout_out_dir" "$batch_out_dir" "$cancel_out_dir" "$diagnostics_out_dir" "$stress_out_dir" "$stdio_runtime_out_dir" "$mcp_lifecycle_out_dir"
+mcp_tools_list_src="$ROOT/examples/014-mcp-tools-registry/mcp_tools_list_probe.pb"
+mcp_tools_list_out_dir="$ROOT/.build/examples/014-mcp-tools-registry"
+mcp_tools_list_out="$mcp_tools_list_out_dir/mcp_tools_list_probe"
+
+mkdir -p "$foundation_out_dir" "$framing_out_dir" "$codec_out_dir" "$connection_out_dir" "$protocol_out_dir" "$dispatch_out_dir" "$outbound_out_dir" "$timeout_out_dir" "$batch_out_dir" "$cancel_out_dir" "$diagnostics_out_dir" "$stress_out_dir" "$stdio_runtime_out_dir" "$mcp_lifecycle_out_dir" "$mcp_tools_list_out_dir"
 
 "$PB_COMPILER" "$foundation_src" --console --thread --output "$foundation_out"
 printf 'Built console scenario: %s\n' "$foundation_out"
@@ -107,3 +111,6 @@ printf 'Built stdio runtime scenario: %s\n' "$stdio_runtime_out"
 
 "$PB_COMPILER" "$mcp_lifecycle_src" --console --thread --output "$mcp_lifecycle_out"
 printf 'Built MCP lifecycle scenario: %s\n' "$mcp_lifecycle_out"
+
+"$PB_COMPILER" "$mcp_tools_list_src" --console --thread --output "$mcp_tools_list_out"
+printf 'Built MCP tools list scenario: %s\n' "$mcp_tools_list_out"
