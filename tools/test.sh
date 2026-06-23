@@ -13,7 +13,7 @@ report_file="$report_dir/index.html"
 mkdir -p "$report_dir"
 
 if [ "$#" -eq 0 ]; then
-  set -- "$ROOT/tests/unit/000_project_foundation.pb" "$ROOT/tests/unit/001_framing.pb" "$ROOT/tests/unit/002_transport_codecs.pb" "$ROOT/tests/unit/003_connection_lifecycle.pb" "$ROOT/tests/unit/004_protocol_errors.pb" "$ROOT/tests/unit/005_dispatch.pb" "$ROOT/tests/unit/006_outbound_requests.pb" "$ROOT/tests/unit/007_timeout_housekeeping.pb" "$ROOT/tests/unit/008_batch_handling.pb" "$ROOT/tests/unit/009_cancellation.pb" "$ROOT/tests/unit/010_diagnostics.pb" "$ROOT/tests/unit/011_stress_memory.pb" "$ROOT/tests/unit/012_stdio_runtime_pump.pb" "$ROOT/tests/unit/013_mcp_lifecycle.pb" "$ROOT/tests/unit/014_mcp_tools_registry.pb" "$ROOT/tests/unit/015_mcp_tools_call.pb" "$ROOT/tests/unit/016_packaging_docs.pb"
+  set -- "$ROOT/tests/unit/000_project_foundation.pb" "$ROOT/tests/unit/001_framing.pb" "$ROOT/tests/unit/002_transport_codecs.pb" "$ROOT/tests/unit/003_connection_lifecycle.pb" "$ROOT/tests/unit/004_protocol_errors.pb" "$ROOT/tests/unit/005_dispatch.pb" "$ROOT/tests/unit/006_outbound_requests.pb" "$ROOT/tests/unit/007_timeout_housekeeping.pb" "$ROOT/tests/unit/008_batch_handling.pb" "$ROOT/tests/unit/009_cancellation.pb" "$ROOT/tests/unit/010_diagnostics.pb" "$ROOT/tests/unit/011_stress_memory.pb" "$ROOT/tests/unit/012_stdio_runtime_pump.pb" "$ROOT/tests/unit/013_mcp_lifecycle.pb" "$ROOT/tests/unit/014_mcp_tools_registry.pb" "$ROOT/tests/unit/015_mcp_tools_call.pb" "$ROOT/tests/unit/016_packaging_docs.pb" "$ROOT/tests/unit/017_reader_writer_interfaces.pb"
 fi
 
 "$PUREUNIT" --compiler "$PB_COMPILER" --verbose --report "$report_file" "$@"

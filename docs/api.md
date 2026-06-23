@@ -21,3 +21,4 @@ Current API pages:
 - `API/014-mcp-tools-registry.md`
 - `API/015-mcp-tools-call.md`
 - `API/016-packaging-docs.md`
+- `API/017-reader-writer-interfaces.md`
