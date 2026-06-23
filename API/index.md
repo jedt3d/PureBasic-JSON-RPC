@@ -36,6 +36,7 @@ Current pages:
 - [029 Negative Tests](029-negative-tests.md)
 - [030 Stress Lifecycle](030-stress-lifecycle.md)
 - [031 Security Robustness](031-security-robustness.md)
+- [032 Release Automation Polish](032-release-automation-polish.md)
 
 Future API pages should document:
 

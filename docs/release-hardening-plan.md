@@ -73,6 +73,10 @@ Those features can resume after the core library has a stronger quality gate.
 
 ## Corrected 027-032 Track
 
+Implementation status: rounds `027` through `032` are now tracked as the alpha
+hardening route. The milestone file, API index, Sphinx navigation, release
+notes, examples, and harness scripts must be kept synchronized for every route.
+
 ### 027 Release Quality Gates
 
 Purpose:
@@ -203,6 +207,7 @@ Verification:
 - `./tools/verify-docs.sh`
 - `./tools/build-docs.sh`
 - `./tools/package-alpha.sh`
+- `./tools/verify-release-artifacts.sh`
 - `./tools/check.sh`
 
 ## Rule For New Features

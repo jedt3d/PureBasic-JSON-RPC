@@ -56,6 +56,8 @@ Use the repository scripts instead of hard-coding local paths in feature work:
 ./tools/discover-purebasic.sh
 ./tools/verify-projects.sh
 ./tools/verify-docs.sh
+./tools/verify-paths.sh
+./tools/verify-release-artifacts.sh
 ./tools/test.sh
 ./tools/build.sh
 ./tools/build-docs.sh
@@ -67,6 +69,11 @@ The discovery script creates ignored project-local homes under `.local/` and rec
 Write project-local paths relative to the repository root in documentation, source constants, probe data, and example configuration. System dependency paths, such as a developer's PureBasic installation, should be discovered through the harness or provided through environment variables instead of committed as workstation-specific paths.
 
 PureBasic project files (`.pbp`) are committed source-of-truth build metadata for the root library project, scenario applications, and MCP example applications. The harness builds project targets through the PureBasic IDE command-line builder (`PureBasic --build ... --target ...`) so Console, GUI executable, and shared-library target types are controlled in one place. Do not replace `.pbp` project targets with ad hoc compiler flags in `tools/build.sh`.
+
+Release artifacts must be generated from the current tree. `tools/check.sh`
+runs package generation and `tools/verify-release-artifacts.sh`; do not treat
+created tarballs, PDFs, manifests, or checksums as valid until the verifier
+passes.
 
 ## PureBasic Rules
 
@@ -112,3 +119,6 @@ Before a milestone is considered complete:
 - API docs are updated.
 - Milestones, documentation navigation, and release notes are updated where relevant.
 - `./tools/verify-docs.sh` passes.
+- `./tools/verify-paths.sh` passes.
+- Release artifact verification passes when the route touches packaging,
+  release docs, or generated documentation outputs.

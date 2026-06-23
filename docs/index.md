@@ -15,6 +15,7 @@ milestones
 release-notes
 release-hardening-plan
 release-quality-gates
+release-checklist
 jsonrpc-compliance-matrix
 security-robustness
 mcp-for-purebasic

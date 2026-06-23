@@ -24,6 +24,7 @@ Required gates:
 - Sphinx documentation builds with warnings treated as errors.
 - The two long-form PDF artifacts are generated, not committed.
 - The alpha package is generated with a manifest and SHA-256 checksums.
+- Generated release artifacts pass `./tools/verify-release-artifacts.sh`.
 - Tracked source, documentation, and project metadata do not contain
   workstation-specific absolute paths.
 
@@ -64,6 +65,7 @@ Every completed route must run:
 
 ```sh
 ./tools/verify-docs.sh
+./tools/verify-paths.sh
 ./tools/build-docs.sh
 ./tools/check.sh
 ```

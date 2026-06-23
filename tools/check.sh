@@ -41,8 +41,10 @@ ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 "$ROOT/.build/examples/029-negative-tests/negative_probe"
 "$ROOT/.build/examples/030-stress-lifecycle/stress_lifecycle_probe"
 "$ROOT/.build/examples/031-security-robustness/security_probe"
+"$ROOT/.build/examples/032-release-automation-polish/release_automation_probe"
 "$ROOT/.build/MCP/examples/purebasic-check/purebasic_check_server" < "$ROOT/MCP/examples/purebasic-check/probe_smoke_input.ndjson" >/dev/null
 "$ROOT/.build/MCP/examples/sqlite-admin/sqlite_admin_server" < "$ROOT/MCP/examples/sqlite-admin/probe_smoke_input.ndjson" >/dev/null
 "$ROOT/.build/MCP/examples/sqlite-admin/sqlite_admin_server" < "$ROOT/MCP/examples/sqlite-admin/probe_input.ndjson" >/dev/null
 "$ROOT/.build/MCP/examples/sqlite-admin/sqlite_admin_probe"
 "$ROOT/tools/package-alpha.sh"
+"$ROOT/tools/verify-release-artifacts.sh"

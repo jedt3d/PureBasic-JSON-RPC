@@ -18,7 +18,7 @@ The implementation should stay general-purpose enough for other JSON-RPC 2.0 use
 
 ## Current Milestone
 
-The current alpha target is `0.1.0-alpha.1`, with generic JSON-RPC foundation work completed through round `026-alpha-release-package`.
+The current alpha target is `0.1.0-alpha.1`, with the generic JSON-RPC foundation and alpha hardening track completed through round `032-release-automation-polish`.
 
 ## Quick Start
 
@@ -31,6 +31,7 @@ example configuration.
 ./tools/discover-purebasic.sh
 ./tools/verify-projects.sh
 ./tools/verify-docs.sh
+./tools/verify-paths.sh
 ./tools/test.sh
 ./tools/build.sh
 ./tools/build-docs.sh
@@ -43,10 +44,11 @@ Or run the full local check:
 ./tools/check.sh
 ```
 
-Create the local alpha source package:
+Create and verify the local alpha source package:
 
 ```sh
 ./tools/package-alpha.sh
+./tools/verify-release-artifacts.sh
 ```
 
 The package step also generates the long-form documentation PDFs in `.build/dist/`.
@@ -69,7 +71,8 @@ The API pages are reference documentation. The narrative path starts with `docs/
 
 Planning and documentation routes are checked by `./tools/verify-docs.sh`. A
 numbered milestone is not considered complete until the example folder, API
-page, milestone section, API indexes, and Sphinx navigation are synchronized.
+page, milestone section, API indexes, release notes, harness expectations, and
+Sphinx navigation are synchronized.
 
 ## PureBasic Project Files
 

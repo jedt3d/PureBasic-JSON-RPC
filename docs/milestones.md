@@ -75,7 +75,7 @@ quality. The narrative rationale and verification habit are captured in
 29. Negative test expansion. Completed in `feature/029-negative-tests`.
 30. Stress and lifecycle testing. Completed in `feature/030-stress-lifecycle`.
 31. Security and robustness review. Completed in `feature/031-security-robustness`.
-32. Release automation polish. Planned as `feature/032-release-automation-polish`.
+32. Release automation polish. Completed in `feature/032-release-automation-polish`.
 
 ## 001-framing
 
@@ -634,7 +634,7 @@ Acceptance criteria:
 
 Branch: `feature/032-release-automation-polish`
 
-Status: planned
+Status: completed
 
 Purpose:
 
@@ -649,4 +649,5 @@ Acceptance criteria:
 - Ensure `./tools/check.sh` verifies docs and package freshness from the current source tree.
 - Confirm package manifests include moved project docs and current API pages.
 - Confirm `.pbp` project verification remains part of normal checks.
+- Add release artifact verification for tarball, PDF, manifest, and checksum files.
 - `./tools/check.sh` passes.

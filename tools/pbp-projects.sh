@@ -39,6 +39,7 @@ pbp_each_project_target() {
   "$callback" "examples/029-negative-tests/negative_tests.pbp" "negative_probe" "console" ".build/examples/029-negative-tests/negative_probe" "negative tests scenario"
   "$callback" "examples/030-stress-lifecycle/stress_lifecycle.pbp" "stress_lifecycle_probe" "console" ".build/examples/030-stress-lifecycle/stress_lifecycle_probe" "stress lifecycle scenario"
   "$callback" "examples/031-security-robustness/security_robustness.pbp" "security_probe" "console" ".build/examples/031-security-robustness/security_probe" "security robustness scenario"
+  "$callback" "examples/032-release-automation-polish/release_automation_polish.pbp" "release_automation_probe" "console" ".build/examples/032-release-automation-polish/release_automation_probe" "release automation polish scenario"
   "$callback" "MCP/examples/purebasic-check/purebasic_check.pbp" "purebasic/check stdio server" "console" ".build/MCP/examples/purebasic-check/purebasic_check_server" "MCP purebasic/check server"
   "$callback" "MCP/examples/sqlite-admin/sqlite_admin.pbp" "sqlite-admin stdio server" "console" ".build/MCP/examples/sqlite-admin/sqlite_admin_server" "MCP sqlite admin server"
   "$callback" "MCP/examples/sqlite-admin/sqlite_admin.pbp" "sqlite-admin bootstrap" "console" ".build/MCP/examples/sqlite-admin/sqlite_admin_bootstrap" "MCP sqlite admin bootstrap"
