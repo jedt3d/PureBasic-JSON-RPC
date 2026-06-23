@@ -11,7 +11,7 @@ Enumeration
 EndEnumeration
 
 Structure JSONRPC_StdioCodecState
-  buffer.s
+  buffer.JSONRPC_ByteBuffer
   maxMessageBytes.i
   errorCode.i
   errorMessage.s
@@ -38,7 +38,7 @@ Procedure.i JSONRPC_Codec_ContainsLineBreak(text.s)
 EndProcedure
 
 Procedure JSONRPC_Codec_StdioInit(*state.JSONRPC_StdioCodecState, maxMessageBytes.i = #JSONRPC_Codec_StdioDefaultMaxMessageBytes)
-  *state\buffer = ""
+  JSONRPC_ByteBuffer_Init(@*state\buffer)
   *state\maxMessageBytes = maxMessageBytes
   *state\errorCode = #JSONRPC_Codec_ErrorNone
   *state\errorMessage = ""
@@ -50,9 +50,12 @@ EndProcedure
 
 Procedure JSONRPC_Codec_StdioPushBytes(*state.JSONRPC_StdioCodecState, chunk.s)
   If *state\errorCode = #JSONRPC_Codec_ErrorNone
-    *state\buffer + chunk
+    If JSONRPC_ByteBuffer_AppendUtf8(@*state\buffer, chunk) = #False
+      JSONRPC_Codec_StdioSetError(*state, #JSONRPC_Codec_ErrorMessageTooLarge, "Stdio message exceeds configured maximum.")
+      ProcedureReturn
+    EndIf
 
-    If JSONRPC_Framing_Utf8ByteLength(*state\buffer) > *state\maxMessageBytes And FindString(*state\buffer, #LF$, 1) = 0
+    If JSONRPC_ByteBuffer_Length(@*state\buffer) > *state\maxMessageBytes And FindString(JSONRPC_ByteBuffer_AsText(@*state\buffer), #LF$, 1) = 0
       JSONRPC_Codec_StdioSetError(*state, #JSONRPC_Codec_ErrorMessageTooLarge, "Stdio message exceeds configured maximum.")
     EndIf
   EndIf
@@ -60,6 +63,7 @@ EndProcedure
 
 Procedure.i JSONRPC_Codec_StdioNextMessage(*state.JSONRPC_StdioCodecState, *message.JSONRPC_Message)
   Protected newlineIndex.i
+  Protected bufferText.s
   Protected line.s
 
   *message\body = ""
@@ -69,13 +73,14 @@ Procedure.i JSONRPC_Codec_StdioNextMessage(*state.JSONRPC_StdioCodecState, *mess
     ProcedureReturn #False
   EndIf
 
-  newlineIndex = FindString(*state\buffer, #LF$, 1)
+  bufferText = JSONRPC_ByteBuffer_AsText(@*state\buffer)
+  newlineIndex = FindString(bufferText, #LF$, 1)
   If newlineIndex = 0
     ProcedureReturn #False
   EndIf
 
-  line = Left(*state\buffer, newlineIndex - 1)
-  *state\buffer = Mid(*state\buffer, newlineIndex + 1)
+  line = Left(bufferText, newlineIndex - 1)
+  JSONRPC_ByteBuffer_SetText(@*state\buffer, Mid(bufferText, newlineIndex + 1))
 
   If Right(line, 1) = #CR$
     line = Left(line, Len(line) - 1)
@@ -116,4 +121,3 @@ Procedure.s JSONRPC_Codec_StdioBuildMessage(body.s)
 
   ProcedureReturn body + #LF$
 EndProcedure
-

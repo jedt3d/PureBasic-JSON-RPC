@@ -5,6 +5,7 @@ This folder contains the PureBasic JSON-RPC library implementation.
 Current library includes:
 
 - `io.pbi` - generic reader and writer structures used by connection and tests.
+- `byte_buffer.pbi` - explicit UTF-8 byte-counted buffer helper for codecs.
 - `framing.pbi` - `Content-Length` frame writing and incremental frame reading.
 - `codec.pbi` - MCP stdio newline-delimited message codec.
 - `connection.pbi` - connection lifecycle and generic writer support.

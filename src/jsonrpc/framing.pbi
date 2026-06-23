@@ -1,5 +1,7 @@
 EnableExplicit
 
+XIncludeFile "byte_buffer.pbi"
+
 #JSONRPC_Framing_DefaultMaxHeaderBytes = 8192
 #JSONRPC_Framing_DefaultMaxBodyBytes = 1048576
 
@@ -14,7 +16,7 @@ Enumeration
 EndEnumeration
 
 Structure JSONRPC_FrameState
-  buffer.s
+  buffer.JSONRPC_ByteBuffer
   maxHeaderBytes.i
   maxBodyBytes.i
   errorCode.i
@@ -42,7 +44,7 @@ Declare.s JSONRPC_Framing_BuildFrame(body.s)
 Procedure JSONRPC_Framing_SetError(*state.JSONRPC_FrameState, code.i, message.s)
   If *state\errorCode = #JSONRPC_Framing_ErrorNone
     *state\errorCode = code
-    *state\errorMessage = message
+  *state\errorMessage = message
   EndIf
 EndProcedure
 
@@ -138,9 +140,9 @@ Procedure.i JSONRPC_Framing_Utf8CharCountForByteLength(text.s, targetBytes.i)
 EndProcedure
 
 Procedure JSONRPC_Framing_Init(*state.JSONRPC_FrameState, maxHeaderBytes.i = #JSONRPC_Framing_DefaultMaxHeaderBytes, maxBodyBytes.i = #JSONRPC_Framing_DefaultMaxBodyBytes)
-  *state\buffer = ""
   *state\maxHeaderBytes = maxHeaderBytes
   *state\maxBodyBytes = maxBodyBytes
+  JSONRPC_ByteBuffer_Init(@*state\buffer, maxHeaderBytes + maxBodyBytes + Len(#JSONRPC_Framing_HeaderTerminator$))
   *state\errorCode = #JSONRPC_Framing_ErrorNone
   *state\errorMessage = ""
 EndProcedure
@@ -151,12 +153,15 @@ EndProcedure
 
 Procedure JSONRPC_Framing_PushBytes(*state.JSONRPC_FrameState, chunk.s)
   If *state\errorCode = #JSONRPC_Framing_ErrorNone
-    *state\buffer + chunk
+    If JSONRPC_ByteBuffer_AppendUtf8(@*state\buffer, chunk) = #False
+      JSONRPC_Framing_SetError(*state, #JSONRPC_Framing_ErrorBodyTooLarge, "Frame buffer exceeds configured maximum.")
+    EndIf
   EndIf
 EndProcedure
 
 Procedure.i JSONRPC_Framing_NextMessage(*state.JSONRPC_FrameState, *message.JSONRPC_Message)
   Protected headerEnd.i
+  Protected bufferText.s
   Protected header.s
   Protected bodyLength.i
   Protected bodyStart.i
@@ -171,17 +176,18 @@ Procedure.i JSONRPC_Framing_NextMessage(*state.JSONRPC_FrameState, *message.JSON
     ProcedureReturn #False
   EndIf
 
-  headerEnd = FindString(*state\buffer, #JSONRPC_Framing_HeaderTerminator$, 1)
+  bufferText = JSONRPC_ByteBuffer_AsText(@*state\buffer)
+  headerEnd = FindString(bufferText, #JSONRPC_Framing_HeaderTerminator$, 1)
 
   If headerEnd = 0
-    If JSONRPC_Framing_Utf8ByteLength(*state\buffer) > *state\maxHeaderBytes
+    If JSONRPC_ByteBuffer_Length(@*state\buffer) > *state\maxHeaderBytes
       JSONRPC_Framing_SetError(*state, #JSONRPC_Framing_ErrorHeaderTooLarge, "Header exceeds configured maximum.")
     EndIf
 
     ProcedureReturn #False
   EndIf
 
-  header = Left(*state\buffer, headerEnd - 1)
+  header = Left(bufferText, headerEnd - 1)
 
   If JSONRPC_Framing_Utf8ByteLength(header) > *state\maxHeaderBytes
     JSONRPC_Framing_SetError(*state, #JSONRPC_Framing_ErrorHeaderTooLarge, "Header exceeds configured maximum.")
@@ -194,7 +200,7 @@ Procedure.i JSONRPC_Framing_NextMessage(*state.JSONRPC_FrameState, *message.JSON
   EndIf
 
   bodyStart = headerEnd + Len(#JSONRPC_Framing_HeaderTerminator$)
-  availableBody = Mid(*state\buffer, bodyStart)
+  availableBody = Mid(bufferText, bodyStart)
   availableBodyBytes = JSONRPC_Framing_Utf8ByteLength(availableBody)
 
   If availableBodyBytes < bodyLength
@@ -219,7 +225,7 @@ Procedure.i JSONRPC_Framing_NextMessage(*state.JSONRPC_FrameState, *message.JSON
   EndIf
 
   *message\byteLength = bodyLength
-  *state\buffer = Mid(availableBody, bodyCharCount + 1)
+  JSONRPC_ByteBuffer_SetText(@*state\buffer, Mid(availableBody, bodyCharCount + 1))
 
   ProcedureReturn #True
 EndProcedure
@@ -243,4 +249,3 @@ EndProcedure
 Procedure.s JSONRPC_Framing_BuildFrame(body.s)
   ProcedureReturn "Content-Length: " + Str(JSONRPC_Framing_Utf8ByteLength(body)) + #CRLF$ + #CRLF$ + body
 EndProcedure
-

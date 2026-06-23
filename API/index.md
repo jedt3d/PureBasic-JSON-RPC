@@ -22,6 +22,7 @@ Current pages:
 - [015 MCP Tools Call](015-mcp-tools-call.md)
 - [016 Packaging And ReadTheDocs](016-packaging-docs.md)
 - [017 Reader Writer Interfaces](017-reader-writer-interfaces.md)
+- [018 Byte Buffer Framing](018-byte-buffer-framing.md)
 
 Future API pages should document:
 
