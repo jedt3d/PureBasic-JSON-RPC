@@ -24,16 +24,17 @@ Acceptance criteria:
 ## Planned Build Order
 
 1. Framed message reader and writer. Completed in `feature/001-framing`.
-2. Connection lifecycle.
-3. JSON parsing, validation, and standard errors.
-4. Request and notification registration.
-5. Inbound dispatch and response writing.
-6. Outbound request ids and pending-response tracking.
-7. Timeout housekeeping.
-8. Batch handling.
-9. Cooperative `$/cancelRequest` support.
-10. Diagnostics counters.
-11. Stress tests and memory lifecycle tests.
+2. Transport codecs. Completed in `feature/002-transport-codecs`.
+3. Connection lifecycle.
+4. JSON parsing, validation, and standard errors.
+5. Request and notification registration.
+6. Inbound dispatch and response writing.
+7. Outbound request ids and pending-response tracking.
+8. Timeout housekeeping.
+9. Batch handling.
+10. Cooperative `$/cancelRequest` support.
+11. Diagnostics counters.
+12. Stress tests and memory lifecycle tests.
 
 ## 001-framing
 
@@ -51,4 +52,21 @@ Acceptance criteria:
 
 - PureUnit covers fragmented headers, fragmented bodies, multiple frames, Unicode byte lengths, invalid lengths, and body limits.
 - `examples/001-framing/framing_probe.pb` builds and runs.
+- `./tools/check.sh` passes.
+
+## 002-transport-codecs
+
+Branch: `feature/002-transport-codecs`
+
+Purpose:
+
+- Add MCP-compatible stdio newline-delimited message handling.
+- Keep existing Content-Length framing helpers available.
+- Reject outbound messages containing embedded line breaks.
+- Bound stdio message buffers.
+
+Acceptance criteria:
+
+- PureUnit covers partial lines, multiple lines, CRLF delimiters, embedded newline rejection, and oversized lines.
+- `examples/002-transport-codecs/stdio_codec_probe.pb` builds and runs.
 - `./tools/check.sh` passes.
