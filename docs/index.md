@@ -16,6 +16,7 @@ release-notes
 release-hardening-plan
 release-quality-gates
 release-checklist
+คู่มือเดินโค้ด <Code Walkthrough>
 jsonrpc-compliance-matrix
 security-robustness
 mcp-for-purebasic
