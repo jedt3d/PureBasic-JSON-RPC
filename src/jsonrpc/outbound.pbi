@@ -92,6 +92,8 @@ Procedure.i JSONRPC_Connection_MatchResponse(*connection.JSONRPC_Connection, bod
 
   If FindMapElement(*connection\pending(), inspect\idText) = #False
     JSONRPC_Connection_SetError(*connection, #JSONRPC_Connection_ErrorOrphanResponse, "Response did not match a pending request.")
+    *connection\diagnostics\orphanResponses + 1
+    *connection\diagnostics\errors + 1
     ProcedureReturn #False
   EndIf
 
@@ -119,6 +121,8 @@ Procedure.i JSONRPC_Connection_CleanupTimeouts(*connection.JSONRPC_Connection, n
 
   If expired > 0
     JSONRPC_Connection_SetError(*connection, #JSONRPC_Connection_ErrorTimeout, "Pending request timed out.")
+    *connection\diagnostics\timeouts + expired
+    *connection\diagnostics\errors + expired
   Else
     JSONRPC_Connection_SetError(*connection, #JSONRPC_Connection_ErrorNone, "")
   EndIf

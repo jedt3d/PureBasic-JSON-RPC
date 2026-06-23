@@ -78,7 +78,15 @@ Procedure.s JSONRPC_Dispatcher_Dispatch(*dispatcher.JSONRPC_Dispatcher, *connect
   Protected notificationHandler.JSONRPC_NotificationHandler
   Protected handlerOk.i
 
+  If *connection <> 0
+    *connection\diagnostics\receivedMessages + 1
+  EndIf
+
   If JSONRPC_Protocol_Inspect(body, @inspect) = #False
+    If *connection <> 0
+      *connection\diagnostics\errors + 1
+    EndIf
+
     If inspect\requiresResponse
       ProcedureReturn JSONRPC_Protocol_BuildErrorResponse(inspect\errorCode, inspect\errorMessage, inspect\idText)
     EndIf
@@ -110,6 +118,10 @@ Procedure.s JSONRPC_Dispatcher_Dispatch(*dispatcher.JSONRPC_Dispatcher, *connect
   EndIf
 
   If FindMapElement(*dispatcher\requestHandlers(), inspect\method) = #False
+    If *connection <> 0
+      *connection\diagnostics\errors + 1
+    EndIf
+
     FreeJSON(json)
     ProcedureReturn JSONRPC_Protocol_BuildMethodNotFoundResponse(inspect\idText)
   EndIf
@@ -120,11 +132,19 @@ Procedure.s JSONRPC_Dispatcher_Dispatch(*dispatcher.JSONRPC_Dispatcher, *connect
   FreeJSON(json)
 
   If handlerOk = #False And handlerResult\ok = #False And handlerResult\errorCode = #JSONRPC_Error_Internal
+    If *connection <> 0
+      *connection\diagnostics\errors + 1
+    EndIf
+
     ProcedureReturn JSONRPC_Protocol_BuildErrorResponse(#JSONRPC_Error_Internal, "Internal error", inspect\idText)
   EndIf
 
   If handlerResult\ok
     ProcedureReturn JSONRPC_Protocol_BuildResultResponse(handlerResult\resultJson, inspect\idText)
+  EndIf
+
+  If *connection <> 0
+    *connection\diagnostics\errors + 1
   EndIf
 
   ProcedureReturn JSONRPC_Protocol_BuildErrorResponse(handlerResult\errorCode, handlerResult\errorMessage, inspect\idText)
@@ -141,4 +161,3 @@ Procedure.i JSONRPC_Dispatcher_DispatchToConnection(*dispatcher.JSONRPC_Dispatch
 
   ProcedureReturn JSONRPC_Connection_SendBody(*connection, response)
 EndProcedure
-

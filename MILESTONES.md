@@ -33,7 +33,7 @@ Acceptance criteria:
 8. Timeout housekeeping. Completed in `feature/007-timeout-housekeeping`.
 9. Batch handling. Completed in `feature/008-batch-handling`.
 10. Cooperative `$/cancelRequest` support. Completed in `feature/009-cancellation`.
-11. Diagnostics counters.
+11. Diagnostics counters. Completed in `feature/010-diagnostics`.
 12. Stress tests and memory lifecycle tests.
 
 ## 001-framing
@@ -188,4 +188,20 @@ Acceptance criteria:
 
 - PureUnit covers numeric and string id cancellation, clearing, ignored invalid notifications, and close cleanup.
 - `examples/009-cancellation/cancel_probe.pb` builds and runs.
+- `./tools/check.sh` passes.
+
+## 010-diagnostics
+
+Branch: `feature/010-diagnostics`
+
+Purpose:
+
+- Add connection-level diagnostics counters.
+- Count sends, inbound messages, errors, timeouts, orphan responses, batches, and cancellations.
+- Add snapshot, reset, and compact summary helpers.
+
+Acceptance criteria:
+
+- PureUnit covers send/receive/error counters, timeout/orphan/batch/cancel counters, and reset behavior.
+- `examples/010-diagnostics/diagnostics_probe.pb` builds and runs.
 - `./tools/check.sh` passes.

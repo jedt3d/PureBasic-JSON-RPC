@@ -128,7 +128,15 @@ Procedure.s JSONRPC_Batch_Dispatch(*dispatcher.JSONRPC_Dispatcher, *connection.J
     ProcedureReturn JSONRPC_Dispatcher_Dispatch(*dispatcher, *connection, body)
   EndIf
 
+  If *connection <> 0
+    *connection\diagnostics\batches + 1
+  EndIf
+
   If JSONArraySize(root) = 0
+    If *connection <> 0
+      *connection\diagnostics\errors + 1
+    EndIf
+
     FreeJSON(json)
     ProcedureReturn JSONRPC_Protocol_BuildErrorResponse(#JSONRPC_Error_InvalidRequest, "Invalid Request", "null")
   EndIf
