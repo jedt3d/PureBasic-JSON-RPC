@@ -28,6 +28,7 @@ Current pages:
 - [021 Handler Cancellation Tokens](021-handler-cancellation-tokens.md)
 - [022 Write Queue Close Semantics](022-write-queue-close-semantics.md)
 - [023 Trace Logger Hooks](023-trace-logger-hooks.md)
+- [024 Compliance Suite](024-compliance-suite.md)
 
 Future API pages should document:
 

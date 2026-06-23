@@ -18,6 +18,7 @@ Current library includes:
 - `diagnostics.pbi` - connection diagnostics counters and summary helpers.
 - `stress.pbi` - bounded stress smoke helper for memory lifecycle paths.
 - `trace.pbi` - trace levels, capture, and logger hook convenience include.
+- `compliance.pbi` - reusable JSON-RPC core compliance runner.
 - `stdio_runtime.pbi` - newline-delimited stdio runtime pump.
 - `mcp_lifecycle.pbi` - MCP initialize and initialized adapter.
 - `mcp_tools.pbi` - MCP tool metadata registry and `tools/list`.
