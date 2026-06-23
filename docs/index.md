@@ -9,4 +9,5 @@ The public API documentation currently lives in the top-level `API/` folder so i
 
 harness
 api
+jsonrpc-foundation-gap-plan
 ```
