@@ -40,4 +40,10 @@ If FindString(response, MCP_SQLiteAdmin_JapaneseHello(), 1) = 0
   End 1
 EndIf
 
+response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"sqlite/export\",\"arguments\":{\"dbPath\":\"probe.sqlite\",\"sql\":\"SELECT id, locale, title FROM admin_notes ORDER BY id\",\"outputPath\":\"probe-export.csv\",\"format\":\"csv\",\"maxRows\":10,\"overwrite\":true}},\"id\":4}")
+If FindString(response, ~"\"isError\":false", 1) = 0 Or FileSize(allowedRoot + "probe-export.csv") <= 0
+  PrintN("sqlite/export probe failed")
+  End 1
+EndIf
+
 PrintN("sqlite admin scenario: OK")

@@ -290,6 +290,51 @@ The result text contains:
 Prefer `sqlite/query` for exploration. It keeps output bounded and makes it
 clear when a result was truncated.
 
+## 11A. Export Query Results To CSV
+
+Use `sqlite/export` when a query result should become a file that another tool
+can open:
+
+```json
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/export","arguments":{"dbPath":"demo.sqlite","sql":"SELECT id, locale, title FROM admin_notes ORDER BY id","outputPath":"exports/admin-notes.csv","format":"csv","maxRows":5000,"overwrite":true}},"id":50}
+```
+
+The export path is resolved inside the same allowed root as database files. The
+example above writes:
+
+```text
+.local/sqlite-admin/exports/admin-notes.csv
+```
+
+CSV is deliberately opinionated in v1. There is no prompt or option to weaken
+the format:
+
+- the file is UTF-8 with a BOM;
+- the first row is a header row;
+- row endings are CRLF;
+- every field is wrapped in double quotes;
+- embedded double quotes are escaped by doubling them;
+- embedded commas and line breaks remain inside quoted fields;
+- SQLite `NULL` values are exported as empty quoted fields;
+- `maxRows` bounds the file size and the result reports `truncated`.
+
+That strictness prevents the most common CSV export bugs: mojibake in
+spreadsheet tools, commas splitting a value into extra columns, quotes breaking
+the row, and line breaks corrupting the next record.
+
+Spreadsheet-specific exports are future work. The practical format ranking for
+PureBasic is:
+
+```text
+CSV  -> easiest: plain UTF-8 text, implemented now
+ODS  -> medium: ZIP package plus simpler OpenDocument XML tables
+XLSX -> harder: ZIP package plus OOXML workbook relationships and shared parts
+```
+
+ODS is a good candidate for the next spreadsheet format because LibreOffice
+uses it natively and Excel can import it. XLSX is still valuable, but it asks us
+to build a larger packaging and relationship model correctly.
+
 ## 12. Run Write SQL Intentionally
 
 Use `sqlite/execute` for non-row SQL:

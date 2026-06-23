@@ -6,11 +6,14 @@ UseSQLiteDatabase()
 
 #MCP_SQLiteAdmin_DefaultMaxOutputChars = 24000
 #MCP_SQLiteAdmin_DefaultMaxRows = 50
+#MCP_SQLiteAdmin_DefaultExportMaxRows = 5000
+#MCP_SQLiteAdmin_MaxExportRows = 10000
 #MCP_SQLiteAdmin_Database = 0
 
 #MCP_SQLiteAdmin_BootstrapSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"overwrite\":{\"type\":\"boolean\"}},\"additionalProperties\":false}"
 #MCP_SQLiteAdmin_InspectSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"includeSystem\":{\"type\":\"boolean\"}},\"additionalProperties\":false}"
 #MCP_SQLiteAdmin_QuerySchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"sql\":{\"type\":\"string\"},\"maxRows\":{\"type\":\"integer\"}},\"required\":[\"sql\"],\"additionalProperties\":false}"
+#MCP_SQLiteAdmin_ExportSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"sql\":{\"type\":\"string\"},\"outputPath\":{\"type\":\"string\"},\"format\":{\"type\":\"string\",\"enum\":[\"csv\"]},\"maxRows\":{\"type\":\"integer\"},\"overwrite\":{\"type\":\"boolean\"}},\"required\":[\"sql\",\"outputPath\"],\"additionalProperties\":false}"
 #MCP_SQLiteAdmin_ExecuteSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"sql\":{\"type\":\"string\"}},\"required\":[\"sql\"],\"additionalProperties\":false}"
 #MCP_SQLiteAdmin_BackupSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"backupPath\":{\"type\":\"string\"},\"overwrite\":{\"type\":\"boolean\"}},\"required\":[\"backupPath\"],\"additionalProperties\":false}"
 #MCP_SQLiteAdmin_MaintenanceSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"operation\":{\"type\":\"string\",\"enum\":[\"quick_check\",\"integrity_check\",\"vacuum\"]}},\"required\":[\"operation\"],\"additionalProperties\":false}"
@@ -42,6 +45,7 @@ Declare MCP_SQLiteAdmin_SetConfig(allowedRoot.s = "", defaultDbPath.s = "", maxO
 Declare MCP_SQLiteAdmin_ResetConfig()
 Declare.s MCP_SQLiteAdmin_DefaultAllowedRoot()
 Declare.s MCP_SQLiteAdmin_DefaultDbPath()
+Declare.i MCP_SQLiteAdmin_EnsureDirectory(directory.s)
 Declare.i MCP_SQLiteAdmin_BootstrapDatabase(dbPath.s, overwrite.i, *result.MCP_SQLiteAdmin_Result)
 Declare.i MCP_SQLiteAdmin_Register(*dispatcher.JSONRPC_Dispatcher, *registry.MCP_ToolRegistry)
 
@@ -164,15 +168,41 @@ Procedure.s MCP_SQLiteAdmin_ResolvePath(inputPath.s, *errorMessage.String)
 EndProcedure
 
 Procedure.i MCP_SQLiteAdmin_EnsureAllowedRoot()
-  Protected parent.s
+  ProcedureReturn MCP_SQLiteAdmin_EnsureDirectory(MCP_SQLiteAdmin_Config\allowedRoot)
+EndProcedure
 
-  parent = GetPathPart(Left(MCP_SQLiteAdmin_Config\allowedRoot, Len(MCP_SQLiteAdmin_Config\allowedRoot) - 1))
-  If parent <> "" And FileSize(parent) <> -2
-    CreateDirectory(parent)
+Procedure.i MCP_SQLiteAdmin_EnsureDirectory(directory.s)
+  Protected normalized.s
+  Protected current.s
+  Protected part.s
+  Protected index.i
+  Protected count.i
+
+  If directory = ""
+    ProcedureReturn #False
   EndIf
 
-  If FileSize(MCP_SQLiteAdmin_Config\allowedRoot) <> -2
-    ProcedureReturn CreateDirectory(MCP_SQLiteAdmin_Config\allowedRoot)
+  normalized = MCP_SQLiteAdmin_EnsureTrailingSlash(directory)
+  If Left(normalized, 1) <> "/"
+    ProcedureReturn #False
+  EndIf
+
+  current = "/"
+  count = CountString(normalized, "/")
+  For index = 2 To count
+    part = StringField(normalized, index, "/")
+    If part <> ""
+      current + part + "/"
+      If FileSize(current) <> -2
+        If CreateDirectory(current) = #False
+          ProcedureReturn #False
+        EndIf
+      EndIf
+    EndIf
+  Next
+
+  If FileSize(normalized) <> -2
+    ProcedureReturn #False
   EndIf
 
   ProcedureReturn #True
@@ -331,6 +361,46 @@ Procedure.s MCP_SQLiteAdmin_CellJson(column.i)
   ProcedureReturn MCP_SQLiteAdmin_JsonString(GetDatabaseString(#MCP_SQLiteAdmin_Database, column))
 EndProcedure
 
+Procedure.s MCP_SQLiteAdmin_CsvField(text.s)
+  ProcedureReturn #DQUOTE$ + ReplaceString(text, #DQUOTE$, #DQUOTE$ + #DQUOTE$) + #DQUOTE$
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_CsvCell(column.i)
+  If CheckDatabaseNull(#MCP_SQLiteAdmin_Database, column)
+    ProcedureReturn MCP_SQLiteAdmin_CsvField("")
+  EndIf
+
+  ProcedureReturn MCP_SQLiteAdmin_CsvField(GetDatabaseString(#MCP_SQLiteAdmin_Database, column))
+EndProcedure
+
+Procedure.i MCP_SQLiteAdmin_WriteCsvHeader(file.i, columns.i)
+  Protected column.i
+  Protected line.s
+
+  For column = 0 To columns - 1
+    If column > 0
+      line + ","
+    EndIf
+    line + MCP_SQLiteAdmin_CsvField(DatabaseColumnName(#MCP_SQLiteAdmin_Database, column))
+  Next
+
+  ProcedureReturn WriteString(file, line + #CRLF$, #PB_UTF8)
+EndProcedure
+
+Procedure.i MCP_SQLiteAdmin_WriteCsvRow(file.i, columns.i)
+  Protected column.i
+  Protected line.s
+
+  For column = 0 To columns - 1
+    If column > 0
+      line + ","
+    EndIf
+    line + MCP_SQLiteAdmin_CsvCell(column)
+  Next
+
+  ProcedureReturn WriteString(file, line + #CRLF$, #PB_UTF8)
+EndProcedure
+
 Procedure.s MCP_SQLiteAdmin_RunQuery(dbPath.s, sql.s, maxRows.i, *result.MCP_SQLiteAdmin_Result)
   Protected columns.i
   Protected column.i
@@ -421,6 +491,90 @@ Procedure.i MCP_SQLiteAdmin_RunExecute(dbPath.s, sql.s, *result.MCP_SQLiteAdmin_
   *result\ok = #True
   *result\isError = #False
   *result\text = ~"{\"ok\":true,\"affectedRows\":" + Str(affected) + "}"
+  ProcedureReturn #True
+EndProcedure
+
+Procedure.i MCP_SQLiteAdmin_RunCsvExport(dbPath.s, sql.s, outputPath.s, maxRows.i, overwrite.i, *result.MCP_SQLiteAdmin_Result)
+  Protected dbResult.MCP_SQLiteAdmin_Result
+  Protected columns.i
+  Protected exportedRows.i
+  Protected truncated.i
+  Protected file.i
+  Protected outputDirectory.s
+
+  MCP_SQLiteAdmin_ResetResult(*result)
+  If maxRows <= 0
+    maxRows = #MCP_SQLiteAdmin_DefaultExportMaxRows
+  EndIf
+
+  If maxRows > #MCP_SQLiteAdmin_MaxExportRows
+    maxRows = #MCP_SQLiteAdmin_MaxExportRows
+  EndIf
+
+  outputDirectory = GetPathPart(outputPath)
+  If MCP_SQLiteAdmin_EnsureDirectory(outputDirectory) = #False
+    *result\text = "Unable to create CSV export directory: " + outputDirectory
+    ProcedureReturn #False
+  EndIf
+
+  If FileSize(outputPath) >= 0 And overwrite = #False
+    *result\text = "CSV export file already exists. Set overwrite=true to replace it."
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_SQLiteAdmin_OpenDatabase(dbPath, #False, @dbResult) = #False
+    *result\text = dbResult\text
+    ProcedureReturn #False
+  EndIf
+
+  If DatabaseQuery(#MCP_SQLiteAdmin_Database, sql) = 0
+    *result\text = DatabaseError()
+    CloseDatabase(#MCP_SQLiteAdmin_Database)
+    ProcedureReturn #False
+  EndIf
+
+  file = CreateFile(#PB_Any, outputPath)
+  If file = 0
+    *result\text = "Unable to create CSV export file: " + outputPath
+    FinishDatabaseQuery(#MCP_SQLiteAdmin_Database)
+    CloseDatabase(#MCP_SQLiteAdmin_Database)
+    ProcedureReturn #False
+  EndIf
+
+  WriteStringFormat(file, #PB_UTF8)
+  columns = DatabaseColumns(#MCP_SQLiteAdmin_Database)
+  If MCP_SQLiteAdmin_WriteCsvHeader(file, columns) = #False
+    *result\text = "Unable to write CSV header: " + outputPath
+    CloseFile(file)
+    FinishDatabaseQuery(#MCP_SQLiteAdmin_Database)
+    CloseDatabase(#MCP_SQLiteAdmin_Database)
+    ProcedureReturn #False
+  EndIf
+
+  While NextDatabaseRow(#MCP_SQLiteAdmin_Database)
+    If exportedRows >= maxRows
+      truncated = #True
+      Break
+    EndIf
+
+    If MCP_SQLiteAdmin_WriteCsvRow(file, columns) = #False
+      *result\text = "Unable to write CSV row: " + outputPath
+      CloseFile(file)
+      FinishDatabaseQuery(#MCP_SQLiteAdmin_Database)
+      CloseDatabase(#MCP_SQLiteAdmin_Database)
+      ProcedureReturn #False
+    EndIf
+
+    exportedRows + 1
+  Wend
+
+  CloseFile(file)
+  FinishDatabaseQuery(#MCP_SQLiteAdmin_Database)
+  CloseDatabase(#MCP_SQLiteAdmin_Database)
+
+  *result\ok = #True
+  *result\isError = #False
+  *result\text = ~"{\"path\":\"" + JSONRPC_Protocol_EscapeString(outputPath) + ~"\",\"format\":\"csv\",\"encoding\":\"UTF-8 with BOM\",\"quotedFields\":true,\"lineEnding\":\"CRLF\",\"exportedRows\":" + Str(exportedRows) + ~",\"truncated\":" + MCP_SQLiteAdmin_BoolJson(truncated) + "}"
   ProcedureReturn #True
 EndProcedure
 
@@ -612,6 +766,51 @@ Procedure.i MCP_SQLiteAdmin_QueryHandler(argumentsValue, *context.JSONRPC_Reques
   EndIf
 
   MCP_SQLiteAdmin_RunQuery(dbPath, sql, maxRows, @toolResult)
+  MCP_SQLiteAdmin_SetMCPResult(*result, toolResult\text, Bool(toolResult\ok = #False))
+  ProcedureReturn #True
+EndProcedure
+
+Procedure.i MCP_SQLiteAdmin_ExportHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  Protected args.MCP_SQLiteAdmin_ArgState
+  Protected dbPath.s
+  Protected sql.s
+  Protected outputInput.s
+  Protected outputPath.s
+  Protected format.s
+  Protected maxRows.i
+  Protected overwrite.i
+  Protected errorMessage.String
+  Protected toolResult.MCP_SQLiteAdmin_Result
+
+  MCP_SQLiteAdmin_InitArgState(@args)
+  dbPath = MCP_SQLiteAdmin_ResolvedDbPath(argumentsValue, @args)
+  sql = MCP_SQLiteAdmin_RequiredStringArg(argumentsValue, "sql", @args)
+  outputInput = MCP_SQLiteAdmin_RequiredStringArg(argumentsValue, "outputPath", @args)
+  format = MCP_SQLiteAdmin_StringArg(argumentsValue, "format", "csv", @args)
+  maxRows = MCP_SQLiteAdmin_IntArg(argumentsValue, "maxRows", #MCP_SQLiteAdmin_DefaultExportMaxRows, 1, #MCP_SQLiteAdmin_MaxExportRows, @args)
+  overwrite = MCP_SQLiteAdmin_BoolArg(argumentsValue, "overwrite", #False, @args)
+  If MCP_SQLiteAdmin_RequireExistingDb(dbPath, @args) = #False
+    MCP_SQLiteAdmin_SetInvalidParams(*result, args\message)
+    ProcedureReturn #True
+  EndIf
+
+  If LCase(format) <> "csv"
+    MCP_SQLiteAdmin_SetInvalidParams(*result, "sqlite/export currently supports only csv format")
+    ProcedureReturn #True
+  EndIf
+
+  If LCase(Right(outputInput, 4)) <> ".csv"
+    MCP_SQLiteAdmin_SetInvalidParams(*result, "outputPath must end with .csv")
+    ProcedureReturn #True
+  EndIf
+
+  outputPath = MCP_SQLiteAdmin_ResolvePath(outputInput, @errorMessage)
+  If outputPath = ""
+    MCP_SQLiteAdmin_SetInvalidParams(*result, errorMessage\s)
+    ProcedureReturn #True
+  EndIf
+
+  MCP_SQLiteAdmin_RunCsvExport(dbPath, sql, outputPath, maxRows, overwrite, @toolResult)
   MCP_SQLiteAdmin_SetMCPResult(*result, toolResult\text, Bool(toolResult\ok = #False))
   ProcedureReturn #True
 EndProcedure
@@ -903,6 +1102,9 @@ Procedure.i MCP_SQLiteAdmin_Register(*dispatcher.JSONRPC_Dispatcher, *registry.M
     ProcedureReturn #False
   EndIf
   If MCP_SQLiteAdmin_RegisterOne(*registry, "sqlite/query", "SQLite Query", "Run row-returning SQL with bounded JSON text output.", #MCP_SQLiteAdmin_QuerySchema$, @MCP_SQLiteAdmin_QueryHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+  If MCP_SQLiteAdmin_RegisterOne(*registry, "sqlite/export", "SQLite Export", "Export a row-returning query to a canonical UTF-8 CSV file.", #MCP_SQLiteAdmin_ExportSchema$, @MCP_SQLiteAdmin_ExportHandler()) = #False
     ProcedureReturn #False
   EndIf
   If MCP_SQLiteAdmin_RegisterOne(*registry, "sqlite/execute", "SQLite Execute", "Run non-row SQL statements intentionally.", #MCP_SQLiteAdmin_ExecuteSchema$, @MCP_SQLiteAdmin_ExecuteHandler()) = #False
