@@ -75,6 +75,7 @@ for required_doc in \
   "release-hardening-plan" \
   "release-quality-gates" \
   "release-checklist" \
+  "Code Walkthrough" \
   "jsonrpc-compliance-matrix" \
   "security-robustness" \
   "mcp-for-purebasic" \

@@ -16,6 +16,8 @@ Documentation and harness discipline:
   that prevents workstation-specific absolute paths from entering the project.
 - Added a release checklist and release artifact verifier so generated packages,
   documentation PDFs, manifests, and checksums are checked after packaging.
+- Added a Thai code-level project walkthrough under `docs/Code Walkthrough.md`
+  for reviewers who need to follow the source and examples from the beginning.
 - Added `tools/verify-docs.sh` to verify numbered routes have matching example
   READMEs, API pages, milestone sections, API index entries, docs API bridge
   entries, and required Sphinx navigation.
