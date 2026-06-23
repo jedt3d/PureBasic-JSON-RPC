@@ -32,7 +32,7 @@ Acceptance criteria:
 7. Outbound request ids and pending-response tracking. Completed in `feature/006-outbound-requests`.
 8. Timeout housekeeping. Completed in `feature/007-timeout-housekeeping`.
 9. Batch handling. Completed in `feature/008-batch-handling`.
-10. Cooperative `$/cancelRequest` support.
+10. Cooperative `$/cancelRequest` support. Completed in `feature/009-cancellation`.
 11. Diagnostics counters.
 12. Stress tests and memory lifecycle tests.
 
@@ -171,4 +171,21 @@ Acceptance criteria:
 
 - PureUnit covers empty batch, notification-only batch, mixed batch, single-message fallback, and connection writing.
 - `examples/008-batch-handling/batch_probe.pb` builds and runs.
+- `./tools/check.sh` passes.
+
+## 009-cancellation
+
+Branch: `feature/009-cancellation`
+
+Purpose:
+
+- Add cooperative `$/cancelRequest` notification handling.
+- Store cancellation tokens on the connection.
+- Allow handlers to query and clear cancellation state.
+- Clear cancellation state on connection close.
+
+Acceptance criteria:
+
+- PureUnit covers numeric and string id cancellation, clearing, ignored invalid notifications, and close cleanup.
+- `examples/009-cancellation/cancel_probe.pb` builds and runs.
 - `./tools/check.sh` passes.
