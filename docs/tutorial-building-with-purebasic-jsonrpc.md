@@ -532,7 +532,7 @@ A typical MCP host registration points to the compiled executable:
 {
   "mcpServers": {
     "purebasic-check": {
-      "command": "/absolute/path/to/.build/MCP/examples/purebasic-check/purebasic_check_server"
+      "command": "<project-root>/.build/MCP/examples/purebasic-check/purebasic_check_server"
     }
   }
 }
@@ -542,11 +542,16 @@ Different hosts have different configuration files and UI, but the principle
 is the same: the host launches the executable, sends MCP JSON-RPC messages to
 stdin, and reads protocol messages from stdout.
 
+If a host cannot resolve relative commands, expand `<project-root>` locally in
+that host's private configuration. Keep committed documentation and examples
+project-root-relative.
+
 ## 15. Troubleshooting
 
 If the host cannot see the server:
 
-- Confirm the command path is absolute.
+- Confirm the command path resolves for the host. Some hosts require expanding
+  `<project-root>` to the local repository path in their private configuration.
 - Confirm the binary was built for the current platform.
 - Confirm the `.pbp` target is console.
 - Run the probe input manually.

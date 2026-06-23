@@ -11,7 +11,7 @@ Define allowedRoot.s
 
 OpenConsole()
 
-allowedRoot = GetCurrentDirectory() + ".local/sqlite-admin/"
+allowedRoot = MCP_SQLiteAdmin_DefaultAllowedRoot()
 MCP_SQLiteAdmin_SetConfig(allowedRoot)
 
 JSONRPC_Dispatcher_Init(@dispatcher)

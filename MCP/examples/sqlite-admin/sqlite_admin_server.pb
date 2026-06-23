@@ -4,7 +4,7 @@ XIncludeFile "../../../src/jsonrpc/version.pbi"
 XIncludeFile "sqlite_admin_tool.pbi"
 
 Procedure.s ServerAllowedRoot()
-  ProcedureReturn GetCurrentDirectory() + ".local/sqlite-admin/"
+  ProcedureReturn MCP_SQLiteAdmin_DefaultAllowedRoot()
 EndProcedure
 
 Procedure ServerWriteProtocol(response.s)
