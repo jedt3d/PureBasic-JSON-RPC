@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 6.40">
+  <section name="targets">
+    <target name="jsonrpc alpha verification" enabled="1" default="1">
+      <inputfile value="examples/026-alpha-release-package/alpha_package_probe.pb"/>
+      <outputfile value=".build/PureBasic-JSON-RPC/jsonrpc_alpha_verification"/>
+      <executable value=".build/PureBasic-JSON-RPC/jsonrpc_alpha_verification"/>
+      <options thread="1" dpiaware="1" optimizer="0"/>
+      <compiler version="PureBasic 6.40 - C Backend (MacOS X - arm64)"/>
+      <format exe="console" cpu="1"/>
+    </target>
+  </section>
+  <section name="files">
+    <file name="src/jsonrpc/jsonrpc.pbi"/>
+    <file name="src/jsonrpc/version.pbi"/>
+    <file name="src/jsonrpc/byte_buffer.pbi"/>
+    <file name="src/jsonrpc/framing.pbi"/>
+    <file name="src/jsonrpc/codec.pbi"/>
+    <file name="src/jsonrpc/io.pbi"/>
+    <file name="src/jsonrpc/connection.pbi"/>
+    <file name="src/jsonrpc/protocol.pbi"/>
+    <file name="src/jsonrpc/dispatch.pbi"/>
+    <file name="src/jsonrpc/batch.pbi"/>
+    <file name="src/jsonrpc/cancel.pbi"/>
+    <file name="src/jsonrpc/outbound.pbi"/>
+    <file name="src/jsonrpc/diagnostics.pbi"/>
+    <file name="src/jsonrpc/stress.pbi"/>
+    <file name="src/jsonrpc/stdio_runtime.pbi"/>
+    <file name="src/jsonrpc/mcp_lifecycle.pbi"/>
+    <file name="src/jsonrpc/mcp_tools.pbi"/>
+    <file name="src/jsonrpc/trace.pbi"/>
+    <file name="src/jsonrpc/compliance.pbi"/>
+    <file name="examples/026-alpha-release-package/alpha_package_probe.pb"/>
+  </section>
+</project>

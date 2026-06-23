@@ -3,6 +3,7 @@
 pbp_each_project_target() {
   callback="$1"
 
+  "$callback" "PureBasic-JSON-RPC.pbp" "jsonrpc alpha verification" "console" ".build/PureBasic-JSON-RPC/jsonrpc_alpha_verification" "root JSON-RPC project"
   "$callback" "examples/000-project-foundation/project_foundation.pbp" "console_probe" "console" ".build/examples/000-project-foundation/console_probe" "console scenario"
   "$callback" "examples/001-framing/framing.pbp" "framing_probe" "console" ".build/examples/001-framing/framing_probe" "framing scenario"
   "$callback" "examples/002-transport-codecs/transport_codecs.pbp" "stdio_codec_probe" "console" ".build/examples/002-transport-codecs/stdio_codec_probe" "stdio codec scenario"

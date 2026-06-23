@@ -43,6 +43,11 @@ verify_project_target() {
 
 pbp_each_project_target verify_project_target
 
+if [ ! -f "$ROOT/PureBasic-JSON-RPC.pbp" ]; then
+  printf 'Missing root PureBasic project file: PureBasic-JSON-RPC.pbp\n' >&2
+  exit 1
+fi
+
 for project_dir in "$ROOT"/examples/* "$ROOT"/MCP/examples/*; do
   [ -d "$project_dir" ] || continue
   find "$project_dir" -maxdepth 1 -name '*.pb' -print | while IFS= read -r source_file; do

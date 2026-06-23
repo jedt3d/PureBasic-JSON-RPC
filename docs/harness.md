@@ -14,7 +14,7 @@ The local harness standardizes PureBasic discovery, PureUnit execution, `.pbp` p
 
 ## PureBasic Project Files
 
-Buildable example applications are controlled by committed PureBasic project files (`.pbp`). Each scenario folder under `examples/` has one project file, and MCP examples under `MCP/examples/` follow the same rule.
+The root library workspace is controlled by `PureBasic-JSON-RPC.pbp`. Buildable example applications are also controlled by committed PureBasic project files (`.pbp`). Each scenario folder under `examples/` has one project file, and MCP examples under `MCP/examples/` follow the same rule.
 
 The project file declares:
 

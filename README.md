@@ -56,7 +56,7 @@ Create the local alpha source package:
 
 ## PureBasic Project Files
 
-Every buildable scenario or MCP example has a committed `.pbp` project file. These files are the source of truth for target type: console application, GUI executable/application, or shared library. The harness verifies them with `./tools/verify-projects.sh` and builds them through `PureBasic --build`.
+The root project file is `PureBasic-JSON-RPC.pbp`. Every buildable scenario or MCP example also has a committed `.pbp` project file. These files are the source of truth for target type: console application, GUI executable/application, or shared library. The harness verifies them with `./tools/verify-projects.sh` and builds them through `PureBasic --build`.
 
 ## Required Toolchain
 

@@ -54,7 +54,7 @@ Use the repository scripts instead of hard-coding local paths in feature work:
 
 The discovery script creates ignored project-local homes under `.local/` and records the detected PureBasic and PureUnit paths. Generated files under `.local/`, `.build/`, and `.reports/` must not be committed.
 
-PureBasic project files (`.pbp`) are committed source-of-truth build metadata for scenario and MCP example applications. The harness builds project targets through the PureBasic IDE command-line builder (`PureBasic --build ... --target ...`) so Console, GUI executable, and shared-library target types are controlled in one place. Do not replace `.pbp` project targets with ad hoc compiler flags in `tools/build.sh`.
+PureBasic project files (`.pbp`) are committed source-of-truth build metadata for the root library project, scenario applications, and MCP example applications. The harness builds project targets through the PureBasic IDE command-line builder (`PureBasic --build ... --target ...`) so Console, GUI executable, and shared-library target types are controlled in one place. Do not replace `.pbp` project targets with ad hoc compiler flags in `tools/build.sh`.
 
 ## PureBasic Rules
 
