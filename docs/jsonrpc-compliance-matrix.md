@@ -18,6 +18,7 @@ Reference: https://www.jsonrpc.org/specification
 | Error object | Standard error responses include `code`, `message`, and original or null `id` | `src/jsonrpc/protocol.pbi` | `tests/unit/004_protocol_errors.pb`, `tests/unit/024_compliance_suite.pb` | Covered |
 | Parse error | Invalid JSON returns `-32700` with `id: null` | `src/jsonrpc/protocol.pbi`, `src/jsonrpc/dispatch.pbi` | `tests/unit/004_protocol_errors.pb`, `tests/unit/024_compliance_suite.pb` | Covered |
 | Invalid request | Invalid request shape returns `-32600` | `src/jsonrpc/protocol.pbi`, `src/jsonrpc/batch.pbi` | `tests/unit/004_protocol_errors.pb`, `tests/unit/024_compliance_suite.pb` | Covered |
+| Invalid id | Object, array, and boolean ids are rejected with `-32600` and `id: null` | `src/jsonrpc/protocol.pbi` | `tests/unit/029_negative_tests.pb` | Covered |
 | Method not found | Unknown request returns `-32601` | `src/jsonrpc/dispatch.pbi` | `tests/unit/005_dispatch.pb`, `tests/unit/024_compliance_suite.pb` | Covered |
 | Invalid params | Invalid `params` shape returns `-32602` | `src/jsonrpc/protocol.pbi`, `src/jsonrpc/dispatch.pbi` | `tests/unit/004_protocol_errors.pb`, `tests/unit/005_dispatch.pb`, `tests/unit/024_compliance_suite.pb` | Covered |
 | Id values | String, number, and null ids are preserved when detectable | `src/jsonrpc/protocol.pbi` | `tests/unit/004_protocol_errors.pb`, `tests/unit/024_compliance_suite.pb` | Covered |

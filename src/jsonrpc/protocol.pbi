@@ -111,6 +111,7 @@ Procedure.i JSONRPC_Protocol_Inspect(body.s, *result.JSONRPC_ProtocolResult)
   Protected errorValue
   Protected hasResult.i
   Protected hasError.i
+  Protected invalidId.i
 
   JSONRPC_Protocol_ResetResult(*result)
 
@@ -129,17 +130,26 @@ Procedure.i JSONRPC_Protocol_Inspect(body.s, *result.JSONRPC_ProtocolResult)
   EndIf
 
   id = GetJSONMember(root, "id")
-  If id <> 0 And JSONRPC_Protocol_IsValidIdValue(id)
-    *result\hasId = #True
-    *result\idText = JSONRPC_Protocol_IdText(id)
-  Else
-    *result\hasId = #False
-    *result\idText = "null"
+  If id <> 0
+    If JSONRPC_Protocol_IsValidIdValue(id)
+      *result\hasId = #True
+      *result\idText = JSONRPC_Protocol_IdText(id)
+    Else
+      invalidId = #True
+      *result\hasId = #False
+      *result\idText = "null"
+    EndIf
   EndIf
 
   version = GetJSONMember(root, "jsonrpc")
   If version = 0 Or JSONType(version) <> #PB_JSON_String Or GetJSONString(version) <> #JSONRPC_Protocol_Version$
     JSONRPC_Protocol_SetError(*result, #JSONRPC_Error_InvalidRequest, "Invalid Request", *result\idText)
+    FreeJSON(json)
+    ProcedureReturn #False
+  EndIf
+
+  If invalidId
+    JSONRPC_Protocol_SetError(*result, #JSONRPC_Error_InvalidRequest, "Invalid Request", "null")
     FreeJSON(json)
     ProcedureReturn #False
   EndIf
