@@ -173,8 +173,9 @@ Acceptance evidence:
 - SQLite tool results now report paths such as `.local/sqlite-admin/...`.
 - Tests assert bootstrap and export responses do not expose the absolute test
   root.
-- The tracked path scan for `/Users/`, `/Applications/PureBasic`, and
-  `/absolute/path` returns no matches outside ignored build/local output.
+- The tracked path scan for workstation home paths, local PureBasic application
+  paths, and placeholder absolute paths returns no matches outside ignored
+  build/local output.
 - SQLite docs recommend reviewing SQL, backing up before write or DDL
   operations, and using host/user confirmation where available.
 

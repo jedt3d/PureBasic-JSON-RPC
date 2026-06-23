@@ -35,3 +35,4 @@ Current API pages:
 - `API/028-compliance-matrix.md`
 - `API/029-negative-tests.md`
 - `API/030-stress-lifecycle.md`
+- `API/031-security-robustness.md`

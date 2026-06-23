@@ -20,6 +20,7 @@ Required gates:
 - Every numbered example builds from a committed `.pbp` project file.
 - Every numbered route has an API page, milestone entry, example README, and
   documentation index entry verified by `./tools/verify-docs.sh`.
+- Tracked files pass `./tools/verify-paths.sh`.
 - Sphinx documentation builds with warnings treated as errors.
 - The two long-form PDF artifacts are generated, not committed.
 - The alpha package is generated with a manifest and SHA-256 checksums.
@@ -113,3 +114,9 @@ Not allowed:
 
 This rule exists because earlier work exposed that path hygiene must be verified
 instead of assumed.
+
+The required command is:
+
+```sh
+./tools/verify-paths.sh
+```

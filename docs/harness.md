@@ -8,6 +8,7 @@ The local harness standardizes PureBasic discovery, PureUnit execution, `.pbp` p
 ./tools/discover-purebasic.sh
 ./tools/verify-projects.sh
 ./tools/verify-docs.sh
+./tools/verify-paths.sh
 ./tools/test.sh
 ./tools/build.sh
 ./tools/build-docs.sh
@@ -54,6 +55,15 @@ Run this script whenever a route adds, moves, renames, completes, or plans a
 numbered milestone. `tools/check.sh` runs it automatically before tests and
 builds.
 
+## Path Verification
+
+`tools/verify-paths.sh` scans tracked files for workstation-specific absolute
+paths. Generated folders such as `.local/`, `.build/`, and `.reports/` may
+contain real local paths, but tracked source, docs, project metadata, examples,
+and probes must use repository-relative paths.
+
+`tools/check.sh` runs the path scan automatically before tests and builds.
+
 ## Generated Folders
 
 - `.local/` - project-local toolchain homes and summaries.
@@ -74,6 +84,7 @@ Some tools still need real system paths at runtime. The PureBasic installation p
 - PureBasic version must be `6.40`.
 - PureUnit must come from the PureBasic SDK.
 - `tools/test.sh` runs every `tests/unit/*.pb` file by default so new tests are not silently skipped.
+- `tools/verify-paths.sh` must pass so tracked files do not commit workstation-specific absolute paths.
 - Console, GUI application, and shared library targets must be treated as distinct `.pbp` build targets.
 - Long-form Markdown docs must build through Sphinx and produce exactly two PDFs through `tools/build-docs.sh`.
 - Numbered routes must keep API pages, milestone sections, documentation indexes, and Sphinx navigation synchronized through `tools/verify-docs.sh`.
