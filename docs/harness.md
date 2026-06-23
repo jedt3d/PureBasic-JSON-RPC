@@ -9,6 +9,7 @@ The local harness standardizes PureBasic discovery, PureUnit execution, `.pbp` p
 ./tools/verify-projects.sh
 ./tools/verify-docs.sh
 ./tools/verify-paths.sh
+./tools/verify-release-artifacts.sh
 ./tools/test.sh
 ./tools/build.sh
 ./tools/build-docs.sh
@@ -64,6 +65,17 @@ and probes must use repository-relative paths.
 
 `tools/check.sh` runs the path scan automatically before tests and builds.
 
+## Release Artifact Verification
+
+`tools/verify-release-artifacts.sh` checks generated files under `.build/dist/`
+after `tools/package-alpha.sh` runs. It verifies that the source tarball,
+manifest, overview PDF, tutorial PDF, and SHA-256 checksum files exist and that
+the checksums validate.
+
+The verifier also checks that the dist manifest includes current hardening docs,
+API pages, examples, tests, and release harness scripts. `tools/check.sh` runs
+the verifier after packaging.
+
 ## Generated Folders
 
 - `.local/` - project-local toolchain homes and summaries.
@@ -85,6 +97,8 @@ Some tools still need real system paths at runtime. The PureBasic installation p
 - PureUnit must come from the PureBasic SDK.
 - `tools/test.sh` runs every `tests/unit/*.pb` file by default so new tests are not silently skipped.
 - `tools/verify-paths.sh` must pass so tracked files do not commit workstation-specific absolute paths.
+- `tools/verify-release-artifacts.sh` must pass after packaging so release
+  artifacts and dist manifests match the current tree.
 - Console, GUI application, and shared library targets must be treated as distinct `.pbp` build targets.
 - Long-form Markdown docs must build through Sphinx and produce exactly two PDFs through `tools/build-docs.sh`.
 - Numbered routes must keep API pages, milestone sections, documentation indexes, and Sphinx navigation synchronized through `tools/verify-docs.sh`.
