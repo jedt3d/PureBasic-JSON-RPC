@@ -10,6 +10,8 @@ Documentation and harness discipline:
   with additional protocol edge cases.
 - Hardened invalid `id` handling so object, array, and boolean ids return
   `-32600 Invalid Request` with `id: null` instead of reaching dispatch.
+- Added lifecycle stress coverage for repeated dispatch, batch, timeout,
+  cancellation, write queue, trace, and close cleanup behavior.
 - Added `tools/verify-docs.sh` to verify numbered routes have matching example
   READMEs, API pages, milestone sections, API index entries, docs API bridge
   entries, and required Sphinx navigation.

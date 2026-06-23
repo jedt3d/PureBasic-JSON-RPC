@@ -34,3 +34,4 @@ Current API pages:
 - `API/027-release-quality-gates.md`
 - `API/028-compliance-matrix.md`
 - `API/029-negative-tests.md`
+- `API/030-stress-lifecycle.md`

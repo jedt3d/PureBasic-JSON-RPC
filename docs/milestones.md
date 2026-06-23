@@ -73,7 +73,7 @@ quality. The narrative rationale and verification habit are captured in
 27. Release quality gates. Completed in `feature/027-release-quality-gates`.
 28. JSON-RPC compliance matrix expansion. Completed in `feature/028-compliance-matrix`.
 29. Negative test expansion. Completed in `feature/029-negative-tests`.
-30. Stress and lifecycle testing. Planned as `feature/030-stress-lifecycle`.
+30. Stress and lifecycle testing. Completed in `feature/030-stress-lifecycle`.
 31. Security and robustness review. Planned as `feature/031-security-robustness`.
 32. Release automation polish. Planned as `feature/032-release-automation-polish`.
 
@@ -594,7 +594,7 @@ Acceptance criteria:
 
 Branch: `feature/030-stress-lifecycle`
 
-Status: planned
+Status: completed
 
 Purpose:
 

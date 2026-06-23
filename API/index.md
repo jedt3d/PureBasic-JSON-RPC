@@ -34,6 +34,7 @@ Current pages:
 - [027 Release Quality Gates](027-release-quality-gates.md)
 - [028 Compliance Matrix](028-compliance-matrix.md)
 - [029 Negative Tests](029-negative-tests.md)
+- [030 Stress Lifecycle](030-stress-lifecycle.md)
 
 Future API pages should document:
 

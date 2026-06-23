@@ -38,6 +38,7 @@ ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 "$ROOT/.build/examples/027-release-quality-gates/release_quality_probe"
 "$ROOT/.build/examples/028-compliance-matrix/compliance_matrix_probe"
 "$ROOT/.build/examples/029-negative-tests/negative_probe"
+"$ROOT/.build/examples/030-stress-lifecycle/stress_lifecycle_probe"
 "$ROOT/.build/MCP/examples/purebasic-check/purebasic_check_server" < "$ROOT/MCP/examples/purebasic-check/probe_smoke_input.ndjson" >/dev/null
 "$ROOT/.build/MCP/examples/sqlite-admin/sqlite_admin_server" < "$ROOT/MCP/examples/sqlite-admin/probe_smoke_input.ndjson" >/dev/null
 "$ROOT/.build/MCP/examples/sqlite-admin/sqlite_admin_server" < "$ROOT/MCP/examples/sqlite-admin/probe_input.ndjson" >/dev/null
