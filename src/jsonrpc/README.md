@@ -18,5 +18,6 @@ Current library includes:
 - `stdio_runtime.pbi` - newline-delimited stdio runtime pump.
 - `mcp_lifecycle.pbi` - MCP initialize and initialized adapter.
 - `mcp_tools.pbi` - MCP tool metadata registry and `tools/list`.
+- `mcp_tools.pbi` also provides MCP `tools/call` helpers.
 
 PureUnit tests live under `tests/unit/`. PureUnit 1.4 currently does not discover `ProcedureUnit` tests reliably when module implementations are included from colocated test files, so the first library slice uses prefixed procedures such as `JSONRPC_Framing_BuildFrame()`.
