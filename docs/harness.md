@@ -7,6 +7,7 @@ The local harness standardizes PureBasic discovery, PureUnit execution, `.pbp` p
 ```sh
 ./tools/discover-purebasic.sh
 ./tools/verify-projects.sh
+./tools/verify-docs.sh
 ./tools/test.sh
 ./tools/build.sh
 ./tools/build-docs.sh
@@ -32,6 +33,26 @@ PureBasic --build project.pbp --target target-name --readonly --quiet
 
 Raw `pbcompiler` flags should not be the source of truth for scenario target type.
 
+## Documentation Route Verification
+
+`tools/verify-docs.sh` checks that implemented numbered routes are represented
+consistently across the repository documentation. It verifies that every
+`examples/NNN-slug/` folder has:
+
+- an example README
+- a matching `API/NNN-slug.md` page
+- a matching `## NNN-slug` section in `docs/milestones.md`
+- an `API/index.md` entry
+- a `docs/api.md` bridge entry
+
+It also checks that the main Sphinx toctree includes required project documents
+and that planned hardening rounds `027` through `032` remain visible in
+`docs/milestones.md`.
+
+Run this script whenever a route adds, moves, renames, completes, or plans a
+numbered milestone. `tools/check.sh` runs it automatically before tests and
+builds.
+
 ## Generated Folders
 
 - `.local/` - project-local toolchain homes and summaries.
@@ -53,3 +74,4 @@ Some tools still need real system paths at runtime. The PureBasic installation p
 - PureUnit must come from the PureBasic SDK.
 - Console, GUI application, and shared library targets must be treated as distinct `.pbp` build targets.
 - Long-form Markdown docs must build through Sphinx and produce exactly two PDFs through `tools/build-docs.sh`.
+- Numbered routes must keep API pages, milestone sections, documentation indexes, and Sphinx navigation synchronized through `tools/verify-docs.sh`.

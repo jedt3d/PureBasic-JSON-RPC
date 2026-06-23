@@ -262,7 +262,8 @@ Rounds 017-026 are complete. The next phase should start with round 027 and keep
 the center of gravity on the JSON-RPC library source and tests.
 
 Round 027 should not add protocol features. It should define release quality
-gates so later hardening work can be measured against explicit criteria.
+gates so later hardening work can be measured against explicit criteria. See
+`docs/release-hardening-plan.md` for the corrected 027-032 maturity-first plan.
 
 ## Recommended Next JSON-RPC Hardening Rounds
 

@@ -67,7 +67,8 @@ Acceptance criteria:
 The next phase should focus on hardening the JSON-RPC library before adding more
 features. MCP examples can continue to exist as proof points, but rounds 027-032
 should prioritize `src/jsonrpc/`, `tests/unit/`, protocol behavior, and release
-quality.
+quality. The narrative rationale and verification habit are captured in
+`docs/release-hardening-plan.md`.
 
 27. Release quality gates. Planned as `feature/027-release-quality-gates`.
 28. JSON-RPC compliance matrix expansion. Planned as `feature/028-compliance-matrix`.
