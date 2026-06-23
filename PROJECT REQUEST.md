@@ -6,6 +6,8 @@ Build a PureBasic JSON-RPC 2.0 library based on the architecture described in `G
 
 The library should be reliable, testable, memory-conscious, and suitable for long-running tools, agent integrations, editor integrations, and service communication. The implementation should follow the JSON-RPC 2.0 official specification and take architectural inspiration from Microsoft’s `vscode-jsonrpc`.
 
+The primary target implementation context is future MCP server development in PureBasic. The library should remain general-purpose for other JSON-RPC 2.0 use cases, but MCP server development should guide API design, examples, tests, and documentation.
+
 Before implementing library features, first establish a strong AI development harness and an `AGENTS.md` project guideline so future AI agents and contributors follow the same workflow, testing expectations, architecture, and quality standards.
 
 ## Required References

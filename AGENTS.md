@@ -10,6 +10,7 @@ This repository is building a PureBasic JSON-RPC 2.0 library. Every agent or con
 - Use Microsoft's `vscode-jsonrpc` as an architectural reference, not as a parity checklist.
 - Prefer correctness, memory safety, diagnostics, and testability before performance tuning.
 - Keep the base JSON-RPC layer transport-agnostic and do not mix Language Server Protocol behavior into the core library.
+- Treat future MCP server development in PureBasic as the primary target implementation context, while keeping the library useful for general JSON-RPC 2.0 applications.
 
 ## Milestone Workflow
 
@@ -76,4 +77,3 @@ Before a milestone is considered complete:
 - Memory ownership has been reviewed.
 - Security and malformed-input behavior have been reviewed where relevant.
 - API docs are updated.
-
