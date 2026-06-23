@@ -11,11 +11,12 @@ UseZipPacker()
 #MCP_SQLiteAdmin_MaxExportRows = 10000
 #MCP_SQLiteAdmin_Database = 0
 #MCP_SQLiteAdmin_OdsMimeType$ = "application/vnd.oasis.opendocument.spreadsheet"
+#MCP_SQLiteAdmin_XlsxMimeType$ = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 #MCP_SQLiteAdmin_BootstrapSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"overwrite\":{\"type\":\"boolean\"}},\"additionalProperties\":false}"
 #MCP_SQLiteAdmin_InspectSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"includeSystem\":{\"type\":\"boolean\"}},\"additionalProperties\":false}"
 #MCP_SQLiteAdmin_QuerySchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"sql\":{\"type\":\"string\"},\"maxRows\":{\"type\":\"integer\"}},\"required\":[\"sql\"],\"additionalProperties\":false}"
-#MCP_SQLiteAdmin_ExportSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"sql\":{\"type\":\"string\"},\"outputPath\":{\"type\":\"string\"},\"format\":{\"type\":\"string\",\"enum\":[\"csv\",\"ods\"]},\"maxRows\":{\"type\":\"integer\"},\"overwrite\":{\"type\":\"boolean\"}},\"required\":[\"sql\",\"outputPath\"],\"additionalProperties\":false}"
+#MCP_SQLiteAdmin_ExportSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"sql\":{\"type\":\"string\"},\"outputPath\":{\"type\":\"string\"},\"format\":{\"type\":\"string\",\"enum\":[\"csv\",\"ods\",\"xlsx\"]},\"maxRows\":{\"type\":\"integer\"},\"overwrite\":{\"type\":\"boolean\"}},\"required\":[\"sql\",\"outputPath\"],\"additionalProperties\":false}"
 #MCP_SQLiteAdmin_ExecuteSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"sql\":{\"type\":\"string\"}},\"required\":[\"sql\"],\"additionalProperties\":false}"
 #MCP_SQLiteAdmin_BackupSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"backupPath\":{\"type\":\"string\"},\"overwrite\":{\"type\":\"boolean\"}},\"required\":[\"backupPath\"],\"additionalProperties\":false}"
 #MCP_SQLiteAdmin_MaintenanceSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dbPath\":{\"type\":\"string\"},\"operation\":{\"type\":\"string\",\"enum\":[\"quick_check\",\"integrity_check\",\"vacuum\"]}},\"required\":[\"operation\"],\"additionalProperties\":false}"
@@ -521,6 +522,197 @@ Procedure.i MCP_SQLiteAdmin_WriteOdsPackage(outputPath.s, contentXml.s)
   ProcedureReturn ok
 EndProcedure
 
+Procedure.s MCP_SQLiteAdmin_XlsxColumnName(column.i)
+  Protected value.i
+  Protected remainder.i
+  Protected name.s
+
+  value = column + 1
+  While value > 0
+    value - 1
+    remainder = value % 26
+    name = Chr(65 + remainder) + name
+    value = value / 26
+  Wend
+
+  ProcedureReturn name
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_XlsxCellRef(row.i, column.i)
+  ProcedureReturn MCP_SQLiteAdmin_XlsxColumnName(column) + Str(row)
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_XlsxText(text.s)
+  text = ReplaceString(ReplaceString(text, #CRLF$, #LF$), #CR$, #LF$)
+  ProcedureReturn MCP_SQLiteAdmin_XmlEscape(text)
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_XlsxTextCell(row.i, column.i, text.s)
+  Protected cellRef.s
+
+  cellRef = MCP_SQLiteAdmin_XlsxCellRef(row, column)
+  ProcedureReturn "<c r=" + #DQUOTE$ + cellRef + #DQUOTE$ + " t=" + #DQUOTE$ + "inlineStr" + #DQUOTE$ + "><is><t xml:space=" + #DQUOTE$ + "preserve" + #DQUOTE$ + ">" + MCP_SQLiteAdmin_XlsxText(text) + "</t></is></c>"
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_XlsxCell(row.i, column.i)
+  If CheckDatabaseNull(#MCP_SQLiteAdmin_Database, column)
+    ProcedureReturn MCP_SQLiteAdmin_XlsxTextCell(row, column, "")
+  EndIf
+
+  ProcedureReturn MCP_SQLiteAdmin_XlsxTextCell(row, column, GetDatabaseString(#MCP_SQLiteAdmin_Database, column))
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_XlsxWorksheetStart()
+  Protected xml.s
+
+  xml = "<?xml version=" + #DQUOTE$ + "1.0" + #DQUOTE$ + " encoding=" + #DQUOTE$ + "UTF-8" + #DQUOTE$ + " standalone=" + #DQUOTE$ + "yes" + #DQUOTE$ + "?>" + #LF$
+  xml + "<worksheet xmlns=" + #DQUOTE$ + "http://schemas.openxmlformats.org/spreadsheetml/2006/main" + #DQUOTE$ + ">" + #LF$
+  xml + "<sheetData>" + #LF$
+
+  ProcedureReturn xml
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_XlsxWorksheetEnd()
+  ProcedureReturn "</sheetData></worksheet>" + #LF$
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_XlsxContentTypes()
+  Protected xml.s
+
+  xml = "<?xml version=" + #DQUOTE$ + "1.0" + #DQUOTE$ + " encoding=" + #DQUOTE$ + "UTF-8" + #DQUOTE$ + " standalone=" + #DQUOTE$ + "yes" + #DQUOTE$ + "?>" + #LF$
+  xml + "<Types xmlns=" + #DQUOTE$ + "http://schemas.openxmlformats.org/package/2006/content-types" + #DQUOTE$ + ">" + #LF$
+  xml + "<Default Extension=" + #DQUOTE$ + "rels" + #DQUOTE$ + " ContentType=" + #DQUOTE$ + "application/vnd.openxmlformats-package.relationships+xml" + #DQUOTE$ + "/>" + #LF$
+  xml + "<Default Extension=" + #DQUOTE$ + "xml" + #DQUOTE$ + " ContentType=" + #DQUOTE$ + "application/xml" + #DQUOTE$ + "/>" + #LF$
+  xml + "<Override PartName=" + #DQUOTE$ + "/xl/workbook.xml" + #DQUOTE$ + " ContentType=" + #DQUOTE$ + "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml" + #DQUOTE$ + "/>" + #LF$
+  xml + "<Override PartName=" + #DQUOTE$ + "/xl/worksheets/sheet1.xml" + #DQUOTE$ + " ContentType=" + #DQUOTE$ + "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml" + #DQUOTE$ + "/>" + #LF$
+  xml + "<Override PartName=" + #DQUOTE$ + "/xl/styles.xml" + #DQUOTE$ + " ContentType=" + #DQUOTE$ + "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml" + #DQUOTE$ + "/>" + #LF$
+  xml + "<Override PartName=" + #DQUOTE$ + "/docProps/core.xml" + #DQUOTE$ + " ContentType=" + #DQUOTE$ + "application/vnd.openxmlformats-package.core-properties+xml" + #DQUOTE$ + "/>" + #LF$
+  xml + "<Override PartName=" + #DQUOTE$ + "/docProps/app.xml" + #DQUOTE$ + " ContentType=" + #DQUOTE$ + "application/vnd.openxmlformats-officedocument.extended-properties+xml" + #DQUOTE$ + "/>" + #LF$
+  xml + "</Types>" + #LF$
+
+  ProcedureReturn xml
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_XlsxRootRels()
+  Protected xml.s
+
+  xml = "<?xml version=" + #DQUOTE$ + "1.0" + #DQUOTE$ + " encoding=" + #DQUOTE$ + "UTF-8" + #DQUOTE$ + " standalone=" + #DQUOTE$ + "yes" + #DQUOTE$ + "?>" + #LF$
+  xml + "<Relationships xmlns=" + #DQUOTE$ + "http://schemas.openxmlformats.org/package/2006/relationships" + #DQUOTE$ + ">" + #LF$
+  xml + "<Relationship Id=" + #DQUOTE$ + "rId1" + #DQUOTE$ + " Type=" + #DQUOTE$ + "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" + #DQUOTE$ + " Target=" + #DQUOTE$ + "xl/workbook.xml" + #DQUOTE$ + "/>" + #LF$
+  xml + "<Relationship Id=" + #DQUOTE$ + "rId2" + #DQUOTE$ + " Type=" + #DQUOTE$ + "http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" + #DQUOTE$ + " Target=" + #DQUOTE$ + "docProps/core.xml" + #DQUOTE$ + "/>" + #LF$
+  xml + "<Relationship Id=" + #DQUOTE$ + "rId3" + #DQUOTE$ + " Type=" + #DQUOTE$ + "http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" + #DQUOTE$ + " Target=" + #DQUOTE$ + "docProps/app.xml" + #DQUOTE$ + "/>" + #LF$
+  xml + "</Relationships>" + #LF$
+
+  ProcedureReturn xml
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_XlsxWorkbook()
+  Protected xml.s
+
+  xml = "<?xml version=" + #DQUOTE$ + "1.0" + #DQUOTE$ + " encoding=" + #DQUOTE$ + "UTF-8" + #DQUOTE$ + " standalone=" + #DQUOTE$ + "yes" + #DQUOTE$ + "?>" + #LF$
+  xml + "<workbook xmlns=" + #DQUOTE$ + "http://schemas.openxmlformats.org/spreadsheetml/2006/main" + #DQUOTE$ + " xmlns:r=" + #DQUOTE$ + "http://schemas.openxmlformats.org/officeDocument/2006/relationships" + #DQUOTE$ + ">" + #LF$
+  xml + "<sheets><sheet name=" + #DQUOTE$ + "QueryResult" + #DQUOTE$ + " sheetId=" + #DQUOTE$ + "1" + #DQUOTE$ + " r:id=" + #DQUOTE$ + "rId1" + #DQUOTE$ + "/></sheets>" + #LF$
+  xml + "</workbook>" + #LF$
+
+  ProcedureReturn xml
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_XlsxWorkbookRels()
+  Protected xml.s
+
+  xml = "<?xml version=" + #DQUOTE$ + "1.0" + #DQUOTE$ + " encoding=" + #DQUOTE$ + "UTF-8" + #DQUOTE$ + " standalone=" + #DQUOTE$ + "yes" + #DQUOTE$ + "?>" + #LF$
+  xml + "<Relationships xmlns=" + #DQUOTE$ + "http://schemas.openxmlformats.org/package/2006/relationships" + #DQUOTE$ + ">" + #LF$
+  xml + "<Relationship Id=" + #DQUOTE$ + "rId1" + #DQUOTE$ + " Type=" + #DQUOTE$ + "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" + #DQUOTE$ + " Target=" + #DQUOTE$ + "worksheets/sheet1.xml" + #DQUOTE$ + "/>" + #LF$
+  xml + "<Relationship Id=" + #DQUOTE$ + "rId2" + #DQUOTE$ + " Type=" + #DQUOTE$ + "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" + #DQUOTE$ + " Target=" + #DQUOTE$ + "styles.xml" + #DQUOTE$ + "/>" + #LF$
+  xml + "</Relationships>" + #LF$
+
+  ProcedureReturn xml
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_XlsxStyles()
+  Protected xml.s
+
+  xml = "<?xml version=" + #DQUOTE$ + "1.0" + #DQUOTE$ + " encoding=" + #DQUOTE$ + "UTF-8" + #DQUOTE$ + " standalone=" + #DQUOTE$ + "yes" + #DQUOTE$ + "?>" + #LF$
+  xml + "<styleSheet xmlns=" + #DQUOTE$ + "http://schemas.openxmlformats.org/spreadsheetml/2006/main" + #DQUOTE$ + ">" + #LF$
+  xml + "<fonts count=" + #DQUOTE$ + "1" + #DQUOTE$ + "><font><sz val=" + #DQUOTE$ + "11" + #DQUOTE$ + "/><name val=" + #DQUOTE$ + "Calibri" + #DQUOTE$ + "/></font></fonts>" + #LF$
+  xml + "<fills count=" + #DQUOTE$ + "1" + #DQUOTE$ + "><fill><patternFill patternType=" + #DQUOTE$ + "none" + #DQUOTE$ + "/></fill></fills>" + #LF$
+  xml + "<borders count=" + #DQUOTE$ + "1" + #DQUOTE$ + "><border><left/><right/><top/><bottom/><diagonal/></border></borders>" + #LF$
+  xml + "<cellStyleXfs count=" + #DQUOTE$ + "1" + #DQUOTE$ + "><xf numFmtId=" + #DQUOTE$ + "0" + #DQUOTE$ + " fontId=" + #DQUOTE$ + "0" + #DQUOTE$ + " fillId=" + #DQUOTE$ + "0" + #DQUOTE$ + " borderId=" + #DQUOTE$ + "0" + #DQUOTE$ + "/></cellStyleXfs>" + #LF$
+  xml + "<cellXfs count=" + #DQUOTE$ + "1" + #DQUOTE$ + "><xf numFmtId=" + #DQUOTE$ + "0" + #DQUOTE$ + " fontId=" + #DQUOTE$ + "0" + #DQUOTE$ + " fillId=" + #DQUOTE$ + "0" + #DQUOTE$ + " borderId=" + #DQUOTE$ + "0" + #DQUOTE$ + " xfId=" + #DQUOTE$ + "0" + #DQUOTE$ + "/></cellXfs>" + #LF$
+  xml + "<cellStyles count=" + #DQUOTE$ + "1" + #DQUOTE$ + "><cellStyle name=" + #DQUOTE$ + "Normal" + #DQUOTE$ + " xfId=" + #DQUOTE$ + "0" + #DQUOTE$ + " builtinId=" + #DQUOTE$ + "0" + #DQUOTE$ + "/></cellStyles>" + #LF$
+  xml + "</styleSheet>" + #LF$
+
+  ProcedureReturn xml
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_XlsxCoreProperties()
+  Protected xml.s
+
+  xml = "<?xml version=" + #DQUOTE$ + "1.0" + #DQUOTE$ + " encoding=" + #DQUOTE$ + "UTF-8" + #DQUOTE$ + " standalone=" + #DQUOTE$ + "yes" + #DQUOTE$ + "?>" + #LF$
+  xml + "<cp:coreProperties xmlns:cp=" + #DQUOTE$ + "http://schemas.openxmlformats.org/package/2006/metadata/core-properties" + #DQUOTE$
+  xml + " xmlns:dc=" + #DQUOTE$ + "http://purl.org/dc/elements/1.1/" + #DQUOTE$
+  xml + " xmlns:dcterms=" + #DQUOTE$ + "http://purl.org/dc/terms/" + #DQUOTE$
+  xml + " xmlns:dcmitype=" + #DQUOTE$ + "http://purl.org/dc/dcmitype/" + #DQUOTE$
+  xml + " xmlns:xsi=" + #DQUOTE$ + "http://www.w3.org/2001/XMLSchema-instance" + #DQUOTE$ + ">" + #LF$
+  xml + "<dc:creator>PureBasic JSON-RPC SQLite Admin MCP</dc:creator><cp:lastModifiedBy>PureBasic JSON-RPC SQLite Admin MCP</cp:lastModifiedBy>" + #LF$
+  xml + "</cp:coreProperties>" + #LF$
+
+  ProcedureReturn xml
+EndProcedure
+
+Procedure.s MCP_SQLiteAdmin_XlsxAppProperties()
+  Protected xml.s
+
+  xml = "<?xml version=" + #DQUOTE$ + "1.0" + #DQUOTE$ + " encoding=" + #DQUOTE$ + "UTF-8" + #DQUOTE$ + " standalone=" + #DQUOTE$ + "yes" + #DQUOTE$ + "?>" + #LF$
+  xml + "<Properties xmlns=" + #DQUOTE$ + "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" + #DQUOTE$
+  xml + " xmlns:vt=" + #DQUOTE$ + "http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes" + #DQUOTE$ + ">" + #LF$
+  xml + "<Application>PureBasic JSON-RPC SQLite Admin MCP</Application>" + #LF$
+  xml + "</Properties>" + #LF$
+
+  ProcedureReturn xml
+EndProcedure
+
+Procedure.i MCP_SQLiteAdmin_WriteXlsxPackage(outputPath.s, worksheetXml.s)
+  Protected pack.i
+  Protected ok.i
+
+  pack = CreatePack(#PB_Any, outputPath, #PB_PackerPlugin_Zip, 0)
+  If pack = 0
+    ProcedureReturn #False
+  EndIf
+
+  ok = MCP_SQLiteAdmin_AddPackUtf8String(pack, "[Content_Types].xml", MCP_SQLiteAdmin_XlsxContentTypes())
+  If ok
+    ok = MCP_SQLiteAdmin_AddPackUtf8String(pack, "_rels/.rels", MCP_SQLiteAdmin_XlsxRootRels())
+  EndIf
+  If ok
+    ok = MCP_SQLiteAdmin_AddPackUtf8String(pack, "xl/workbook.xml", MCP_SQLiteAdmin_XlsxWorkbook())
+  EndIf
+  If ok
+    ok = MCP_SQLiteAdmin_AddPackUtf8String(pack, "xl/_rels/workbook.xml.rels", MCP_SQLiteAdmin_XlsxWorkbookRels())
+  EndIf
+  If ok
+    ok = MCP_SQLiteAdmin_AddPackUtf8String(pack, "xl/worksheets/sheet1.xml", worksheetXml)
+  EndIf
+  If ok
+    ok = MCP_SQLiteAdmin_AddPackUtf8String(pack, "xl/styles.xml", MCP_SQLiteAdmin_XlsxStyles())
+  EndIf
+  If ok
+    ok = MCP_SQLiteAdmin_AddPackUtf8String(pack, "docProps/core.xml", MCP_SQLiteAdmin_XlsxCoreProperties())
+  EndIf
+  If ok
+    ok = MCP_SQLiteAdmin_AddPackUtf8String(pack, "docProps/app.xml", MCP_SQLiteAdmin_XlsxAppProperties())
+  EndIf
+
+  ClosePack(pack)
+
+  If ok = #False
+    DeleteFile(outputPath)
+  EndIf
+
+  ProcedureReturn ok
+EndProcedure
+
 Procedure.s MCP_SQLiteAdmin_CsvCell(column.i)
   If CheckDatabaseNull(#MCP_SQLiteAdmin_Database, column)
     ProcedureReturn MCP_SQLiteAdmin_CsvField("")
@@ -812,6 +1004,87 @@ Procedure.i MCP_SQLiteAdmin_RunOdsExport(dbPath.s, sql.s, outputPath.s, maxRows.
   ProcedureReturn #True
 EndProcedure
 
+Procedure.i MCP_SQLiteAdmin_RunXlsxExport(dbPath.s, sql.s, outputPath.s, maxRows.i, overwrite.i, *result.MCP_SQLiteAdmin_Result)
+  Protected dbResult.MCP_SQLiteAdmin_Result
+  Protected columns.i
+  Protected column.i
+  Protected exportedRows.i
+  Protected truncated.i
+  Protected outputDirectory.s
+  Protected worksheetXml.s
+  Protected rowNumber.i
+
+  MCP_SQLiteAdmin_ResetResult(*result)
+  If maxRows <= 0
+    maxRows = #MCP_SQLiteAdmin_DefaultExportMaxRows
+  EndIf
+
+  If maxRows > #MCP_SQLiteAdmin_MaxExportRows
+    maxRows = #MCP_SQLiteAdmin_MaxExportRows
+  EndIf
+
+  outputDirectory = GetPathPart(outputPath)
+  If MCP_SQLiteAdmin_EnsureDirectory(outputDirectory) = #False
+    *result\text = "Unable to create XLSX export directory: " + outputDirectory
+    ProcedureReturn #False
+  EndIf
+
+  If FileSize(outputPath) >= 0 And overwrite = #False
+    *result\text = "XLSX export file already exists. Set overwrite=true to replace it."
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_SQLiteAdmin_OpenDatabase(dbPath, #False, @dbResult) = #False
+    *result\text = dbResult\text
+    ProcedureReturn #False
+  EndIf
+
+  If DatabaseQuery(#MCP_SQLiteAdmin_Database, sql) = 0
+    *result\text = DatabaseError()
+    CloseDatabase(#MCP_SQLiteAdmin_Database)
+    ProcedureReturn #False
+  EndIf
+
+  columns = DatabaseColumns(#MCP_SQLiteAdmin_Database)
+  worksheetXml = MCP_SQLiteAdmin_XlsxWorksheetStart()
+  rowNumber = 1
+  worksheetXml + "<row r=" + #DQUOTE$ + Str(rowNumber) + #DQUOTE$ + ">"
+  For column = 0 To columns - 1
+    worksheetXml + MCP_SQLiteAdmin_XlsxTextCell(rowNumber, column, DatabaseColumnName(#MCP_SQLiteAdmin_Database, column))
+  Next
+  worksheetXml + "</row>" + #LF$
+
+  While NextDatabaseRow(#MCP_SQLiteAdmin_Database)
+    If exportedRows >= maxRows
+      truncated = #True
+      Break
+    EndIf
+
+    rowNumber + 1
+    worksheetXml + "<row r=" + #DQUOTE$ + Str(rowNumber) + #DQUOTE$ + ">"
+    For column = 0 To columns - 1
+      worksheetXml + MCP_SQLiteAdmin_XlsxCell(rowNumber, column)
+    Next
+    worksheetXml + "</row>" + #LF$
+    exportedRows + 1
+  Wend
+
+  worksheetXml + MCP_SQLiteAdmin_XlsxWorksheetEnd()
+
+  FinishDatabaseQuery(#MCP_SQLiteAdmin_Database)
+  CloseDatabase(#MCP_SQLiteAdmin_Database)
+
+  If MCP_SQLiteAdmin_WriteXlsxPackage(outputPath, worksheetXml) = #False
+    *result\text = "Unable to create XLSX export package: " + outputPath
+    ProcedureReturn #False
+  EndIf
+
+  *result\ok = #True
+  *result\isError = #False
+  *result\text = ~"{\"path\":\"" + JSONRPC_Protocol_EscapeString(outputPath) + ~"\",\"format\":\"xlsx\",\"mediaType\":\"" + #MCP_SQLiteAdmin_XlsxMimeType$ + ~"\",\"encoding\":\"UTF-8 XML in OOXML ZIP\",\"sheet\":\"QueryResult\",\"stringCells\":true,\"inlineStrings\":true,\"macroFree\":true,\"exportedRows\":" + Str(exportedRows) + ~",\"truncated\":" + MCP_SQLiteAdmin_BoolJson(truncated) + "}"
+  ProcedureReturn #True
+EndProcedure
+
 Procedure MCP_SQLiteAdmin_InitArgState(*state.MCP_SQLiteAdmin_ArgState)
   *state\ok = #True
   *state\message = ""
@@ -1029,8 +1302,8 @@ Procedure.i MCP_SQLiteAdmin_ExportHandler(argumentsValue, *context.JSONRPC_Reque
   EndIf
 
   format = LCase(format)
-  If format <> "csv" And format <> "ods"
-    MCP_SQLiteAdmin_SetInvalidParams(*result, "sqlite/export supports csv and ods formats")
+  If format <> "csv" And format <> "ods" And format <> "xlsx"
+    MCP_SQLiteAdmin_SetInvalidParams(*result, "sqlite/export supports csv, ods, and xlsx formats")
     ProcedureReturn #True
   EndIf
 
@@ -1044,13 +1317,20 @@ Procedure.i MCP_SQLiteAdmin_ExportHandler(argumentsValue, *context.JSONRPC_Reque
     ProcedureReturn #True
   EndIf
 
+  If format = "xlsx" And LCase(Right(outputInput, 5)) <> ".xlsx"
+    MCP_SQLiteAdmin_SetInvalidParams(*result, "outputPath must end with .xlsx")
+    ProcedureReturn #True
+  EndIf
+
   outputPath = MCP_SQLiteAdmin_ResolvePath(outputInput, @errorMessage)
   If outputPath = ""
     MCP_SQLiteAdmin_SetInvalidParams(*result, errorMessage\s)
     ProcedureReturn #True
   EndIf
 
-  If format = "ods"
+  If format = "xlsx"
+    MCP_SQLiteAdmin_RunXlsxExport(dbPath, sql, outputPath, maxRows, overwrite, @toolResult)
+  ElseIf format = "ods"
     MCP_SQLiteAdmin_RunOdsExport(dbPath, sql, outputPath, maxRows, overwrite, @toolResult)
   Else
     MCP_SQLiteAdmin_RunCsvExport(dbPath, sql, outputPath, maxRows, overwrite, @toolResult)
@@ -1348,7 +1628,7 @@ Procedure.i MCP_SQLiteAdmin_Register(*dispatcher.JSONRPC_Dispatcher, *registry.M
   If MCP_SQLiteAdmin_RegisterOne(*registry, "sqlite/query", "SQLite Query", "Run row-returning SQL with bounded JSON text output.", #MCP_SQLiteAdmin_QuerySchema$, @MCP_SQLiteAdmin_QueryHandler()) = #False
     ProcedureReturn #False
   EndIf
-  If MCP_SQLiteAdmin_RegisterOne(*registry, "sqlite/export", "SQLite Export", "Export a row-returning query to canonical CSV or ODS.", #MCP_SQLiteAdmin_ExportSchema$, @MCP_SQLiteAdmin_ExportHandler()) = #False
+  If MCP_SQLiteAdmin_RegisterOne(*registry, "sqlite/export", "SQLite Export", "Export a row-returning query to canonical CSV, ODS, or XLSX.", #MCP_SQLiteAdmin_ExportSchema$, @MCP_SQLiteAdmin_ExportHandler()) = #False
     ProcedureReturn #False
   EndIf
   If MCP_SQLiteAdmin_RegisterOne(*registry, "sqlite/execute", "SQLite Execute", "Run non-row SQL statements intentionally.", #MCP_SQLiteAdmin_ExecuteSchema$, @MCP_SQLiteAdmin_ExecuteHandler()) = #False

@@ -290,7 +290,7 @@ The result text contains:
 Prefer `sqlite/query` for exploration. It keeps output bounded and makes it
 clear when a result was truncated.
 
-## 11A. Export Query Results To CSV Or ODS
+## 11A. Export Query Results To CSV, ODS, Or XLSX
 
 Use `sqlite/export` when a query result should become a file that another tool
 can open:
@@ -322,8 +322,8 @@ That strictness prevents the most common CSV export bugs: mojibake in
 spreadsheet tools, commas splitting a value into extra columns, quotes breaking
 the row, and line breaks corrupting the next record.
 
-ODS is the first native spreadsheet package supported by this example. Use
-`format: "ods"` and an `.ods` output path:
+ODS is the OpenDocument spreadsheet export. Use `format: "ods"` and an `.ods`
+output path:
 
 ```json
 {"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/export","arguments":{"dbPath":"demo.sqlite","sql":"SELECT id, locale, title FROM admin_notes ORDER BY id","outputPath":"exports/admin-notes.ods","format":"ods","maxRows":5000,"overwrite":true}},"id":51}
@@ -348,26 +348,57 @@ results arrive exactly as SQLite returned them, without formula evaluation or
 spreadsheet type guessing. Embedded XML-sensitive characters are escaped, and
 line breaks inside text values are represented as OpenDocument text line breaks.
 
+ODS is useful when the receiver wants an actual spreadsheet file rather than a
+text interchange format. LibreOffice and OpenOffice use ODS natively, and many
+spreadsheet applications can import it.
+
+XLSX is the Excel workbook export. Use `format: "xlsx"` and an `.xlsx` output
+path:
+
+```json
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/export","arguments":{"dbPath":"demo.sqlite","sql":"SELECT id, locale, title FROM admin_notes ORDER BY id","outputPath":"exports/admin-notes.xlsx","format":"xlsx","maxRows":5000,"overwrite":true}},"id":52}
+```
+
+The XLSX writer creates a minimal macro-free Office Open XML workbook package:
+
+```text
+admin-notes.xlsx
+  [Content_Types].xml
+  _rels/.rels
+  docProps/app.xml
+  docProps/core.xml
+  xl/workbook.xml
+  xl/_rels/workbook.xml.rels
+  xl/worksheets/sheet1.xml
+  xl/styles.xml
+```
+
+The workbook contains one sheet named `QueryResult`. In this first version,
+every exported value is written as an inline string cell. The package does not
+include macros, formulas, pivot tables, charts, shared strings, or typed number
+conversion. That is intentional for the first Excel export: the file should be a
+clear table-shaped handoff of exactly what SQLite returned.
+
 The practical format ranking for PureBasic is now:
 
 ```text
 CSV  -> easiest: plain UTF-8 text, implemented
 ODS  -> medium: ZIP package plus simpler OpenDocument XML tables, implemented
-XLSX -> harder: ZIP package plus OOXML workbook relationships and shared parts, future work
+XLSX -> harder: ZIP package plus OOXML workbook relationships, implemented
 ```
 
-ODS is useful when the receiver wants an actual spreadsheet file rather than a
-text interchange format. LibreOffice and OpenOffice use ODS natively, and many
-spreadsheet applications can import it. XLSX is still valuable, but it asks us
-to build a larger packaging and relationship model correctly, so it comes after
-the ODS path is proven by builds and tests.
+XLSX is useful when the receiver expects an Excel workbook and you do not want
+them to go through a CSV import dialog. The v1 writer is a table export, not an
+Excel automation layer. If you need formulas, styled workbooks, multiple sheets,
+typed numeric/date cells, or charts, treat those as later enhancements.
 
 ## 11B. Export The Same Query To Multiple Formats
 
 In real administration work, export is rarely a single-file decision. You may
-want a strict CSV for another script, an ODS spreadsheet for a colleague, and a
-saved SQL recipe so the export can be repeated next week. The important habit is
-to keep the SQL stable and change only the export format and output path.
+want a strict CSV for another script, an ODS spreadsheet for a LibreOffice user,
+an XLSX workbook for an Excel user, and a saved SQL recipe so the export can be
+repeated next week. The important habit is to keep the SQL stable and change
+only the export format and output path.
 
 Think about the export as three layers:
 
@@ -378,8 +409,8 @@ SQL query
   -> exported into one or more file formats
 ```
 
-The `sqlite/export` tool intentionally uses the same input shape for both CSV
-and ODS:
+The `sqlite/export` tool intentionally uses the same input shape for CSV, ODS,
+and XLSX:
 
 ```json
 {
@@ -394,13 +425,13 @@ and ODS:
 
 Only two fields usually change between formats:
 
-- `format`, such as `csv` or `ods`;
+- `format`, such as `csv`, `ods`, or `xlsx`;
 - `outputPath`, whose extension must match the selected format.
 
 That design matters when an AI model is helping you. You can ask the model to
 prepare one query, review that query, and then ask it to export the exact same
-query twice. If the CSV and ODS were produced from different SQL strings, later
-comparison becomes noisy and trust goes down.
+query to every format you need. If the CSV, ODS, and XLSX files were produced
+from different SQL strings, later comparison becomes noisy and trust goes down.
 
 ### Step 1: Preview The Query
 
@@ -409,7 +440,7 @@ This is the moment to catch missing filters, surprising sort order, or columns
 that should not leave the database.
 
 ```json
-{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/query","arguments":{"dbPath":"demo.sqlite","sql":"SELECT id, locale, title FROM admin_notes ORDER BY id","maxRows":5}},"id":52}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/query","arguments":{"dbPath":"demo.sqlite","sql":"SELECT id, locale, title FROM admin_notes ORDER BY id","maxRows":5}},"id":60}
 ```
 
 Read the returned columns and the first few rows. For sensitive data, this is
@@ -421,7 +452,7 @@ CSV is the right first export when another program, shell script, database
 loader, or spreadsheet import flow needs plain text.
 
 ```json
-{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/export","arguments":{"dbPath":"demo.sqlite","sql":"SELECT id, locale, title FROM admin_notes ORDER BY id","outputPath":"exports/admin-notes.csv","format":"csv","maxRows":5000,"overwrite":true}},"id":53}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/export","arguments":{"dbPath":"demo.sqlite","sql":"SELECT id, locale, title FROM admin_notes ORDER BY id","outputPath":"exports/admin-notes.csv","format":"csv","maxRows":5000,"overwrite":true}},"id":61}
 ```
 
 The response text should include:
@@ -457,7 +488,7 @@ text file. It is also easier to hand to someone using LibreOffice or OpenOffice,
 because the file already has a spreadsheet package structure.
 
 ```json
-{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/export","arguments":{"dbPath":"demo.sqlite","sql":"SELECT id, locale, title FROM admin_notes ORDER BY id","outputPath":"exports/admin-notes.ods","format":"ods","maxRows":5000,"overwrite":true}},"id":54}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/export","arguments":{"dbPath":"demo.sqlite","sql":"SELECT id, locale, title FROM admin_notes ORDER BY id","outputPath":"exports/admin-notes.ods","format":"ods","maxRows":5000,"overwrite":true}},"id":62}
 ```
 
 The response text should include:
@@ -503,10 +534,67 @@ The `mimetype` content should be exactly:
 application/vnd.oasis.opendocument.spreadsheet
 ```
 
-### Step 4: Compare The Two Exports
+### Step 4: Export XLSX For Excel Users
 
-CSV and ODS are different containers, so you do not compare the files byte for
-byte. Compare their intent:
+XLSX is better when the receiver expects a native Excel workbook. It avoids the
+CSV import dialog and gives the file a workbook/sheet structure immediately.
+
+```json
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/export","arguments":{"dbPath":"demo.sqlite","sql":"SELECT id, locale, title FROM admin_notes ORDER BY id","outputPath":"exports/admin-notes.xlsx","format":"xlsx","maxRows":5000,"overwrite":true}},"id":63}
+```
+
+The response text should include:
+
+```json
+{
+  "format": "xlsx",
+  "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "encoding": "UTF-8 XML in OOXML ZIP",
+  "sheet": "QueryResult",
+  "stringCells": true,
+  "inlineStrings": true,
+  "macroFree": true,
+  "exportedRows": 4,
+  "truncated": false
+}
+```
+
+The XLSX export is macro-free and uses inline string cells. That means the
+workbook is meant to be opened, reviewed, and possibly reformatted by a person,
+not used as an Excel programming model. IDs, dates, and numbers are preserved as
+text in v1 so the export does not silently change account codes, leading zeros,
+locale-specific dates, or multilingual text.
+
+To inspect the XLSX package without opening Excel:
+
+```sh
+unzip -l .local/sqlite-admin/exports/admin-notes.xlsx
+unzip -p .local/sqlite-admin/exports/admin-notes.xlsx '\[Content_Types\].xml' | sed -n '1,12p'
+unzip -p .local/sqlite-admin/exports/admin-notes.xlsx xl/workbook.xml
+unzip -p .local/sqlite-admin/exports/admin-notes.xlsx xl/worksheets/sheet1.xml | sed -n '1,8p'
+```
+
+The package should contain the workbook and worksheet parts:
+
+```text
+[Content_Types].xml
+_rels/.rels
+docProps/app.xml
+docProps/core.xml
+xl/workbook.xml
+xl/_rels/workbook.xml.rels
+xl/worksheets/sheet1.xml
+xl/styles.xml
+```
+
+`xl/workbook.xml` should name the sheet `QueryResult`, and
+`xl/worksheets/sheet1.xml` should contain rows and cells with `inlineStr`
+values.
+
+### Step 5: Compare The Exports
+
+CSV, ODS, and XLSX are different containers, so you do not compare the files
+byte for byte. Compare their intent:
 
 ```text
 same SQL
@@ -526,6 +614,7 @@ A useful naming convention is:
 ```text
 exports/<topic>-<date>.csv
 exports/<topic>-<date>.ods
+exports/<topic>-<date>.xlsx
 ```
 
 For example:
@@ -533,24 +622,25 @@ For example:
 ```text
 exports/admin-notes-2026-06-23.csv
 exports/admin-notes-2026-06-23.ods
+exports/admin-notes-2026-06-23.xlsx
 ```
 
 The server does not create dates in filenames for you. Ask the MCP client or
 your own workflow to choose names that make sense for audit and handoff.
 
-### Step 5: Save The Export Query As A Recipe
+### Step 6: Save The Export Query As A Recipe
 
 Once an export query is useful, save it. Recipes keep the SQL close to the
 database and make repeated exports less error-prone.
 
 ```json
-{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/recipe/save","arguments":{"dbPath":"demo.sqlite","name":"export-admin-notes","description":"Export admin note summary columns in stable order","category":"exports","sql":"SELECT id, locale, title FROM admin_notes ORDER BY id","parameterNotes":"No parameters"}},"id":55}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/recipe/save","arguments":{"dbPath":"demo.sqlite","name":"export-admin-notes","description":"Export admin note summary columns in stable order","category":"exports","sql":"SELECT id, locale, title FROM admin_notes ORDER BY id","parameterNotes":"No parameters"}},"id":64}
 ```
 
 Later, you can run the recipe to preview the rows:
 
 ```json
-{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/recipe/run","arguments":{"dbPath":"demo.sqlite","name":"export-admin-notes","maxRows":5}},"id":56}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"sqlite/recipe/run","arguments":{"dbPath":"demo.sqlite","name":"export-admin-notes","maxRows":5}},"id":65}
 ```
 
 The current `sqlite/export` tool accepts raw SQL, not a recipe name. The
@@ -571,14 +661,15 @@ Use this quick decision table:
 | --- | --- | --- |
 | Import into another program | CSV | Plain text, easy to parse, stable quoting |
 | Open in LibreOffice or OpenOffice | ODS | Native spreadsheet package |
-| Send a human-readable spreadsheet | ODS | Fewer import prompts than CSV |
+| Send a human-readable spreadsheet to Excel users | XLSX | Opens as a workbook without CSV import choices |
+| Send a human-readable spreadsheet to open-format users | ODS | Native OpenDocument package |
 | Inspect in a terminal | CSV | Works with `sed`, `head`, `awk`, and scripts |
-| Preserve exact returned text | CSV or ODS | Both formats write SQLite values as text |
-| Excel-native workbook features | Future XLSX | Not implemented yet |
+| Preserve exact returned text | CSV, ODS, or XLSX | All current formats write SQLite values as text |
+| Spreadsheet formulas, charts, styling, or typed cells | Later XLSX work | The current XLSX writer is a simple table export |
 
-When you are unsure, export both CSV and ODS from the same reviewed SQL. CSV is
-the audit-friendly interchange artifact; ODS is the spreadsheet-friendly
-artifact.
+When you are unsure, export CSV plus one spreadsheet package from the same
+reviewed SQL. CSV is the audit-friendly interchange artifact; ODS is the
+open-format spreadsheet artifact; XLSX is the Excel-friendly artifact.
 
 ### Common Mistakes
 
@@ -586,6 +677,7 @@ The export tool rejects several mistakes before writing files:
 
 - `format: "ods"` with an output path ending in `.csv`;
 - `format: "csv"` with an output path ending in `.ods`;
+- `format: "xlsx"` with an output path ending in `.ods` or `.csv`;
 - paths that try to escape the allowed SQLite root;
 - overwriting an existing file without `overwrite: true`;
 - invalid JSON argument types, such as a string where `maxRows` should be an
@@ -605,8 +697,8 @@ When using an MCP host with this server, give the model a precise export task:
 ```text
 Inspect demo.sqlite, prepare a SELECT query for admin note id, locale, and
 title ordered by id, show me the query for review, then export the same reviewed
-query to exports/admin-notes.csv and exports/admin-notes.ods with maxRows 5000.
-Do not run sqlite/execute.
+query to exports/admin-notes.csv, exports/admin-notes.ods, and
+exports/admin-notes.xlsx with maxRows 5000. Do not run sqlite/execute.
 ```
 
 That prompt asks for review before export, fixes the output formats, and blocks

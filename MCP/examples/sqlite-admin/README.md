@@ -88,7 +88,7 @@ Run the compiled dispatcher scenario:
 - `sqlite/bootstrap`: create or recreate the demo/admin database.
 - `sqlite/inspect`: list schema metadata from `sqlite_schema`.
 - `sqlite/query`: run row-returning SQL such as `SELECT` or `PRAGMA`.
-- `sqlite/export`: export a row-returning query to canonical UTF-8 CSV or ODS.
+- `sqlite/export`: export a row-returning query to canonical CSV, ODS, or XLSX.
 - `sqlite/execute`: run intentional non-row SQL such as DDL, writes, `VACUUM`,
   and PRAGMA updates.
 - `sqlite/backup`: copy a SQLite file to another approved path.
@@ -108,9 +108,9 @@ SQLite's built-in `NOCASE`, `LIKE`, `upper()`, and `lower()` are not complete
 Unicode case-folding systems without ICU or a custom collation. This example
 does not add ICU or localized UI text.
 
-## CSV And ODS Export
+## CSV, ODS, And XLSX Export
 
-`sqlite/export` supports two implemented formats:
+`sqlite/export` supports three implemented formats:
 
 - `csv`: UTF-8 CSV with a BOM, a header row, CRLF row endings, every field
   double-quoted, embedded quote characters doubled, and embedded commas,
@@ -120,16 +120,19 @@ does not add ICU or localized UI text.
   with `mimetype`, `META-INF/manifest.xml`, `content.xml`, `styles.xml`, and
   `meta.xml`. The exported sheet is named `QueryResult`, uses UTF-8 XML, and
   writes every result value as a string cell in v1.
+- `xlsx`: macro-free Excel workbook. The server writes a ZIP-based Office Open
+  XML package with workbook, worksheet, relationship, style, and document
+  property parts. The exported sheet is named `QueryResult`, uses inline string
+  cells, and writes every result value as text in v1.
 
-Future XLSX support is intentionally separate work. Current effort from easiest
-to hardest in PureBasic is:
+Current effort from easiest to hardest in PureBasic is:
 
 1. CSV: plain UTF-8 text, implemented.
 2. ODS/OpenDocument Spreadsheet: ZIP plus XML files, implemented as a minimal
    table writer and importable by LibreOffice/OpenOffice and many spreadsheet
    tools.
 3. XLSX: ZIP plus the larger OOXML workbook relationship model, useful but more
-   code to create correctly; planned after ODS is stable.
+   code to create correctly, implemented as a macro-free text-cell workbook.
 
 ## Tutorial
 
@@ -140,5 +143,5 @@ MCP/examples/sqlite-admin/TUTORIAL.md
 ```
 
 It explains the first session, safe administration workflow, SQL recipes,
-multilingual data behavior, multi-format CSV/ODS export workflow, and the
+multilingual data behavior, multi-format CSV/ODS/XLSX export workflow, and the
 responsible admin checklist.
