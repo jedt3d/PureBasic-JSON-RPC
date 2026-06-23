@@ -10,7 +10,7 @@ Current library includes:
 - `codec.pbi` - MCP stdio newline-delimited message codec.
 - `connection.pbi` - connection lifecycle, events, and generic writer support.
 - `protocol.pbi` - JSON-RPC 2.0 message inspection and standard response builders.
-- `dispatch.pbi` - request and notification handler registration and dispatch.
+- `dispatch.pbi` - request and notification handler registration lifecycle and dispatch.
 - `outbound.pbi` - outbound request ids, notifications, and pending response matching.
 - `outbound.pbi` also owns pending request timeout cleanup.
 - `batch.pbi` - sequential JSON-RPC batch dispatch.
