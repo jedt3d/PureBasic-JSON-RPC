@@ -11,6 +11,7 @@ harness
 purebasic-project-files
 mcp-for-purebasic
 tutorial-building-with-purebasic-jsonrpc
+mcp-example-milestone-log
 api
 api-stability
 jsonrpc-foundation-gap-plan
