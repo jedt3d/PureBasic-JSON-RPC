@@ -178,6 +178,27 @@ The authoring draft tools may save under
 provided. Saved drafts are working notes; they are not the implementation and
 should not be committed unless a human intentionally promotes them.
 
+## Dogfood Sample Implementations
+
+Some toolkit routes create real PureBasic sample implementations outside the MCP
+server itself. These projects live under repository-specific folders such as
+`Gadgets/` and are used to prove that the toolkit can support practical PureBasic
+development, not only MCP server scaffolding.
+
+When a dogfood sample starts:
+
+1. Track the human-reviewed PRD or implementation brief.
+2. Update `MCP/mcp-purebasic-toolkit/docs/milestones.md`.
+3. Keep the project separate from core JSON-RPC library milestones.
+4. Add `.pbp` targets, source, tests, examples, docs, and asset licenses only
+   when the implementation route actually introduces them.
+5. Keep paths repository-relative and run the same docs/path/harness
+   verification used by the rest of the repository.
+
+`Gadgets/SevenSegmentClock/` is the first such tracked sample. It will exercise
+pair-development interviews, rendering-flow explanation, human design decisions,
+`.pbp` build metadata, and documentation discipline in milestone `00.07`.
+
 ## Harness Execution Through MCP
 
 The toolkit can run the fixed repository harness commands:

@@ -253,18 +253,43 @@ Acceptance criteria:
 
 ## 007-seven-segment-gadget
 
-Status: planned
+Branch: `feature/00.07-seven-segment-gadget-track`
+
+Status: seeded
 
 Purpose:
 
-- Create the next route for a Seven Segment Gadget after the MCP authoring kit is
-  complete.
+- Create the next route for a Seven Segment Gadget after the MCP authoring kit
+  is complete.
+- Track `Gadgets/SevenSegmentClock/` as the first sample implementation target
+  produced from the toolkit plus skills workflow.
 - Use the toolkit's pair-development and authoring defaults: clarify target
   shape, explain rendering/interaction flow before implementation, keep `.pbp`
   target metadata explicit, document route decisions, and verify through the
   harness.
 
+Seed artifacts:
+
+- `Gadgets/README.md`
+- `Gadgets/SevenSegmentClock/README.md`
+- `Gadgets/SevenSegmentClock/PRD SevenSegmentClock Gadget.md`
+
 Candidate surface:
 
-- PureBasic gadget source and examples will be defined in the 007 route.
-- Documentation and milestone details will be updated when implementation starts.
+- PureBasic gadget source and examples will be defined in the implementation
+  route.
+- The PRD currently scopes a `CanvasGadget()`-based digital clock with DSEG
+  fonts, automatic sizing, blink behavior, click-to-invert theme behavior,
+  padding, border controls, and font license attribution.
+- Implementation must add explicit `.pbp` target metadata, source, examples,
+  documentation, and verification before this milestone can move from seeded to
+  completed.
+
+Acceptance criteria for the seed route:
+
+- `Gadgets/` is tracked as a repository area for dogfood sample
+  implementations.
+- The Seven Segment Clock PRD is committed for review.
+- Toolkit milestone documentation explains that this is a sample implementation
+  target, not a core JSON-RPC library feature and not an MCP server example.
+- Unrelated working-tree changes remain outside the commit.

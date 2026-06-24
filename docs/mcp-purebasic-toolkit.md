@@ -53,6 +53,11 @@ input, and stdio transcript validation reports. Drafts can be saved under
 `.local/mcp-purebasic-toolkit/records/mcp-authoring/`, while tracked server
 files remain human-reviewed implementation work.
 
+Dogfood sample implementation work is tracked separately from MCP server
+examples. `Gadgets/SevenSegmentClock/` is the first tracked sample target for
+the toolkit plus skills workflow; it starts milestone `00.07` with a committed
+PRD before source, `.pbp` targets, examples, tests, and asset licenses are added.
+
 Toolkit milestones are intentionally tracked in
 `MCP/mcp-purebasic-toolkit/docs/milestones.md` instead of the core library
 milestone file.
