@@ -5,13 +5,28 @@ XIncludeFile "../../src/jsonrpc/mcp_tools.pbi"
 #MCP_Toolkit_ProjectInspectName$ = "purebasic/project/inspect"
 #MCP_Toolkit_WorkflowBriefName$ = "purebasic/workflow/brief"
 #MCP_Toolkit_HarnessChecklistName$ = "purebasic/harness/checklist"
+#MCP_Toolkit_IncludeGraphName$ = "purebasic/include/graph"
+#MCP_Toolkit_SymbolSearchName$ = "purebasic/symbol/search"
+#MCP_Toolkit_ProcedureListName$ = "purebasic/procedure/list"
+#MCP_Toolkit_PbpListTargetsName$ = "purebasic/pbp/list-targets"
 
 #MCP_Toolkit_ProjectInspectSchema$ = ~"{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"
 #MCP_Toolkit_WorkflowBriefSchema$ = ~"{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"
 #MCP_Toolkit_HarnessChecklistSchema$ = ~"{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"
+#MCP_Toolkit_IncludeGraphSchema$ = ~"{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"
+#MCP_Toolkit_SymbolSearchSchema$ = ~"{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\"}},\"required\":[\"query\"],\"additionalProperties\":false}"
+#MCP_Toolkit_ProcedureListSchema$ = ~"{\"type\":\"object\",\"properties\":{\"prefix\":{\"type\":\"string\"}},\"additionalProperties\":false}"
+#MCP_Toolkit_PbpListTargetsSchema$ = ~"{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"
+
+#MCP_Toolkit_DefaultMaxScanResults = 80
 
 Structure MCP_Toolkit_Config
   projectRoot.s
+EndStructure
+
+Structure MCP_Toolkit_ScanState
+  count.i
+  truncated.i
 EndStructure
 
 Global MCP_Toolkit_Config.MCP_Toolkit_Config
@@ -41,6 +56,37 @@ EndProcedure
 
 Procedure.i MCP_Toolkit_DirectoryExists(root.s, relativePath.s)
   ProcedureReturn Bool(FileSize(MCP_Toolkit_Path(root, relativePath)) = -2)
+EndProcedure
+
+Procedure.s MCP_Toolkit_NormalizeRelativePath(path.s)
+  path = ReplaceString(path, "\", "/")
+
+  While Left(path, 2) = "./"
+    path = Mid(path, 3)
+  Wend
+
+  ProcedureReturn path
+EndProcedure
+
+Procedure.i MCP_Toolkit_HasSuffix(text.s, suffix.s)
+  If Len(text) < Len(suffix)
+    ProcedureReturn #False
+  EndIf
+
+  ProcedureReturn Bool(LCase(Right(text, Len(suffix))) = LCase(suffix))
+EndProcedure
+
+Procedure.i MCP_Toolkit_IsSourceFile(name.s)
+  ProcedureReturn Bool(MCP_Toolkit_HasSuffix(name, ".pb") Or MCP_Toolkit_HasSuffix(name, ".pbi"))
+EndProcedure
+
+Procedure.i MCP_Toolkit_IsIgnoredDirectory(name.s)
+  Select name
+    Case ".", "..", ".git", ".build", ".local", ".reports"
+      ProcedureReturn #True
+  EndSelect
+
+  ProcedureReturn #False
 EndProcedure
 
 Procedure.s MCP_Toolkit_YesNo(value.i)
@@ -139,6 +185,415 @@ Procedure.i MCP_Toolkit_CountSkillFolders(root.s)
 
   FinishDirectory(dir)
   ProcedureReturn count
+EndProcedure
+
+Procedure.s MCP_Toolkit_GetQuotedValue(line.s)
+  Protected firstQuote.i
+  Protected secondQuote.i
+
+  firstQuote = FindString(line, #DQUOTE$, 1)
+  If firstQuote = 0
+    ProcedureReturn ""
+  EndIf
+
+  secondQuote = FindString(line, #DQUOTE$, firstQuote + 1)
+  If secondQuote = 0
+    ProcedureReturn ""
+  EndIf
+
+  ProcedureReturn Mid(line, firstQuote + 1, secondQuote - firstQuote - 1)
+EndProcedure
+
+Procedure.s MCP_Toolkit_ReadArgumentString(argumentsValue, name.s, defaultValue.s = "")
+  Protected value
+
+  If argumentsValue = 0 Or JSONType(argumentsValue) <> #PB_JSON_Object
+    ProcedureReturn defaultValue
+  EndIf
+
+  value = GetJSONMember(argumentsValue, name)
+  If value = 0 Or JSONType(value) <> #PB_JSON_String
+    ProcedureReturn defaultValue
+  EndIf
+
+  ProcedureReturn GetJSONString(value)
+EndProcedure
+
+Procedure.s MCP_Toolkit_ScanIncludesInFile(root.s, relativePath.s, *state.MCP_Toolkit_ScanState)
+  Protected file.i
+  Protected line.s
+  Protected trimmed.s
+  Protected includeTarget.s
+  Protected text.s
+
+  If *state\truncated
+    ProcedureReturn ""
+  EndIf
+
+  file = ReadFile(#PB_Any, MCP_Toolkit_Path(root, relativePath), #PB_UTF8)
+  If file = 0
+    ProcedureReturn ""
+  EndIf
+
+  While Eof(file) = 0
+    line = ReadString(file, #PB_UTF8)
+    trimmed = Trim(line)
+
+    If FindString(trimmed, "XIncludeFile", 1) > 0 Or FindString(trimmed, "IncludeFile", 1) > 0
+      includeTarget = MCP_Toolkit_GetQuotedValue(trimmed)
+      If includeTarget <> ""
+        text + relativePath + " -> " + includeTarget + #LF$
+        *state\count + 1
+        If *state\count >= #MCP_Toolkit_DefaultMaxScanResults
+          *state\truncated = #True
+          Break
+        EndIf
+      EndIf
+    EndIf
+  Wend
+
+  CloseFile(file)
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_Toolkit_IncludeGraphDirectory(root.s, relativeDir.s, *state.MCP_Toolkit_ScanState)
+  Protected dir.i
+  Protected name.s
+  Protected childRelative.s
+  Protected text.s
+
+  dir = ExamineDirectory(#PB_Any, MCP_Toolkit_Path(root, relativeDir), "*")
+  If dir = 0
+    ProcedureReturn ""
+  EndIf
+
+  While NextDirectoryEntry(dir)
+    name = DirectoryEntryName(dir)
+    childRelative = MCP_Toolkit_NormalizeRelativePath(relativeDir + "/" + name)
+
+    If DirectoryEntryType(dir) = #PB_DirectoryEntry_Directory
+      If MCP_Toolkit_IsIgnoredDirectory(name) = #False
+        text + MCP_Toolkit_IncludeGraphDirectory(root, childRelative, *state)
+      EndIf
+    ElseIf MCP_Toolkit_IsSourceFile(name)
+      text + MCP_Toolkit_ScanIncludesInFile(root, childRelative, *state)
+    EndIf
+
+    If *state\truncated
+      Break
+    EndIf
+  Wend
+
+  FinishDirectory(dir)
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_Toolkit_IncludeGraphText()
+  Protected root.s = MCP_Toolkit_Config\projectRoot
+  Protected state.MCP_Toolkit_ScanState
+  Protected text.s
+
+  text = "PureBasic include graph" + #LF$
+  text + MCP_Toolkit_IncludeGraphDirectory(root, "src/jsonrpc", @state)
+  text + MCP_Toolkit_IncludeGraphDirectory(root, "MCP/mcp-purebasic-toolkit", @state)
+
+  If state\count = 0
+    text + "(no include edges found)" + #LF$
+  EndIf
+
+  If state\truncated
+    text + "[truncated after " + Str(state\count) + " include edges]" + #LF$
+  EndIf
+
+  ProcedureReturn text
+EndProcedure
+
+Procedure.i MCP_Toolkit_LineMatchesProcedureList(trimmed.s)
+  ProcedureReturn Bool(Left(trimmed, 9) = "Procedure" Or Left(trimmed, 7) = "Declare" Or Left(trimmed, 9) = "Prototype" Or Left(trimmed, 9) = "Structure")
+EndProcedure
+
+Procedure.s MCP_Toolkit_SearchFile(root.s, relativePath.s, query.s, *state.MCP_Toolkit_ScanState)
+  Protected file.i
+  Protected line.s
+  Protected lineNumber.i
+  Protected text.s
+  Protected loweredQuery.s = LCase(query)
+
+  If *state\truncated
+    ProcedureReturn ""
+  EndIf
+
+  file = ReadFile(#PB_Any, MCP_Toolkit_Path(root, relativePath), #PB_UTF8)
+  If file = 0
+    ProcedureReturn ""
+  EndIf
+
+  While Eof(file) = 0
+    lineNumber + 1
+    line = ReadString(file, #PB_UTF8)
+
+    If FindString(LCase(line), loweredQuery, 1) > 0
+      text + relativePath + ":" + Str(lineNumber) + ": " + Trim(line) + #LF$
+      *state\count + 1
+      If *state\count >= #MCP_Toolkit_DefaultMaxScanResults
+        *state\truncated = #True
+        Break
+      EndIf
+    EndIf
+  Wend
+
+  CloseFile(file)
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_Toolkit_SearchDirectory(root.s, relativeDir.s, query.s, *state.MCP_Toolkit_ScanState)
+  Protected dir.i
+  Protected name.s
+  Protected childRelative.s
+  Protected text.s
+
+  dir = ExamineDirectory(#PB_Any, MCP_Toolkit_Path(root, relativeDir), "*")
+  If dir = 0
+    ProcedureReturn ""
+  EndIf
+
+  While NextDirectoryEntry(dir)
+    name = DirectoryEntryName(dir)
+    childRelative = MCP_Toolkit_NormalizeRelativePath(relativeDir + "/" + name)
+
+    If DirectoryEntryType(dir) = #PB_DirectoryEntry_Directory
+      If MCP_Toolkit_IsIgnoredDirectory(name) = #False
+        text + MCP_Toolkit_SearchDirectory(root, childRelative, query, *state)
+      EndIf
+    ElseIf MCP_Toolkit_IsSourceFile(name) Or MCP_Toolkit_HasSuffix(name, ".pbp") Or MCP_Toolkit_HasSuffix(name, ".md") Or MCP_Toolkit_HasSuffix(name, ".sh")
+      text + MCP_Toolkit_SearchFile(root, childRelative, query, *state)
+    EndIf
+
+    If *state\truncated
+      Break
+    EndIf
+  Wend
+
+  FinishDirectory(dir)
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_Toolkit_SymbolSearchText(query.s)
+  Protected root.s = MCP_Toolkit_Config\projectRoot
+  Protected state.MCP_Toolkit_ScanState
+  Protected text.s
+
+  text = "PureBasic symbol search" + #LF$
+  text + "Query: " + query + #LF$
+  text + MCP_Toolkit_SearchDirectory(root, "src/jsonrpc", query, @state)
+  text + MCP_Toolkit_SearchDirectory(root, "examples", query, @state)
+  text + MCP_Toolkit_SearchDirectory(root, "MCP", query, @state)
+  text + MCP_Toolkit_SearchDirectory(root, "tools", query, @state)
+
+  If state\count = 0
+    text + "(no matches found)" + #LF$
+  EndIf
+
+  If state\truncated
+    text + "[truncated after " + Str(state\count) + " matches]" + #LF$
+  EndIf
+
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_Toolkit_ProcedureListFile(root.s, relativePath.s, prefix.s, *state.MCP_Toolkit_ScanState)
+  Protected file.i
+  Protected line.s
+  Protected trimmed.s
+  Protected lineNumber.i
+  Protected text.s
+
+  If *state\truncated
+    ProcedureReturn ""
+  EndIf
+
+  file = ReadFile(#PB_Any, MCP_Toolkit_Path(root, relativePath), #PB_UTF8)
+  If file = 0
+    ProcedureReturn ""
+  EndIf
+
+  While Eof(file) = 0
+    lineNumber + 1
+    line = ReadString(file, #PB_UTF8)
+    trimmed = Trim(line)
+
+    If MCP_Toolkit_LineMatchesProcedureList(trimmed)
+      If prefix = "" Or FindString(trimmed, prefix, 1) > 0
+        text + relativePath + ":" + Str(lineNumber) + ": " + trimmed + #LF$
+        *state\count + 1
+        If *state\count >= #MCP_Toolkit_DefaultMaxScanResults
+          *state\truncated = #True
+          Break
+        EndIf
+      EndIf
+    EndIf
+  Wend
+
+  CloseFile(file)
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_Toolkit_ProcedureListDirectory(root.s, relativeDir.s, prefix.s, *state.MCP_Toolkit_ScanState)
+  Protected dir.i
+  Protected name.s
+  Protected childRelative.s
+  Protected text.s
+
+  dir = ExamineDirectory(#PB_Any, MCP_Toolkit_Path(root, relativeDir), "*")
+  If dir = 0
+    ProcedureReturn ""
+  EndIf
+
+  While NextDirectoryEntry(dir)
+    name = DirectoryEntryName(dir)
+    childRelative = MCP_Toolkit_NormalizeRelativePath(relativeDir + "/" + name)
+
+    If DirectoryEntryType(dir) = #PB_DirectoryEntry_Directory
+      If MCP_Toolkit_IsIgnoredDirectory(name) = #False
+        text + MCP_Toolkit_ProcedureListDirectory(root, childRelative, prefix, *state)
+      EndIf
+    ElseIf MCP_Toolkit_IsSourceFile(name)
+      text + MCP_Toolkit_ProcedureListFile(root, childRelative, prefix, *state)
+    EndIf
+
+    If *state\truncated
+      Break
+    EndIf
+  Wend
+
+  FinishDirectory(dir)
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_Toolkit_ProcedureListText(prefix.s)
+  Protected root.s = MCP_Toolkit_Config\projectRoot
+  Protected state.MCP_Toolkit_ScanState
+  Protected text.s
+
+  text = "PureBasic procedure and symbol list" + #LF$
+  If prefix <> ""
+    text + "Prefix/filter: " + prefix + #LF$
+  EndIf
+
+  text + MCP_Toolkit_ProcedureListDirectory(root, "src/jsonrpc", prefix, @state)
+  text + MCP_Toolkit_ProcedureListDirectory(root, "MCP/mcp-purebasic-toolkit", prefix, @state)
+
+  If state\count = 0
+    text + "(no procedure symbols found)" + #LF$
+  EndIf
+
+  If state\truncated
+    text + "[truncated after " + Str(state\count) + " symbols]" + #LF$
+  EndIf
+
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_Toolkit_PbpTargetsFile(root.s, relativePath.s, *state.MCP_Toolkit_ScanState)
+  Protected file.i
+  Protected line.s
+  Protected trimmed.s
+  Protected targetName.s
+  Protected inputFile.s
+  Protected outputFile.s
+  Protected format.s
+  Protected text.s
+
+  If *state\truncated
+    ProcedureReturn ""
+  EndIf
+
+  file = ReadFile(#PB_Any, MCP_Toolkit_Path(root, relativePath), #PB_UTF8)
+  If file = 0
+    ProcedureReturn ""
+  EndIf
+
+  While Eof(file) = 0
+    line = ReadString(file, #PB_UTF8)
+    trimmed = Trim(line)
+
+    If FindString(trimmed, "<target ", 1) > 0
+      targetName = MCP_Toolkit_GetQuotedValue(trimmed)
+      inputFile = ""
+      outputFile = ""
+      format = ""
+    ElseIf FindString(trimmed, "<inputfile ", 1) > 0
+      inputFile = MCP_Toolkit_GetQuotedValue(trimmed)
+    ElseIf FindString(trimmed, "<outputfile ", 1) > 0
+      outputFile = MCP_Toolkit_GetQuotedValue(trimmed)
+    ElseIf FindString(trimmed, "<format ", 1) > 0
+      format = MCP_Toolkit_GetQuotedValue(trimmed)
+    ElseIf FindString(trimmed, "</target>", 1) > 0 And targetName <> ""
+      text + relativePath + " :: " + targetName + " [" + format + "] input=" + inputFile + " output=" + outputFile + #LF$
+      *state\count + 1
+      targetName = ""
+      If *state\count >= #MCP_Toolkit_DefaultMaxScanResults
+        *state\truncated = #True
+        Break
+      EndIf
+    EndIf
+  Wend
+
+  CloseFile(file)
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_Toolkit_PbpTargetsDirectory(root.s, relativeDir.s, *state.MCP_Toolkit_ScanState)
+  Protected dir.i
+  Protected name.s
+  Protected childRelative.s
+  Protected text.s
+
+  dir = ExamineDirectory(#PB_Any, MCP_Toolkit_Path(root, relativeDir), "*")
+  If dir = 0
+    ProcedureReturn ""
+  EndIf
+
+  While NextDirectoryEntry(dir)
+    name = DirectoryEntryName(dir)
+    childRelative = MCP_Toolkit_NormalizeRelativePath(relativeDir + "/" + name)
+
+    If DirectoryEntryType(dir) = #PB_DirectoryEntry_Directory
+      If MCP_Toolkit_IsIgnoredDirectory(name) = #False
+        text + MCP_Toolkit_PbpTargetsDirectory(root, childRelative, *state)
+      EndIf
+    ElseIf MCP_Toolkit_HasSuffix(name, ".pbp")
+      text + MCP_Toolkit_PbpTargetsFile(root, childRelative, *state)
+    EndIf
+
+    If *state\truncated
+      Break
+    EndIf
+  Wend
+
+  FinishDirectory(dir)
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_Toolkit_PbpTargetsText()
+  Protected root.s = MCP_Toolkit_Config\projectRoot
+  Protected state.MCP_Toolkit_ScanState
+  Protected text.s
+
+  text = "PureBasic .pbp targets" + #LF$
+  text + MCP_Toolkit_PbpTargetsFile(root, "PureBasic-JSON-RPC.pbp", @state)
+  text + MCP_Toolkit_PbpTargetsDirectory(root, "examples", @state)
+  text + MCP_Toolkit_PbpTargetsDirectory(root, "MCP", @state)
+
+  If state\count = 0
+    text + "(no .pbp targets found)" + #LF$
+  EndIf
+
+  If state\truncated
+    text + "[truncated after " + Str(state\count) + " targets]" + #LF$
+  EndIf
+
+  ProcedureReturn text
 EndProcedure
 
 Procedure MCP_Toolkit_SetConfig(projectRoot.s)
@@ -267,6 +722,43 @@ Procedure.i MCP_Toolkit_HarnessChecklistHandler(argumentsValue, *context.JSONRPC
   ProcedureReturn #True
 EndProcedure
 
+Procedure.i MCP_Toolkit_IncludeGraphHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  *result\ok = #True
+  *result\resultJson = MCP_Tools_TextResult(MCP_Toolkit_IncludeGraphText())
+  ProcedureReturn #True
+EndProcedure
+
+Procedure.i MCP_Toolkit_SymbolSearchHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  Protected query.s
+
+  query = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "query"))
+  If query = ""
+    *result\ok = #False
+    *result\errorCode = #JSONRPC_Error_InvalidParams
+    *result\errorMessage = "purebasic/symbol/search requires query"
+    ProcedureReturn #True
+  EndIf
+
+  *result\ok = #True
+  *result\resultJson = MCP_Tools_TextResult(MCP_Toolkit_SymbolSearchText(query))
+  ProcedureReturn #True
+EndProcedure
+
+Procedure.i MCP_Toolkit_ProcedureListHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  Protected prefix.s
+
+  prefix = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "prefix"))
+  *result\ok = #True
+  *result\resultJson = MCP_Tools_TextResult(MCP_Toolkit_ProcedureListText(prefix))
+  ProcedureReturn #True
+EndProcedure
+
+Procedure.i MCP_Toolkit_PbpListTargetsHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  *result\ok = #True
+  *result\resultJson = MCP_Tools_TextResult(MCP_Toolkit_PbpTargetsText())
+  ProcedureReturn #True
+EndProcedure
+
 Procedure.i MCP_Toolkit_RegisterTool(*registry.MCP_ToolRegistry, name.s, title.s, description.s, schema.s, *handler)
   If MCP_RegisterTool(*registry, name, title, description, schema) = #False
     ProcedureReturn #False
@@ -289,6 +781,22 @@ Procedure.i MCP_Toolkit_Register(*dispatcher.JSONRPC_Dispatcher, *registry.MCP_T
   EndIf
 
   If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_HarnessChecklistName$, "PureBasic Harness Checklist", "Return the default harness, ReadTheDocs, release, Git, and GitHub checklist for PureBasic development routes.", #MCP_Toolkit_HarnessChecklistSchema$, @MCP_Toolkit_HarnessChecklistHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_IncludeGraphName$, "PureBasic Include Graph", "List IncludeFile and XIncludeFile edges from the JSON-RPC library and toolkit source.", #MCP_Toolkit_IncludeGraphSchema$, @MCP_Toolkit_IncludeGraphHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_SymbolSearchName$, "PureBasic Symbol Search", "Search PureBasic source, project files, docs, and harness scripts for a symbol or text query.", #MCP_Toolkit_SymbolSearchSchema$, @MCP_Toolkit_SymbolSearchHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_ProcedureListName$, "PureBasic Procedure List", "List PureBasic procedure, declare, prototype, and structure lines with an optional prefix filter.", #MCP_Toolkit_ProcedureListSchema$, @MCP_Toolkit_ProcedureListHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_PbpListTargetsName$, "PureBasic PBP Target List", "List committed .pbp project targets using repository-relative paths.", #MCP_Toolkit_PbpListTargetsSchema$, @MCP_Toolkit_PbpListTargetsHandler()) = #False
     ProcedureReturn #False
   EndIf
 

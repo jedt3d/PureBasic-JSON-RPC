@@ -21,6 +21,9 @@ Documentation and harness discipline:
 - Started the real `MCP/mcp-purebasic-toolkit` project with a stdio MCP server,
   read-only project/workflow/harness tools, bundled PureBasic development
   skills, separate toolkit milestones, and harness/package verification.
+- Expanded `MCP/mcp-purebasic-toolkit` project intelligence with include graph,
+  symbol search, procedure listing, `.pbp` target listing, probe coverage, and
+  PureUnit coverage.
 - Added `tools/verify-docs.sh` to verify numbered routes have matching example
   READMEs, API pages, milestone sections, API index entries, docs API bridge
   entries, and required Sphinx navigation.

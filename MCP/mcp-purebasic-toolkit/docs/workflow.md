@@ -21,6 +21,15 @@ clear enough to build. The interview should identify:
 The agent should summarize the brief before code changes unless the user has
 already supplied a complete implementation plan.
 
+Use the toolkit project-intelligence tools early in the interview when the code
+base is unfamiliar:
+
+- `purebasic/project/inspect`
+- `purebasic/include/graph`
+- `purebasic/symbol/search`
+- `purebasic/procedure/list`
+- `purebasic/pbp/list-targets`
+
 ## Algorithm And Human Decisions
 
 Before touching risky code, explain:

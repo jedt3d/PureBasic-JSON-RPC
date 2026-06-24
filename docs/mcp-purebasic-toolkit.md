@@ -17,6 +17,10 @@ Current foundation tools:
 - `purebasic/project/inspect`
 - `purebasic/workflow/brief`
 - `purebasic/harness/checklist`
+- `purebasic/include/graph`
+- `purebasic/symbol/search`
+- `purebasic/procedure/list`
+- `purebasic/pbp/list-targets`
 
 Toolkit milestones are intentionally tracked in
 `MCP/mcp-purebasic-toolkit/docs/milestones.md` instead of the core library

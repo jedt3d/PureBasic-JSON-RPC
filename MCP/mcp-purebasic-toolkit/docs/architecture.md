@@ -52,6 +52,14 @@ Current implementation files:
 - `purebasic_toolkit.pbp`
 - `probe_smoke_input.ndjson`
 
+Current tool groups:
+
+- Foundation context: `purebasic/project/inspect`, `purebasic/workflow/brief`,
+  and `purebasic/harness/checklist`.
+- Project intelligence: `purebasic/include/graph`,
+  `purebasic/symbol/search`, `purebasic/procedure/list`, and
+  `purebasic/pbp/list-targets`.
+
 ## Design Rules
 
 - Keep the toolkit as a real project under `MCP/mcp-purebasic-toolkit`.
@@ -66,8 +74,8 @@ Current implementation files:
 
 ## Future Tool Groups
 
-- Project intelligence: inspect structure, include graph, symbols, procedures,
-  public API, and `.pbp` targets.
+- Project intelligence: deepen include graph, symbols, procedures, public API,
+  and `.pbp` target analysis.
 - Harness execution: run focused tests, full checks, docs builds, and package
   verification with bounded output.
 - Pair workflow: produce implementation briefs, algorithm flow summaries, and

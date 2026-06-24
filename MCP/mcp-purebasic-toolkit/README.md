@@ -19,6 +19,14 @@ management, docs automation, milestone generation, and MCP authoring helpers.
   document, and use Git/GitHub intentionally.
 - `purebasic/harness/checklist` - return the local harness, ReadTheDocs,
   release artifact, Git, and GitHub checklist.
+- `purebasic/include/graph` - list `IncludeFile` and `XIncludeFile` edges from
+  JSON-RPC and toolkit source.
+- `purebasic/symbol/search` - search source, docs, project files, and harness
+  scripts with repository-relative results.
+- `purebasic/procedure/list` - list PureBasic procedure, declare, prototype,
+  and structure lines with an optional prefix filter.
+- `purebasic/pbp/list-targets` - list committed `.pbp` targets and target
+  formats using repository-relative paths.
 
 ## Build
 
@@ -51,6 +59,14 @@ Run the stdio server with probe input:
 ```
 
 The full repository check runs both paths.
+
+## Project Intelligence Scope
+
+The first intelligence tools are intentionally read-only and bounded. They are
+not a replacement for compiler or static-analysis tooling. They provide fast
+project orientation for a pair-development session: where includes point, which
+symbols exist, which procedures are likely public, and which `.pbp` targets
+define buildable PureBasic programs.
 
 ## Skills
 
