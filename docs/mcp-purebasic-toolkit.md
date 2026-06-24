@@ -25,9 +25,14 @@ Current foundation tools:
 - `purebasic/build/run`
 - `purebasic/check`
 - `purebasic/docs/build`
+- `purebasic/brief/create`
+- `purebasic/algorithm/explain`
+- `purebasic/decision-record/create`
 
 Harness execution tools run fixed repository scripts only. They support
 `dryRun`, bounded output, timeout controls, and project-root path sanitization.
+Pair-development record tools return Markdown and save only when `save: true`
+is requested, using `.local/mcp-purebasic-toolkit/records/`.
 
 Toolkit milestones are intentionally tracked in
 `MCP/mcp-purebasic-toolkit/docs/milestones.md` instead of the core library

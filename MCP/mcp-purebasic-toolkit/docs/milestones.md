@@ -102,18 +102,38 @@ Acceptance criteria:
 
 ## 003-pair-development-records
 
-Status: planned
+Branch: `feature/mcp-toolkit-pair-development-records`
+
+Status: completed
 
 Purpose:
 
 - Turn the interview and algorithm explanation workflow into reusable MCP
   outputs and persisted brief files when requested.
 
-Candidate tools:
+Tools:
 
 - `purebasic/brief/create`
 - `purebasic/algorithm/explain`
 - `purebasic/decision-record/create`
+
+Acceptance criteria:
+
+- Brief creation returns a Markdown implementation brief with goal, context,
+  non-goals, deliverables, risks, tests, docs, and clarification questions.
+- Algorithm explanation returns Markdown covering inputs, flow, state/ownership,
+  errors, human decisions, and a default review checklist.
+- Decision record creation returns Markdown covering status, context, decision,
+  options, consequences, and follow-up.
+- Records are returned as MCP text results by default.
+- `save: true` writes records under
+  `.local/mcp-purebasic-toolkit/records/`.
+- Saved record paths are repository-relative in MCP output.
+- Path traversal and nested filenames are rejected with JSON-RPC `-32602`.
+- Toolkit probe and stdio smoke input cover the record tools.
+- PureUnit coverage validates registration, content shape, save behavior, and
+  invalid filename handling.
+- `./tools/check.sh` passes.
 
 ## 004-git-github-workflow
 

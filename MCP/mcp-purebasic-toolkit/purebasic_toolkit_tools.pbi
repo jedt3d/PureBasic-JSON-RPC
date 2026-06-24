@@ -13,6 +13,9 @@ XIncludeFile "../../src/jsonrpc/mcp_tools.pbi"
 #MCP_Toolkit_BuildRunName$ = "purebasic/build/run"
 #MCP_Toolkit_CheckName$ = "purebasic/check"
 #MCP_Toolkit_DocsBuildName$ = "purebasic/docs/build"
+#MCP_Toolkit_BriefCreateName$ = "purebasic/brief/create"
+#MCP_Toolkit_AlgorithmExplainName$ = "purebasic/algorithm/explain"
+#MCP_Toolkit_DecisionRecordCreateName$ = "purebasic/decision-record/create"
 
 #MCP_Toolkit_ProjectInspectSchema$ = ~"{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"
 #MCP_Toolkit_WorkflowBriefSchema$ = ~"{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"
@@ -22,6 +25,9 @@ XIncludeFile "../../src/jsonrpc/mcp_tools.pbi"
 #MCP_Toolkit_ProcedureListSchema$ = ~"{\"type\":\"object\",\"properties\":{\"prefix\":{\"type\":\"string\"}},\"additionalProperties\":false}"
 #MCP_Toolkit_PbpListTargetsSchema$ = ~"{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"
 #MCP_Toolkit_HarnessExecutionSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dryRun\":{\"type\":\"boolean\"},\"timeoutMs\":{\"type\":\"integer\",\"minimum\":1000,\"maximum\":900000},\"maxOutputBytes\":{\"type\":\"integer\",\"minimum\":1000,\"maximum\":60000}},\"additionalProperties\":false}"
+#MCP_Toolkit_BriefCreateSchema$ = ~"{\"type\":\"object\",\"properties\":{\"goal\":{\"type\":\"string\"},\"context\":{\"type\":\"string\"},\"nonGoals\":{\"type\":\"string\"},\"deliverables\":{\"type\":\"string\"},\"risks\":{\"type\":\"string\"},\"tests\":{\"type\":\"string\"},\"docs\":{\"type\":\"string\"},\"save\":{\"type\":\"boolean\"},\"fileName\":{\"type\":\"string\"}},\"additionalProperties\":false}"
+#MCP_Toolkit_AlgorithmExplainSchema$ = ~"{\"type\":\"object\",\"properties\":{\"title\":{\"type\":\"string\"},\"inputs\":{\"type\":\"string\"},\"flow\":{\"type\":\"string\"},\"state\":{\"type\":\"string\"},\"errors\":{\"type\":\"string\"},\"humanDecisions\":{\"type\":\"string\"},\"save\":{\"type\":\"boolean\"},\"fileName\":{\"type\":\"string\"}},\"additionalProperties\":false}"
+#MCP_Toolkit_DecisionRecordCreateSchema$ = ~"{\"type\":\"object\",\"properties\":{\"title\":{\"type\":\"string\"},\"status\":{\"type\":\"string\"},\"context\":{\"type\":\"string\"},\"decision\":{\"type\":\"string\"},\"options\":{\"type\":\"string\"},\"consequences\":{\"type\":\"string\"},\"followUp\":{\"type\":\"string\"},\"save\":{\"type\":\"boolean\"},\"fileName\":{\"type\":\"string\"}},\"additionalProperties\":false}"
 
 #MCP_Toolkit_DefaultMaxScanResults = 80
 #MCP_Toolkit_DefaultCommandTimeoutMs = 300000
@@ -30,6 +36,8 @@ XIncludeFile "../../src/jsonrpc/mcp_tools.pbi"
 #MCP_Toolkit_DefaultCommandMaxOutputBytes = 20000
 #MCP_Toolkit_MinCommandMaxOutputBytes = 1000
 #MCP_Toolkit_MaxCommandMaxOutputBytes = 60000
+#MCP_Toolkit_RecordFieldMaxChars = 4000
+#MCP_Toolkit_RecordOutputMaxChars = 24000
 
 Structure MCP_Toolkit_Config
   projectRoot.s
@@ -55,6 +63,12 @@ Structure MCP_Toolkit_HarnessResult
   exitCode.i
   output.s
   truncated.i
+EndStructure
+
+Structure MCP_Toolkit_RecordSaveResult
+  saved.i
+  relativePath.s
+  errorMessage.s
 EndStructure
 
 Global MCP_Toolkit_Config.MCP_Toolkit_Config
@@ -510,6 +524,225 @@ Procedure.i MCP_Toolkit_RunHarnessTool(argumentsValue, *result.JSONRPC_HandlerRe
   ProcedureReturn #True
 EndProcedure
 
+Procedure.s MCP_Toolkit_LimitText(text.s, maxChars.i)
+  If Len(text) <= maxChars
+    ProcedureReturn text
+  EndIf
+
+  ProcedureReturn Left(text, maxChars) + #LF$ + "[truncated]" + #LF$
+EndProcedure
+
+Procedure.s MCP_Toolkit_RecordField(text.s)
+  text = Trim(text)
+  If text = ""
+    ProcedureReturn "(not specified yet)"
+  EndIf
+
+  ProcedureReturn MCP_Toolkit_LimitText(text, #MCP_Toolkit_RecordFieldMaxChars)
+EndProcedure
+
+Procedure.s MCP_Toolkit_MarkdownSection(title.s, body.s)
+  ProcedureReturn "## " + title + #LF$ + MCP_Toolkit_RecordField(body) + #LF$ + #LF$
+EndProcedure
+
+Procedure.i MCP_Toolkit_ReadSaveFlag(argumentsValue, *result.JSONRPC_HandlerResult)
+  Protected present.Integer
+  Protected save.i
+
+  save = MCP_Toolkit_ReadOptionalBoolean(argumentsValue, "save", #False, @present)
+  If present\i And JSONType(GetJSONMember(argumentsValue, "save")) <> #PB_JSON_Boolean
+    MCP_Toolkit_SetInvalidParams(*result, "save must be a boolean")
+    ProcedureReturn -1
+  EndIf
+
+  ProcedureReturn save
+EndProcedure
+
+Procedure.s MCP_Toolkit_RecordFileName(argumentsValue, prefix.s, *result.JSONRPC_HandlerResult)
+  Protected fileName.s
+  Protected normalized.s
+
+  fileName = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "fileName"))
+  If fileName = ""
+    fileName = prefix + "-" + Str(Date()) + ".md"
+  EndIf
+
+  normalized = ReplaceString(fileName, "\", "/")
+  If FindString(normalized, "/", 1) > 0 Or FindString(normalized, "..", 1) > 0 Or FindString(normalized, ":", 1) > 0
+    MCP_Toolkit_SetInvalidParams(*result, "fileName must be a simple markdown filename")
+    ProcedureReturn ""
+  EndIf
+
+  If MCP_Toolkit_HasSuffix(fileName, ".md") = #False
+    fileName + ".md"
+  EndIf
+
+  If fileName = ".md"
+    MCP_Toolkit_SetInvalidParams(*result, "fileName must not be empty")
+    ProcedureReturn ""
+  EndIf
+
+  ProcedureReturn fileName
+EndProcedure
+
+Procedure.i MCP_Toolkit_EnsureRelativeDirectory(root.s, relativeDir.s)
+  Protected index.i
+  Protected part.s
+  Protected current.s
+  Protected count.i
+
+  count = CountString(relativeDir, "/") + 1
+  For index = 1 To count
+    part = StringField(relativeDir, index, "/")
+    If part = ""
+      Continue
+    EndIf
+
+    If current = ""
+      current = part
+    Else
+      current + "/" + part
+    EndIf
+
+    If FileSize(MCP_Toolkit_Path(root, current)) <> -2
+      If CreateDirectory(MCP_Toolkit_Path(root, current)) = 0
+        ProcedureReturn #False
+      EndIf
+    EndIf
+  Next
+
+  ProcedureReturn #True
+EndProcedure
+
+Procedure.i MCP_Toolkit_SaveRecord(category.s, fileName.s, content.s, *saveResult.MCP_Toolkit_RecordSaveResult)
+  Protected root.s = MCP_Toolkit_Config\projectRoot
+  Protected relativeDir.s
+  Protected file.i
+
+  If root = ""
+    root = MCP_Toolkit_DefaultProjectRoot()
+  EndIf
+
+  relativeDir = ".local/mcp-purebasic-toolkit/records/" + category
+  If MCP_Toolkit_EnsureRelativeDirectory(root, relativeDir) = #False
+    *saveResult\errorMessage = "Could not create record directory: " + relativeDir
+    ProcedureReturn #False
+  EndIf
+
+  *saveResult\relativePath = relativeDir + "/" + fileName
+  file = CreateFile(#PB_Any, MCP_Toolkit_Path(root, *saveResult\relativePath), #PB_UTF8)
+  If file = 0
+    *saveResult\errorMessage = "Could not write record: " + *saveResult\relativePath
+    ProcedureReturn #False
+  EndIf
+
+  WriteString(file, content, #PB_UTF8)
+  CloseFile(file)
+  *saveResult\saved = #True
+  ProcedureReturn #True
+EndProcedure
+
+Procedure.s MCP_Toolkit_RecordWithSaveNote(content.s, *saveResult.MCP_Toolkit_RecordSaveResult)
+  If *saveResult\saved
+    ProcedureReturn content + #LF$ + "Saved record: " + *saveResult\relativePath + #LF$
+  EndIf
+
+  If *saveResult\errorMessage <> ""
+    ProcedureReturn content + #LF$ + "Save failed: " + *saveResult\errorMessage + #LF$
+  EndIf
+
+  ProcedureReturn content
+EndProcedure
+
+Procedure.i MCP_Toolkit_SetRecordToolResult(argumentsValue, *result.JSONRPC_HandlerResult, category.s, prefix.s, content.s)
+  Protected save.i
+  Protected fileName.s
+  Protected saveResult.MCP_Toolkit_RecordSaveResult
+  Protected isError.i
+
+  save = MCP_Toolkit_ReadSaveFlag(argumentsValue, *result)
+  If save = -1
+    ProcedureReturn #True
+  EndIf
+
+  content = MCP_Toolkit_LimitText(content, #MCP_Toolkit_RecordOutputMaxChars)
+  If save
+    fileName = MCP_Toolkit_RecordFileName(argumentsValue, prefix, *result)
+    If fileName = ""
+      ProcedureReturn #True
+    EndIf
+
+    If MCP_Toolkit_SaveRecord(category, fileName, content, @saveResult) = #False
+      isError = #True
+    EndIf
+    content = MCP_Toolkit_RecordWithSaveNote(content, @saveResult)
+  EndIf
+
+  *result\ok = #True
+  *result\resultJson = MCP_Tools_TextResult(content, isError)
+  ProcedureReturn #True
+EndProcedure
+
+Procedure.s MCP_Toolkit_BriefMarkdown(argumentsValue)
+  Protected text.s
+
+  text = "# PureBasic Implementation Brief" + #LF$ + #LF$
+  text + MCP_Toolkit_MarkdownSection("Goal", MCP_Toolkit_ReadArgumentString(argumentsValue, "goal"))
+  text + MCP_Toolkit_MarkdownSection("Context", MCP_Toolkit_ReadArgumentString(argumentsValue, "context"))
+  text + MCP_Toolkit_MarkdownSection("Non-goals", MCP_Toolkit_ReadArgumentString(argumentsValue, "nonGoals"))
+  text + MCP_Toolkit_MarkdownSection("Deliverables", MCP_Toolkit_ReadArgumentString(argumentsValue, "deliverables"))
+  text + MCP_Toolkit_MarkdownSection("Risks", MCP_Toolkit_ReadArgumentString(argumentsValue, "risks"))
+  text + MCP_Toolkit_MarkdownSection("Tests", MCP_Toolkit_ReadArgumentString(argumentsValue, "tests"))
+  text + MCP_Toolkit_MarkdownSection("Documentation", MCP_Toolkit_ReadArgumentString(argumentsValue, "docs"))
+  text + "## Questions To Clarify" + #LF$
+  text + "- What PureBasic target type is affected: console, GUI app, shared library, or include-only library?" + #LF$
+  text + "- What public API, MCP method, or tool schema changes?" + #LF$
+  text + "- What malformed-input, path-safety, memory-lifecycle, and docs checks must pass?" + #LF$
+  text + "- Which human decisions should be made before implementation continues?" + #LF$
+
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_Toolkit_AlgorithmMarkdown(argumentsValue)
+  Protected title.s
+  Protected text.s
+
+  title = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "title", "Untitled PureBasic Flow"))
+  text = "# Algorithm Explanation: " + title + #LF$ + #LF$
+  text + MCP_Toolkit_MarkdownSection("Inputs", MCP_Toolkit_ReadArgumentString(argumentsValue, "inputs"))
+  text + MCP_Toolkit_MarkdownSection("Flow", MCP_Toolkit_ReadArgumentString(argumentsValue, "flow"))
+  text + MCP_Toolkit_MarkdownSection("State And Ownership", MCP_Toolkit_ReadArgumentString(argumentsValue, "state"))
+  text + MCP_Toolkit_MarkdownSection("Errors And Edge Cases", MCP_Toolkit_ReadArgumentString(argumentsValue, "errors"))
+  text + MCP_Toolkit_MarkdownSection("Human Decisions", MCP_Toolkit_ReadArgumentString(argumentsValue, "humanDecisions"))
+  text + "## Default Review Checklist" + #LF$
+  text + "- Validate all inputs before state changes." + #LF$
+  text + "- Pair each `ParseJSON()` or `CreateJSON()` ownership path with `FreeJSON()`." + #LF$
+  text + "- Keep MCP stdout protocol-only and route diagnostics to stderr." + #LF$
+  text + "- Keep paths repository-relative in tracked files and generated descriptions." + #LF$
+  text + "- Run focused tests first, then `./tools/check.sh`." + #LF$
+
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_Toolkit_DecisionRecordMarkdown(argumentsValue)
+  Protected title.s
+  Protected status.s
+  Protected text.s
+
+  title = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "title", "Untitled Decision"))
+  status = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "status", "proposed"))
+
+  text = "# Decision Record: " + title + #LF$ + #LF$
+  text + "Status: " + status + #LF$ + #LF$
+  text + MCP_Toolkit_MarkdownSection("Context", MCP_Toolkit_ReadArgumentString(argumentsValue, "context"))
+  text + MCP_Toolkit_MarkdownSection("Decision", MCP_Toolkit_ReadArgumentString(argumentsValue, "decision"))
+  text + MCP_Toolkit_MarkdownSection("Options Considered", MCP_Toolkit_ReadArgumentString(argumentsValue, "options"))
+  text + MCP_Toolkit_MarkdownSection("Consequences", MCP_Toolkit_ReadArgumentString(argumentsValue, "consequences"))
+  text + MCP_Toolkit_MarkdownSection("Follow-up", MCP_Toolkit_ReadArgumentString(argumentsValue, "followUp"))
+
+  ProcedureReturn text
+EndProcedure
+
 Procedure.s MCP_Toolkit_ScanIncludesInFile(root.s, relativePath.s, *state.MCP_Toolkit_ScanState)
   Protected file.i
   Protected line.s
@@ -935,10 +1168,12 @@ Procedure.s MCP_Toolkit_WorkflowBriefText()
   text + "1. Interview and align" + #LF$
   text + "- Grill the human until goal, non-goals, target type, API surface, examples, tests, docs, and risks are clear." + #LF$
   text + "- Summarize the shared brief before code changes." + #LF$
+  text + "- Use purebasic/brief/create to capture the shared brief as Markdown when useful." + #LF$
   text + #LF$
   text + "2. Explain algorithm and flow" + #LF$
   text + "- Describe input validation, state changes, JSON ownership, error behavior, output shape, cleanup, and diagnostics." + #LF$
   text + "- Ask for human decisions when semantics or policy are not mechanical." + #LF$
+  text + "- Use purebasic/algorithm/explain and purebasic/decision-record/create to make flow and decisions reviewable." + #LF$
   text + #LF$
   text + "3. Implement through harness" + #LF$
   text + "- Create a focused branch." + #LF$
@@ -1074,6 +1309,18 @@ Procedure.i MCP_Toolkit_DocsBuildHandler(argumentsValue, *context.JSONRPC_Reques
   ProcedureReturn MCP_Toolkit_RunHarnessTool(argumentsValue, *result, "ReadTheDocs/Sphinx and PDF docs build", "tools/build-docs.sh")
 EndProcedure
 
+Procedure.i MCP_Toolkit_BriefCreateHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  ProcedureReturn MCP_Toolkit_SetRecordToolResult(argumentsValue, *result, "briefs", "brief", MCP_Toolkit_BriefMarkdown(argumentsValue))
+EndProcedure
+
+Procedure.i MCP_Toolkit_AlgorithmExplainHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  ProcedureReturn MCP_Toolkit_SetRecordToolResult(argumentsValue, *result, "algorithms", "algorithm", MCP_Toolkit_AlgorithmMarkdown(argumentsValue))
+EndProcedure
+
+Procedure.i MCP_Toolkit_DecisionRecordCreateHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  ProcedureReturn MCP_Toolkit_SetRecordToolResult(argumentsValue, *result, "decisions", "decision", MCP_Toolkit_DecisionRecordMarkdown(argumentsValue))
+EndProcedure
+
 Procedure.i MCP_Toolkit_RegisterTool(*registry.MCP_ToolRegistry, name.s, title.s, description.s, schema.s, *handler)
   If MCP_RegisterTool(*registry, name, title, description, schema) = #False
     ProcedureReturn #False
@@ -1128,6 +1375,18 @@ Procedure.i MCP_Toolkit_Register(*dispatcher.JSONRPC_Dispatcher, *registry.MCP_T
   EndIf
 
   If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_DocsBuildName$, "PureBasic Docs Build", "Run ./tools/build-docs.sh with bounded output and timeout controls.", #MCP_Toolkit_HarnessExecutionSchema$, @MCP_Toolkit_DocsBuildHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_BriefCreateName$, "PureBasic Brief Create", "Create a pair-development implementation brief as Markdown, optionally saving it under .local records.", #MCP_Toolkit_BriefCreateSchema$, @MCP_Toolkit_BriefCreateHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_AlgorithmExplainName$, "PureBasic Algorithm Explain", "Create an implementation algorithm and flow explanation as Markdown, optionally saving it under .local records.", #MCP_Toolkit_AlgorithmExplainSchema$, @MCP_Toolkit_AlgorithmExplainHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_DecisionRecordCreateName$, "PureBasic Decision Record Create", "Create a concise technical decision record as Markdown, optionally saving it under .local records.", #MCP_Toolkit_DecisionRecordCreateSchema$, @MCP_Toolkit_DecisionRecordCreateHandler()) = #False
     ProcedureReturn #False
   EndIf
 

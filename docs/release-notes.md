@@ -27,6 +27,9 @@ Documentation and harness discipline:
 - Added bounded MCP toolkit harness execution tools for `./tools/test.sh`,
   `./tools/build.sh`, `./tools/check.sh`, and `./tools/build-docs.sh`, with
   `dryRun`, timeout limits, output bounds, and project-root path sanitization.
+- Added MCP toolkit pair-development record tools for implementation briefs,
+  algorithm explanations, and decision records, with optional `.local/` saves
+  and filename/path validation.
 - Added `tools/verify-docs.sh` to verify numbered routes have matching example
   READMEs, API pages, milestone sections, API index entries, docs API bridge
   entries, and required Sphinx navigation.

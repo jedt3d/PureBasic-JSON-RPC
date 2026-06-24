@@ -9,7 +9,8 @@ The foundation and project-intelligence slices are read-only. Harness execution
 tools are now available for the repository's fixed verification scripts. They
 do not accept arbitrary shell commands; each tool runs one whitelisted harness
 script with timeout and output limits. Use `dryRun: true` when an MCP host
-should explain the command before launching it.
+should explain the command before launching it. Pair-development record tools
+produce Markdown and save only under `.local/` when explicitly requested.
 
 ## Current Tools
 
@@ -36,6 +37,12 @@ should explain the command before launching it.
   controls.
 - `purebasic/docs/build` - run `./tools/build-docs.sh` with bounded output and
   timeout controls.
+- `purebasic/brief/create` - create a pair-development implementation brief as
+  Markdown.
+- `purebasic/algorithm/explain` - create an algorithm and control-flow
+  explanation before implementation.
+- `purebasic/decision-record/create` - create a concise technical decision
+  record.
 
 ## Build
 
@@ -94,6 +101,23 @@ Harness execution tools are intentionally narrow:
 These tools are developer-facing execution helpers, not a sandbox. A host or
 human reviewer should still decide when to run expensive commands such as
 `purebasic/check`.
+
+## Pair-Development Records
+
+Record tools turn conversation into reviewable Markdown:
+
+- implementation briefs clarify goal, non-goals, risks, tests, docs, and open
+  questions
+- algorithm explanations capture inputs, flow, state ownership, error behavior,
+  and human decision points
+- decision records capture context, decision, options, consequences, and
+  follow-up
+
+By default these tools return MCP text only. When `save: true` is supplied, the
+record is written under `.local/mcp-purebasic-toolkit/records/`. File names must
+be simple Markdown file names; path traversal such as `../` is rejected with
+JSON-RPC `-32602`. Generated records stay outside tracked source until a human
+promotes them.
 
 ## Skills
 
