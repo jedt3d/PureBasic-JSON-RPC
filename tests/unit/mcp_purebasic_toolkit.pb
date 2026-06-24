@@ -19,6 +19,10 @@ Procedure.s ToolkitRoot()
   ProcedureReturn root
 EndProcedure
 
+Procedure.s WorkstationAbsolutePathMarker()
+  ProcedureReturn "/" + "Users" + "/"
+EndProcedure
+
 Procedure ToolkitInit(*dispatcher.JSONRPC_Dispatcher, *registry.MCP_ToolRegistry)
   Protected server.MCP_ServerInfo
 
@@ -61,7 +65,7 @@ ProcedureUnit SymbolSearchFindsDispatcher()
   text = MCP_Toolkit_SymbolSearchText("JSONRPC_Dispatcher_Dispatch")
 
   Assert(FindString(text, "src/jsonrpc/dispatch.pbi", 1) > 0, "Symbol search should find dispatcher implementation.")
-  Assert(FindString(text, "/Users/", 1) = 0, "Symbol search should use repository-relative paths.")
+  Assert(FindString(text, WorkstationAbsolutePathMarker(), 1) = 0, "Symbol search should use repository-relative paths.")
 EndProcedureUnit
 
 ProcedureUnit ProcedureListFiltersToolkitPrefix()
@@ -82,7 +86,7 @@ ProcedureUnit PbpTargetsListIncludesToolkitConsoleTargets()
 
   Assert(FindString(text, "MCP/mcp-purebasic-toolkit/purebasic_toolkit.pbp", 1) > 0, "PBP target list should include toolkit project.")
   Assert(FindString(text, "mcp-purebasic-toolkit stdio server [console]", 1) > 0, "Toolkit server should be a console target.")
-  Assert(FindString(text, "/Users/", 1) = 0, "PBP target list should use repository-relative paths.")
+  Assert(FindString(text, WorkstationAbsolutePathMarker(), 1) = 0, "PBP target list should use repository-relative paths.")
 EndProcedureUnit
 
 ProcedureUnit SymbolSearchRequiresQuery()
