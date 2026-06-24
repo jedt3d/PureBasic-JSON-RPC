@@ -37,6 +37,9 @@ Documentation and harness discipline:
   `005-docs-and-milestone-automation`: read-only route audits, route
   documentation update drafts, and milestone entry drafts that keep tracked
   source-of-truth edits under human review.
+- Hardened `tools/test.sh` so a successful PureUnit report can unblock
+  `tools/check.sh` when a PureBasic standby compiler process remains alive
+  after all tests complete with zero failures.
 - Added `tools/verify-docs.sh` to verify numbered routes have matching example
   READMEs, API pages, milestone sections, API index entries, docs API bridge
   entries, and required Sphinx navigation.
