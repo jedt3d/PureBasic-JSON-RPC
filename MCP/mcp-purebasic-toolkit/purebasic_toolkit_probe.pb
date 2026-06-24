@@ -91,6 +91,26 @@ If FindString(response, #MCP_Toolkit_DecisionRecordCreateName$, 1) = 0
   End 1
 EndIf
 
+If FindString(response, #MCP_Toolkit_GitPreflightName$, 1) = 0
+  PrintN("tools/list is missing git preflight")
+  End 1
+EndIf
+
+If FindString(response, #MCP_Toolkit_GitCommitSummaryName$, 1) = 0
+  PrintN("tools/list is missing git commit summary")
+  End 1
+EndIf
+
+If FindString(response, #MCP_Toolkit_GithubPrDraftName$, 1) = 0
+  PrintN("tools/list is missing github pr draft")
+  End 1
+EndIf
+
+If FindString(response, #MCP_Toolkit_GithubReleaseDraftName$, 1) = 0
+  PrintN("tools/list is missing github release draft")
+  End 1
+EndIf
+
 response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/project/inspect\",\"arguments\":{}},\"id\":2}")
 If FindString(response, "Toolkit milestones: yes", 1) = 0
   PrintN("project inspect did not find toolkit milestones")
@@ -160,6 +180,30 @@ EndIf
 response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/decision-record/create\",\"arguments\":{\"title\":\"Keep toolkit records under .local\",\"decision\":\"Generated records should stay outside tracked source unless promoted by a human.\"}},\"id\":13}")
 If FindString(response, "Decision Record: Keep toolkit records under .local", 1) = 0 Or FindString(response, "Generated records should stay outside tracked source", 1) = 0
   PrintN("decision record create did not return a decision record")
+  End 1
+EndIf
+
+response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/git/preflight\",\"arguments\":{\"baseBranch\":\"main\"}},\"id\":14}")
+If FindString(response, "# Git Preflight", 1) = 0 Or FindString(response, "Mode: read-only inspection", 1) = 0
+  PrintN("git preflight did not return read-only inspection")
+  End 1
+EndIf
+
+response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/git/commit-summary\",\"arguments\":{\"messageHint\":\"feat: add toolkit git workflow\"}},\"id\":15}")
+If FindString(response, "Git Commit Summary Draft", 1) = 0 Or FindString(response, "No `git add` or `git commit` was executed", 1) = 0
+  PrintN("git commit summary did not return a safe draft")
+  End 1
+EndIf
+
+response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/github/pr-draft\",\"arguments\":{\"title\":\"Toolkit Git workflow\",\"summary\":\"Add read-only Git workflow helpers.\",\"tests\":\"./tools/check.sh\"}},\"id\":16}")
+If FindString(response, "GitHub PR Draft", 1) = 0 Or FindString(response, "No branch was pushed and no PR was opened", 1) = 0
+  PrintN("github pr draft did not return a safe PR draft")
+  End 1
+EndIf
+
+response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/github/release-draft\",\"arguments\":{\"version\":\"0.1.0-alpha.next\",\"highlights\":\"Toolkit Git helpers\",\"verification\":\"./tools/check.sh\"}},\"id\":17}")
+If FindString(response, "GitHub Release Draft", 1) = 0 Or FindString(response, "No tag, release, or upload was created", 1) = 0
+  PrintN("github release draft did not return a safe release draft")
   End 1
 EndIf
 

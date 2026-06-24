@@ -89,6 +89,20 @@ git push origin feature/name
 Open a PR when review or CI is needed. Include verification evidence in the PR
 summary.
 
+Use the Git/GitHub MCP helpers before taking irreversible or collaborative
+steps:
+
+- `purebasic/git/preflight` inspects branch, status, diff stats, and recent
+  commits.
+- `purebasic/git/commit-summary` drafts a commit message and summary without
+  staging or committing.
+- `purebasic/github/pr-draft` drafts PR text without pushing or opening a PR.
+- `purebasic/github/release-draft` drafts release notes and artifact checks
+  without creating tags or releases.
+
+These tools are intentionally read-only or draft-only. Real Git/GitHub actions
+remain human-approved steps.
+
 ## Documentation
 
 ReadTheDocs/Sphinx is part of the route, not a release-only task.

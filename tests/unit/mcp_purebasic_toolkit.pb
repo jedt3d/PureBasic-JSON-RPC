@@ -75,6 +75,20 @@ ProcedureUnit ToolkitRegistersPairDevelopmentRecordTools()
   Assert(FindString(response, #MCP_Toolkit_DecisionRecordCreateName$, 1) > 0, "tools/list should include decision record create.")
 EndProcedureUnit
 
+ProcedureUnit ToolkitRegistersGitGithubWorkflowTools()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/list\",\"id\":1}")
+
+  Assert(FindString(response, #MCP_Toolkit_GitPreflightName$, 1) > 0, "tools/list should include git preflight.")
+  Assert(FindString(response, #MCP_Toolkit_GitCommitSummaryName$, 1) > 0, "tools/list should include git commit summary.")
+  Assert(FindString(response, #MCP_Toolkit_GithubPrDraftName$, 1) > 0, "tools/list should include github pr draft.")
+  Assert(FindString(response, #MCP_Toolkit_GithubReleaseDraftName$, 1) > 0, "tools/list should include github release draft.")
+EndProcedureUnit
+
 ProcedureUnit IncludeGraphContainsJsonRpcEdges()
   Protected text.s
 
@@ -230,4 +244,57 @@ ProcedureUnit RecordSaveRejectsPathTraversal()
   response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/brief/create\",\"arguments\":{\"save\":true,\"fileName\":\"../bad.md\"}},\"id\":9}")
 
   Assert(FindString(response, ~"\"code\":-32602", 1) > 0, "Record save should reject path traversal.")
+EndProcedureUnit
+
+ProcedureUnit GitPreflightReturnsReadOnlyStatus()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/git/preflight\",\"arguments\":{\"baseBranch\":\"main\"}},\"id\":10}")
+
+  Assert(FindString(response, "# Git Preflight", 1) > 0, "Git preflight should return a markdown report.")
+  Assert(FindString(response, "Mode: read-only inspection", 1) > 0, "Git preflight should be read-only.")
+  Assert(FindString(response, "Recommended Checks", 1) > 0, "Git preflight should include route checks.")
+  Assert(FindString(response, WorkstationAbsolutePathMarker(), 1) = 0, "Git preflight should avoid workstation-specific paths.")
+EndProcedureUnit
+
+ProcedureUnit GitCommitSummaryReturnsDraftOnly()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/git/commit-summary\",\"arguments\":{\"messageHint\":\"feat: add toolkit git helpers\",\"scope\":\"toolkit milestone\"}},\"id\":11}")
+
+  Assert(FindString(response, "Git Commit Summary Draft", 1) > 0, "Commit summary should return a markdown draft.")
+  Assert(FindString(response, "No `git add` or `git commit` was executed", 1) > 0, "Commit summary must not imply mutation.")
+  Assert(FindString(response, "feat: add toolkit git helpers", 1) > 0, "Commit summary should include the message hint.")
+EndProcedureUnit
+
+ProcedureUnit GithubPrDraftReturnsSafeTemplate()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/github/pr-draft\",\"arguments\":{\"title\":\"Toolkit Git workflow\",\"summary\":\"Add read-only workflow helpers.\",\"tests\":\"./tools/check.sh\",\"risks\":\"Draft only.\"}},\"id\":12}")
+
+  Assert(FindString(response, "GitHub PR Draft", 1) > 0, "PR draft should return a markdown draft.")
+  Assert(FindString(response, "No branch was pushed and no PR was opened", 1) > 0, "PR draft must not imply GitHub mutation.")
+  Assert(FindString(response, "Add read-only workflow helpers", 1) > 0, "PR draft should include the supplied summary.")
+EndProcedureUnit
+
+ProcedureUnit GithubReleaseDraftReturnsArtifactChecklist()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/github/release-draft\",\"arguments\":{\"version\":\"0.1.0-alpha.next\",\"highlights\":\"Toolkit workflow helpers\",\"verification\":\"./tools/check.sh\"}},\"id\":13}")
+
+  Assert(FindString(response, "GitHub Release Draft", 1) > 0, "Release draft should return a markdown draft.")
+  Assert(FindString(response, "No tag, release, or upload was created", 1) > 0, "Release draft must not imply GitHub mutation.")
+  Assert(FindString(response, "Artifact Checklist", 1) > 0, "Release draft should include artifact checks.")
 EndProcedureUnit
