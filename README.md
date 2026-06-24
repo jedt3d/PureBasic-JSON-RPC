@@ -60,14 +60,15 @@ The package step also generates the long-form documentation PDFs in `.build/dist
 - `API/` - public API documentation in Markdown.
 - `docs/` - Read the Docs/Sphinx entrypoint, project request, guideline, milestones, and release notes.
 - `examples/` - sequential scenario applications, one folder per milestone.
-- `MCP/` - MCP-focused example projects without numeric prefixes.
+- `MCP/` - MCP-focused projects, including examples under `MCP/examples/` and
+  the real development toolkit under `MCP/mcp-purebasic-toolkit/`.
 - `src/jsonrpc/` - library source.
 - `tests/unit/` - PureUnit tests close to the library workflow.
 - `tools/` - local discovery, build, test, and verification scripts.
 
 ## Documentation
 
-The API pages are reference documentation. The narrative path starts with `docs/mcp-for-purebasic.md` for the MCP and PureBasic overview, then `docs/tutorial-building-with-purebasic-jsonrpc.md` for the end-to-end tutorial. Thai readers can use `docs/Code Walkthrough.md` as a code-level walkthrough of the source and examples. `./tools/build-docs.sh` builds Sphinx HTML and exactly two generated PDFs under `.build/docs-pdf/`.
+The API pages are reference documentation. The narrative path starts with `docs/mcp-for-purebasic.md` for the MCP and PureBasic overview, then `docs/tutorial-building-with-purebasic-jsonrpc.md` for the end-to-end tutorial. Thai readers can use `docs/Code Walkthrough.md` as a code-level walkthrough of the source and examples. `docs/mcp-purebasic-toolkit.md` introduces the real PureBasic development toolkit project. `./tools/build-docs.sh` builds Sphinx HTML and exactly two generated PDFs under `.build/docs-pdf/`.
 
 Planning and documentation routes are checked by `./tools/verify-docs.sh`. A
 numbered milestone is not considered complete until the example folder, API

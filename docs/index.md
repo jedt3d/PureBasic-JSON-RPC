@@ -20,6 +20,7 @@ release-checklist
 jsonrpc-compliance-matrix
 security-robustness
 mcp-for-purebasic
+mcp-purebasic-toolkit
 tutorial-building-with-purebasic-jsonrpc
 mcp-example-milestone-log
 api

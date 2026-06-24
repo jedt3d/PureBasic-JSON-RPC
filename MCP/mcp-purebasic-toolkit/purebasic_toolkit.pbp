@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.purebasic.com/namespace" version="1.0" creator="PureBasic 6.40">
+  <section name="targets">
+    <target name="mcp-purebasic-toolkit stdio server" enabled="1" default="1">
+      <inputfile value="purebasic_toolkit_server.pb"/>
+      <outputfile value="../../.build/MCP/mcp-purebasic-toolkit/purebasic_toolkit_server"/>
+      <executable value="../../.build/MCP/mcp-purebasic-toolkit/purebasic_toolkit_server"/>
+      <options thread="1" dpiaware="1" optimizer="0"/>
+      <compiler version="PureBasic 6.40 - C Backend (MacOS X - arm64)"/>
+      <format exe="console" cpu="1"/>
+    </target>
+    <target name="mcp-purebasic-toolkit probe" enabled="1" default="0">
+      <inputfile value="purebasic_toolkit_probe.pb"/>
+      <outputfile value="../../.build/MCP/mcp-purebasic-toolkit/purebasic_toolkit_probe"/>
+      <executable value="../../.build/MCP/mcp-purebasic-toolkit/purebasic_toolkit_probe"/>
+      <options thread="1" dpiaware="1" optimizer="0"/>
+      <compiler version="PureBasic 6.40 - C Backend (MacOS X - arm64)"/>
+      <format exe="console" cpu="1"/>
+    </target>
+  </section>
+  <section name="files">
+    <file name="purebasic_toolkit_server.pb"/>
+    <file name="purebasic_toolkit_probe.pb"/>
+    <file name="purebasic_toolkit_tools.pbi"/>
+  </section>
+</project>

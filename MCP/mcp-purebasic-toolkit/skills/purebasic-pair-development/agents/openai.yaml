@@ -1,0 +1,4 @@
+interface:
+  display_name: "PureBasic Pair Development"
+  short_description: "Interview, align, and plan PureBasic work"
+  default_prompt: "Use $purebasic-pair-development to interview me and write a clear PureBasic implementation brief."

@@ -18,6 +18,9 @@ Documentation and harness discipline:
   documentation PDFs, manifests, and checksums are checked after packaging.
 - Added a Thai code-level project walkthrough under `docs/Code Walkthrough.md`
   for reviewers who need to follow the source and examples from the beginning.
+- Started the real `MCP/mcp-purebasic-toolkit` project with a stdio MCP server,
+  read-only project/workflow/harness tools, bundled PureBasic development
+  skills, separate toolkit milestones, and harness/package verification.
 - Added `tools/verify-docs.sh` to verify numbered routes have matching example
   READMEs, API pages, milestone sections, API index entries, docs API bridge
   entries, and required Sphinx navigation.

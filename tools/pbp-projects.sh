@@ -44,4 +44,6 @@ pbp_each_project_target() {
   "$callback" "MCP/examples/sqlite-admin/sqlite_admin.pbp" "sqlite-admin stdio server" "console" ".build/MCP/examples/sqlite-admin/sqlite_admin_server" "MCP sqlite admin server"
   "$callback" "MCP/examples/sqlite-admin/sqlite_admin.pbp" "sqlite-admin bootstrap" "console" ".build/MCP/examples/sqlite-admin/sqlite_admin_bootstrap" "MCP sqlite admin bootstrap"
   "$callback" "MCP/examples/sqlite-admin/sqlite_admin.pbp" "sqlite-admin probe" "console" ".build/MCP/examples/sqlite-admin/sqlite_admin_probe" "MCP sqlite admin probe"
+  "$callback" "MCP/mcp-purebasic-toolkit/purebasic_toolkit.pbp" "mcp-purebasic-toolkit stdio server" "console" ".build/MCP/mcp-purebasic-toolkit/purebasic_toolkit_server" "MCP PureBasic toolkit server"
+  "$callback" "MCP/mcp-purebasic-toolkit/purebasic_toolkit.pbp" "mcp-purebasic-toolkit probe" "console" ".build/MCP/mcp-purebasic-toolkit/purebasic_toolkit_probe" "MCP PureBasic toolkit probe"
 }

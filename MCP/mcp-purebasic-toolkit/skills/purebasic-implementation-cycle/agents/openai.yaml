@@ -1,0 +1,4 @@
+interface:
+  display_name: "PureBasic Implementation Cycle"
+  short_description: "Run the PureBasic feature route workflow"
+  default_prompt: "Use $purebasic-implementation-cycle to implement this PureBasic feature with tests, docs, and harness checks."

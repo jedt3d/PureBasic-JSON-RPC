@@ -1,0 +1,4 @@
+interface:
+  display_name: "PureBasic MCP Authoring"
+  short_description: "Design and build PureBasic MCP servers"
+  default_prompt: "Use $purebasic-mcp-authoring to design a PureBasic MCP server and add tools safely."

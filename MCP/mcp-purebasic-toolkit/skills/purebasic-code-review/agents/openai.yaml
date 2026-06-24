@@ -1,0 +1,4 @@
+interface:
+  display_name: "PureBasic Code Review"
+  short_description: "Review PureBasic code, tests, docs, and safety"
+  default_prompt: "Use $purebasic-code-review to review this PureBasic change for bugs, lifecycle issues, and missing tests."

@@ -24,6 +24,19 @@ Agents and contributors should use that context when making product and engineer
 - Document behavior in a way that a future PureBasic MCP server author can follow without reverse-engineering transport, framing, cancellation, or memory ownership rules.
 - Do not narrow the library so much that it cannot support other JSON-RPC 2.0 applications; MCP is the primary context, not the only allowed use.
 
+## MCP PureBasic Toolkit
+
+`MCP/mcp-purebasic-toolkit/` is a real development toolkit project, not an
+example. Keep its milestones in
+`MCP/mcp-purebasic-toolkit/docs/milestones.md` instead of the core library
+milestone file.
+
+The toolkit packages a stdio MCP server together with Codex skills for
+PureBasic pair development, implementation cycles, code review, release
+management, and MCP authoring. Changes to this project must still follow the
+repository harness: `.pbp` targets, smoke probes, docs, path verification, and
+`./tools/check.sh`.
+
 ## Milestone Workflow
 
 Every feature milestone must follow this cycle:
