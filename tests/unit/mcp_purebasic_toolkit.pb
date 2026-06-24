@@ -89,6 +89,19 @@ ProcedureUnit ToolkitRegistersGitGithubWorkflowTools()
   Assert(FindString(response, #MCP_Toolkit_GithubReleaseDraftName$, 1) > 0, "tools/list should include github release draft.")
 EndProcedureUnit
 
+ProcedureUnit ToolkitRegistersDocsMilestoneAutomationTools()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/list\",\"id\":1}")
+
+  Assert(FindString(response, #MCP_Toolkit_DocsCheckName$, 1) > 0, "tools/list should include docs check.")
+  Assert(FindString(response, #MCP_Toolkit_DocsUpdateRouteName$, 1) > 0, "tools/list should include docs update route.")
+  Assert(FindString(response, #MCP_Toolkit_MilestoneCreateName$, 1) > 0, "tools/list should include milestone create.")
+EndProcedureUnit
+
 ProcedureUnit IncludeGraphContainsJsonRpcEdges()
   Protected text.s
 
@@ -297,4 +310,61 @@ ProcedureUnit GithubReleaseDraftReturnsArtifactChecklist()
   Assert(FindString(response, "GitHub Release Draft", 1) > 0, "Release draft should return a markdown draft.")
   Assert(FindString(response, "No tag, release, or upload was created", 1) > 0, "Release draft must not imply GitHub mutation.")
   Assert(FindString(response, "Artifact Checklist", 1) > 0, "Release draft should include artifact checks.")
+EndProcedureUnit
+
+ProcedureUnit DocsCheckReturnsReadOnlyRouteAudit()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/docs/check\",\"arguments\":{\"route\":\"005-docs-and-milestone-automation\",\"track\":\"toolkit\"}},\"id\":14}")
+
+  Assert(FindString(response, "Documentation Route Check", 1) > 0, "Docs check should return a route audit.")
+  Assert(FindString(response, "Mode: read-only documentation audit", 1) > 0, "Docs check should be read-only.")
+  Assert(FindString(response, "MCP/mcp-purebasic-toolkit/docs/milestones.md", 1) > 0, "Docs check should point to toolkit milestones.")
+  Assert(FindString(response, "./tools/verify-docs.sh", 1) > 0, "Docs check should include docs verifier.")
+  Assert(FindString(response, WorkstationAbsolutePathMarker(), 1) = 0, "Docs check should avoid workstation-specific paths.")
+EndProcedureUnit
+
+ProcedureUnit DocsUpdateRouteReturnsDraftOnly()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/docs/update-route\",\"arguments\":{\"route\":\"005-docs-and-milestone-automation\",\"track\":\"toolkit\",\"summary\":\"Add documentation route automation helpers.\",\"publicApi\":\"Toolkit MCP tools only.\",\"docs\":\"Update README, architecture, workflow, milestones, Sphinx bridge, and release notes.\"}},\"id\":15}")
+
+  Assert(FindString(response, "Documentation Route Update Draft", 1) > 0, "Docs update route should return a draft.")
+  Assert(FindString(response, "No tracked documentation file was modified", 1) > 0, "Docs update route should not claim mutation.")
+  Assert(FindString(response, "Add documentation route automation helpers", 1) > 0, "Docs update route should include supplied summary.")
+  Assert(FindString(response, "MCP/mcp-purebasic-toolkit/docs/milestones.md", 1) > 0, "Docs update route should list toolkit milestone file.")
+EndProcedureUnit
+
+ProcedureUnit MilestoneCreateCanSaveRelativeDraft()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+  Protected savedPath.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/milestone/create\",\"arguments\":{\"route\":\"005-docs-and-milestone-automation\",\"track\":\"toolkit\",\"branch\":\"feature/mcp-toolkit-docs-milestone-automation\",\"purpose\":\"Automate route documentation checks without replacing human review.\",\"tools\":\"purebasic/docs/check, purebasic/docs/update-route, purebasic/milestone/create\",\"acceptance\":\"Docs audit and drafts are covered by tests.\",\"save\":true,\"fileName\":\"unit-milestone-draft\"}},\"id\":16}")
+
+  savedPath = ".local/mcp-purebasic-toolkit/records/milestones/unit-milestone-draft.md"
+  Assert(FindString(response, "Milestone Draft: 005-docs-and-milestone-automation", 1) > 0, "Milestone create should return a milestone draft.")
+  Assert(FindString(response, "No tracked milestone file was modified", 1) > 0, "Milestone create should not edit tracked milestones.")
+  Assert(FindString(response, "Acceptance criteria", 1) > 0, "Milestone create should include acceptance criteria.")
+  Assert(FindString(response, "Saved record: " + savedPath, 1) > 0, "Saved milestone draft should report a repository-relative saved path.")
+  Assert(FileSize(ToolkitRoot() + savedPath) >= 0, "Milestone draft should be written under .local.")
+EndProcedureUnit
+
+ProcedureUnit DocsAutomationRejectsInvalidTrack()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/docs/check\",\"arguments\":{\"track\":\"wrong\"}},\"id\":17}")
+
+  Assert(FindString(response, ~"\"code\":-32602", 1) > 0, "Invalid docs track should return invalid params.")
 EndProcedureUnit

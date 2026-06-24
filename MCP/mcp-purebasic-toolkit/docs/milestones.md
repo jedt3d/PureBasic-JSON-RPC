@@ -172,18 +172,38 @@ Acceptance criteria:
 
 ## 005-docs-and-milestone-automation
 
-Status: planned
+Branch: `feature/mcp-toolkit-docs-milestone-automation`
+
+Status: completed
 
 Purpose:
 
 - Automate route documentation checks without replacing human technical review.
 - Keep ReadTheDocs/Sphinx as a default part of every route.
 
-Candidate tools:
+Tools:
 
 - `purebasic/docs/check`
 - `purebasic/docs/update-route`
 - `purebasic/milestone/create`
+
+Acceptance criteria:
+
+- Docs check returns a read-only route audit for either `toolkit` or `core`
+  tracks.
+- Docs check reports source-of-truth files, route mentions, human review
+  requirements, and verification commands.
+- Route update drafts explain which docs, milestone files, Sphinx bridge pages,
+  release notes, API indexes, and agent workflow docs should be reviewed.
+- Milestone create drafts a milestone entry without editing tracked milestone
+  files automatically.
+- Draft tools save only under `.local/mcp-purebasic-toolkit/records/` when
+  `save: true` is supplied.
+- Invalid track names return JSON-RPC `-32602`.
+- Toolkit probe and stdio smoke input cover docs/milestone automation.
+- PureUnit coverage validates registration, read-only/draft behavior, saved
+  draft paths, and invalid track handling.
+- `./tools/check.sh` passes.
 
 ## 006-mcp-authoring-kit
 

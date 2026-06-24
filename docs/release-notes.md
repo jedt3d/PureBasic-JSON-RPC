@@ -33,6 +33,10 @@ Documentation and harness discipline:
 - Added MCP toolkit Git/GitHub workflow helpers for read-only preflight,
   commit summary drafts, PR drafts, and release drafts without mutating Git or
   GitHub state.
+- Added MCP toolkit documentation and milestone automation helpers for
+  `005-docs-and-milestone-automation`: read-only route audits, route
+  documentation update drafts, and milestone entry drafts that keep tracked
+  source-of-truth edits under human review.
 - Added `tools/verify-docs.sh` to verify numbered routes have matching example
   READMEs, API pages, milestone sections, API index entries, docs API bridge
   entries, and required Sphinx navigation.

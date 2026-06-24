@@ -40,6 +40,9 @@ MCP toolkit server
   purebasic/git/commit-summary
   purebasic/github/pr-draft
   purebasic/github/release-draft
+  purebasic/docs/check
+  purebasic/docs/update-route
+  purebasic/milestone/create
         |
 PureBasic JSON-RPC library
   MCP lifecycle/tools adapter
@@ -57,6 +60,8 @@ algorithm explanations, and technical decisions into Markdown outputs that can
 optionally be saved under `.local/`. The Git/GitHub workflow slice inspects
 local Git state and drafts commit, PR, and release text without mutating the
 repository or calling GitHub.
+The documentation automation slice audits source-of-truth coverage and drafts
+route/milestone updates without editing tracked docs automatically.
 
 Current implementation files:
 
@@ -80,6 +85,8 @@ Current tool groups:
 - Git/GitHub workflow: `purebasic/git/preflight`,
   `purebasic/git/commit-summary`, `purebasic/github/pr-draft`, and
   `purebasic/github/release-draft`.
+- Docs and milestone automation: `purebasic/docs/check`,
+  `purebasic/docs/update-route`, and `purebasic/milestone/create`.
 
 Harness execution is deliberately not a general shell. Each tool maps to one
 fixed repository script, captures combined stdout/stderr, replaces the
@@ -98,6 +105,13 @@ inspection commands, generate Markdown text, and leave real `git add`,
 `git commit`, `git push`, PR creation, tagging, and release publishing to the
 human or host.
 
+Docs and milestone automation tools are also draft-first. They can detect route
+documentation gaps and produce Markdown skeletons, but they do not directly
+modify `docs/milestones.md`,
+`MCP/mcp-purebasic-toolkit/docs/milestones.md`, ReadTheDocs navigation, API
+indexes, or release notes. That boundary keeps documentation review semantic
+instead of letting a tool silently stamp incomplete source-of-truth files.
+
 ## Design Rules
 
 - Keep the toolkit as a real project under `MCP/mcp-purebasic-toolkit`.
@@ -112,6 +126,8 @@ human or host.
   deliberately promotes them into tracked documentation.
 - Keep Git/GitHub mutation out of draft helpers; they may inspect and propose,
   not commit, push, tag, or publish.
+- Keep documentation automation review-first; it may audit and draft, not
+  silently modify tracked docs.
 - Run harness checks before claiming a route is complete.
 - Update documentation and ReadTheDocs navigation when user-facing guidance
   changes.
@@ -126,7 +142,7 @@ human or host.
   promotion paths from `.local/` into reviewed docs.
 - Git/GitHub workflow: add optional CI inspection and safer remote-aware
   handoff after the read-only/draft helpers.
-- Docs workflow: API page skeletons, milestone updates, ReadTheDocs navigation,
-  and release checklist verification.
+- Docs workflow: deeper API page skeleton validation, ReadTheDocs navigation
+  checks, and release checklist verification.
 - MCP authoring: new stdio server skeletons, tool registration, probe inputs,
   safety notes, and tests.

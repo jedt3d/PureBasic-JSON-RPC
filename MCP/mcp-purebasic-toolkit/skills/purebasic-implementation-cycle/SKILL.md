@@ -16,9 +16,10 @@ Use this order unless the user provides a stricter plan:
 5. Implement the smallest coherent slice.
 6. Update `.pbp` metadata for buildable PureBasic targets.
 7. Update API, milestone, README, tutorial, Sphinx navigation, and release notes when relevant.
-8. Run focused checks.
-9. Run `./tools/check.sh`.
-10. Commit, merge, push, or prepare PR according to the chosen Git workflow.
+8. Use `purebasic/docs/check` or draft helpers when route documentation needs review.
+9. Run focused checks.
+10. Run `./tools/check.sh`.
+11. Commit, merge, push, or prepare PR according to the chosen Git workflow.
 
 ## Default Harness
 
@@ -40,6 +41,13 @@ For release-impacting work, also use:
 ./tools/package-alpha.sh
 ./tools/verify-release-artifacts.sh
 ```
+
+When the MCP toolkit is available, use these documentation helpers before the
+final check:
+
+- `purebasic/docs/check` for a read-only route documentation audit
+- `purebasic/docs/update-route` for a documentation update draft
+- `purebasic/milestone/create` for a milestone entry draft
 
 ## Project Rules
 

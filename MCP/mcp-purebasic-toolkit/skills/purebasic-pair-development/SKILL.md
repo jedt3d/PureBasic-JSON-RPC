@@ -25,6 +25,7 @@ Ask only the questions needed for the current task:
 - What tests, probes, docs, and `.pbp` target updates are expected?
 - Are there filesystem, command execution, stdout/stderr, path, or security constraints?
 - Should the workflow be local-only Git or local plus GitHub/PR?
+- Which milestone track should be updated: core library or toolkit?
 
 ## Required Brief
 
@@ -39,6 +40,10 @@ Before implementation, summarize:
 - Documentation updates
 - Git branch name
 - Known risks
+
+When the MCP toolkit is available, use `purebasic/docs/check` to audit the
+route and `purebasic/milestone/create` to draft milestone text before final
+verification.
 
 ## Decision Discipline
 

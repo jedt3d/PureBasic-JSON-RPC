@@ -32,6 +32,9 @@ Current foundation tools:
 - `purebasic/git/commit-summary`
 - `purebasic/github/pr-draft`
 - `purebasic/github/release-draft`
+- `purebasic/docs/check`
+- `purebasic/docs/update-route`
+- `purebasic/milestone/create`
 
 Harness execution tools run fixed repository scripts only. They support
 `dryRun`, bounded output, timeout controls, and project-root path sanitization.
@@ -39,6 +42,8 @@ Pair-development record tools return Markdown and save only when `save: true`
 is requested, using `.local/mcp-purebasic-toolkit/records/`.
 Git/GitHub workflow tools inspect local Git state and draft commit, PR, or
 release text without committing, pushing, tagging, or publishing.
+Documentation and milestone automation tools audit route coverage and draft
+updates without modifying tracked source-of-truth files automatically.
 
 Toolkit milestones are intentionally tracked in
 `MCP/mcp-purebasic-toolkit/docs/milestones.md` instead of the core library

@@ -13,6 +13,8 @@ should explain the command before launching it. Pair-development record tools
 produce Markdown and save only under `.local/` when explicitly requested.
 Git/GitHub workflow tools inspect local Git state and draft text only; they do
 not commit, push, tag, open pull requests, or create releases.
+Documentation and milestone automation tools audit and draft route updates, but
+they do not edit tracked source-of-truth documents automatically.
 
 ## Current Tools
 
@@ -53,6 +55,11 @@ not commit, push, tag, open pull requests, or create releases.
   tests, risks, and current Git state without pushing or opening a PR.
 - `purebasic/github/release-draft` - draft release notes and an artifact
   checklist without tagging, uploading, or creating a release.
+- `purebasic/docs/check` - run a read-only route documentation audit for core
+  or toolkit work.
+- `purebasic/docs/update-route` - draft the documentation updates a route
+  should make before final verification.
+- `purebasic/milestone/create` - draft a core or toolkit milestone entry.
 
 ## Build
 
@@ -143,6 +150,24 @@ Git/GitHub tools are deliberately read-only or draft-only:
 
 These tools are meant to support best-practice review. The human or host still
 chooses when to run real Git/GitHub commands.
+
+## Documentation And Milestone Automation
+
+Documentation automation is deliberately review-first:
+
+- `purebasic/docs/check` reports whether the expected source-of-truth files
+  exist, whether the route is mentioned in the milestone and release notes, and
+  which verification commands must still pass.
+- `purebasic/docs/update-route` drafts the documentation route update plan,
+  including API docs, toolkit docs, Sphinx navigation, release notes, and agent
+  workflow docs as appropriate.
+- `purebasic/milestone/create` drafts a milestone entry for either the core
+  library track or the toolkit track.
+
+These tools return MCP text by default. Draft tools may save under
+`.local/mcp-purebasic-toolkit/records/` when `save: true` is supplied. They do
+not mutate `docs/milestones.md`, `MCP/mcp-purebasic-toolkit/docs/milestones.md`,
+or other tracked documentation files; a human reviewer must promote the text.
 
 ## Skills
 
