@@ -39,7 +39,9 @@ Acceptance criteria:
 
 ## 001-project-intelligence
 
-Status: planned
+Branch: `feature/mcp-toolkit-project-intelligence`
+
+Status: completed
 
 Purpose:
 
@@ -53,6 +55,19 @@ Candidate tools:
 - `purebasic/symbol/search`
 - `purebasic/procedure/list`
 - `purebasic/pbp/list-targets`
+
+Acceptance criteria:
+
+- Include graph reports `IncludeFile` and `XIncludeFile` edges with
+  repository-relative paths.
+- Symbol search accepts a `query` argument and rejects missing query with
+  `-32602`.
+- Procedure list supports an optional `prefix` filter.
+- `.pbp` target listing reports project file, target name, target format, input,
+  and output with repository-relative paths.
+- Toolkit probe covers all project-intelligence tools.
+- PureUnit coverage exists in `tests/unit/mcp_purebasic_toolkit.pb`.
+- `./tools/check.sh` passes.
 
 ## 002-harness-execution
 

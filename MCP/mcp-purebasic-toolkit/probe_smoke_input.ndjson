@@ -2,3 +2,5 @@
 {"jsonrpc":"2.0","method":"notifications/initialized"}
 {"jsonrpc":"2.0","method":"tools/list","id":2}
 {"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/project/inspect","arguments":{}},"id":3}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/include/graph","arguments":{}},"id":4}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/symbol/search","arguments":{"query":"MCP_Toolkit_Register"}},"id":5}
