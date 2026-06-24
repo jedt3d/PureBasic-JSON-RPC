@@ -102,6 +102,20 @@ ProcedureUnit ToolkitRegistersDocsMilestoneAutomationTools()
   Assert(FindString(response, #MCP_Toolkit_MilestoneCreateName$, 1) > 0, "tools/list should include milestone create.")
 EndProcedureUnit
 
+ProcedureUnit ToolkitRegistersMcpAuthoringTools()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/list\",\"id\":1}")
+
+  Assert(FindString(response, #MCP_Toolkit_McpNewServerName$, 1) > 0, "tools/list should include MCP new server.")
+  Assert(FindString(response, #MCP_Toolkit_McpAddToolName$, 1) > 0, "tools/list should include MCP add tool.")
+  Assert(FindString(response, #MCP_Toolkit_McpProbeName$, 1) > 0, "tools/list should include MCP probe.")
+  Assert(FindString(response, #MCP_Toolkit_McpValidateStdioName$, 1) > 0, "tools/list should include MCP stdio validator.")
+EndProcedureUnit
+
 ProcedureUnit IncludeGraphContainsJsonRpcEdges()
   Protected text.s
 
@@ -367,4 +381,104 @@ ProcedureUnit DocsAutomationRejectsInvalidTrack()
   response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/docs/check\",\"arguments\":{\"track\":\"wrong\"}},\"id\":17}")
 
   Assert(FindString(response, ~"\"code\":-32602", 1) > 0, "Invalid docs track should return invalid params.")
+EndProcedureUnit
+
+ProcedureUnit McpNewServerReturnsScaffoldDraft()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/mcp/new-server\",\"arguments\":{\"serverName\":\"petstore-admin\",\"toolName\":\"petstore/query\",\"toolDescription\":\"Query a local pet store database.\",\"projectDir\":\"MCP/petstore-admin\"}},\"id\":18}")
+
+  Assert(FindString(response, "MCP Server Scaffold Draft: petstore-admin", 1) > 0, "MCP new-server should return a scaffold draft.")
+  Assert(FindString(response, "Console .pbp Checklist", 1) > 0, "Scaffold should include console .pbp guidance.")
+  Assert(FindString(response, "petstore/query", 1) > 0, "Scaffold should include the requested tool name.")
+  Assert(FindString(response, WorkstationAbsolutePathMarker(), 1) = 0, "Scaffold should avoid workstation-specific paths.")
+EndProcedureUnit
+
+ProcedureUnit McpAddToolReturnsHandlerDraft()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/mcp/add-tool\",\"arguments\":{\"toolName\":\"purebasic/check\",\"title\":\"PureBasic Check\",\"description\":\"Run project verification.\",\"inputSchema\":\"{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{},\\\"additionalProperties\\\":false}\"}},\"id\":19}")
+
+  Assert(FindString(response, "MCP Tool Implementation Draft: purebasic/check", 1) > 0, "MCP add-tool should return a handler draft.")
+  Assert(FindString(response, "Input Schema", 1) > 0, "Tool draft should include input schema.")
+  Assert(FindString(response, "FreeJSON", 1) > 0, "Tool draft should include JSON ownership guidance.")
+EndProcedureUnit
+
+ProcedureUnit McpProbeReturnsNdjson()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/mcp/probe\",\"arguments\":{\"serverName\":\"petstore-admin\",\"toolName\":\"petstore/query\",\"argumentsJson\":\"{\\\"sql\\\":\\\"SELECT 1\\\"}\"}},\"id\":20}")
+
+  Assert(FindString(response, "MCP Stdio Probe Draft: petstore-admin", 1) > 0, "MCP probe should return a probe draft.")
+  Assert(FindString(response, "initialize", 1) > 0, "Probe should include initialize.")
+  Assert(FindString(response, "tools/list", 1) > 0, "Probe should include tools/list.")
+  Assert(FindString(response, "tools/call", 1) > 0, "Probe should include tools/call.")
+  Assert(FindString(response, "Content-Length", 1) > 0, "Probe should mention forbidden Content-Length framing in explanatory text.")
+EndProcedureUnit
+
+ProcedureUnit McpValidateStdioAcceptsValidTranscript()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+  Protected transcript.s
+
+  transcript = ~"{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":1}" + #LF$
+  transcript + ~"{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\",\"params\":{}}" + #LF$
+  transcript + ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/list\",\"id\":2}" + #LF$
+  transcript + ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/check\",\"arguments\":{}},\"id\":3}"
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/mcp/validate-stdio\",\"arguments\":{\"transcript\":\"" + JSONRPC_Protocol_EscapeString(transcript) + ~"\"}},\"id\":21}")
+
+  Assert(FindString(response, "Stdio transcript validation", 1) > 0, "Validator should return a validation report.")
+  Assert(FindString(response, "Valid: yes", 1) > 0, "Valid transcript should pass.")
+  Assert(FindString(response, "Messages: 4", 1) > 0, "Validator should count messages.")
+  Assert(FindString(response, ~"\"isError\":false", 1) > 0, "Valid transcript should not be a tool error.")
+EndProcedureUnit
+
+ProcedureUnit McpValidateStdioRejectsContentLengthOrBadJson()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+  Protected transcript.s
+
+  transcript = "Content-Length: 42" + #LF$ + "{not-json}"
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/mcp/validate-stdio\",\"arguments\":{\"transcript\":\"" + JSONRPC_Protocol_EscapeString(transcript) + ~"\"}},\"id\":22}")
+
+  Assert(FindString(response, "Content-Length framing is not valid for MCP stdio", 1) > 0, "Validator should reject Content-Length framing.")
+  Assert(FindString(response, "invalid JSON", 1) > 0, "Validator should reject invalid JSON.")
+  Assert(FindString(response, ~"\"isError\":true", 1) > 0, "Invalid transcript should be a tool error.")
+EndProcedureUnit
+
+ProcedureUnit McpValidateStdioRequiresTranscript()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/mcp/validate-stdio\",\"arguments\":{}},\"id\":23}")
+
+  Assert(FindString(response, ~"\"code\":-32602", 1) > 0, "Missing transcript should return invalid params.")
+EndProcedureUnit
+
+ProcedureUnit McpProbeRejectsInvalidArgumentsJson()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/mcp/probe\",\"arguments\":{\"toolName\":\"purebasic/check\",\"argumentsJson\":\"not-json\"}},\"id\":24}")
+
+  Assert(FindString(response, ~"\"code\":-32602", 1) > 0, "Invalid probe argumentsJson should return invalid params.")
 EndProcedureUnit

@@ -9,6 +9,9 @@ description: MCP server authoring workflow for PureBasic. Use when designing, cr
 
 Default to a console target controlled by `.pbp`.
 
+Start with `purebasic/mcp/new-server` when drafting a new server. Treat its
+output as a reviewable scaffold, not an automatic file generator.
+
 Required pieces:
 
 - `*_server.pb` stdio entrypoint
@@ -28,6 +31,19 @@ Required pieces:
 - Keep stdout protocol-only.
 - Put diagnostics and logs on stderr.
 - Bound command output and query output.
+- Draft probe input with `purebasic/mcp/probe`.
+- Validate probe or captured transcript text with `purebasic/mcp/validate-stdio`
+  before treating it as a correct MCP stdio example.
+
+## Tool Authoring
+
+- Use `purebasic/mcp/add-tool` to draft tool name, title, description, input
+  schema, handler pattern, registration pattern, result policy, and tests.
+- Return JSON-RPC `-32602` for invalid tool arguments.
+- Return MCP `isError: true` for execution failures after arguments are valid.
+- Pair every `ParseJSON()` or `CreateJSON()` ownership path with `FreeJSON()`.
+- Save authoring drafts only under `.local/` unless the human promotes them into
+  tracked documentation or source.
 
 ## Safety Defaults
 
@@ -43,6 +59,7 @@ the repository harness:
 
 ```sh
 ./tools/verify-projects.sh
+./tools/verify-docs.sh
 ./tools/build.sh
 ./tools/check.sh
 ```

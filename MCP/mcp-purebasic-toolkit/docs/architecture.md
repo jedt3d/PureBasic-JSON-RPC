@@ -43,6 +43,10 @@ MCP toolkit server
   purebasic/docs/check
   purebasic/docs/update-route
   purebasic/milestone/create
+  purebasic/mcp/new-server
+  purebasic/mcp/add-tool
+  purebasic/mcp/probe
+  purebasic/mcp/validate-stdio
         |
 PureBasic JSON-RPC library
   MCP lifecycle/tools adapter
@@ -62,6 +66,9 @@ local Git state and drafts commit, PR, and release text without mutating the
 repository or calling GitHub.
 The documentation automation slice audits source-of-truth coverage and drafts
 route/milestone updates without editing tracked docs automatically.
+The MCP authoring slice drafts PureBasic stdio server scaffolds, tool handlers,
+probe inputs, and transcript-validation reports without creating tracked project
+files automatically.
 
 Current implementation files:
 
@@ -87,6 +94,8 @@ Current tool groups:
   `purebasic/github/release-draft`.
 - Docs and milestone automation: `purebasic/docs/check`,
   `purebasic/docs/update-route`, and `purebasic/milestone/create`.
+- MCP authoring: `purebasic/mcp/new-server`, `purebasic/mcp/add-tool`,
+  `purebasic/mcp/probe`, and `purebasic/mcp/validate-stdio`.
 
 Harness execution is deliberately not a general shell. Each tool maps to one
 fixed repository script, captures combined stdout/stderr, replaces the
@@ -112,6 +121,12 @@ modify `docs/milestones.md`,
 indexes, or release notes. That boundary keeps documentation review semantic
 instead of letting a tool silently stamp incomplete source-of-truth files.
 
+MCP authoring tools keep the same review-first boundary. Server and tool
+authoring helpers return Markdown plans and snippets; optional saves go under
+`.local/mcp-purebasic-toolkit/records/mcp-authoring/`. The only validator in the
+slice, `purebasic/mcp/validate-stdio`, parses caller-provided transcript lines
+and pairs every `ParseJSON()` ownership path with `FreeJSON()`.
+
 ## Design Rules
 
 - Keep the toolkit as a real project under `MCP/mcp-purebasic-toolkit`.
@@ -128,6 +143,10 @@ instead of letting a tool silently stamp incomplete source-of-truth files.
   not commit, push, tag, or publish.
 - Keep documentation automation review-first; it may audit and draft, not
   silently modify tracked docs.
+- Keep MCP authoring draft-first; it may scaffold and validate, not silently add
+  server files to tracked source.
+- Validate MCP stdio probes as LF-delimited JSON-RPC 2.0 object messages with no
+  `Content-Length` framing.
 - Run harness checks before claiming a route is complete.
 - Update documentation and ReadTheDocs navigation when user-facing guidance
   changes.
@@ -144,5 +163,5 @@ instead of letting a tool silently stamp incomplete source-of-truth files.
   handoff after the read-only/draft helpers.
 - Docs workflow: deeper API page skeleton validation, ReadTheDocs navigation
   checks, and release checklist verification.
-- MCP authoring: new stdio server skeletons, tool registration, probe inputs,
-  safety notes, and tests.
+- MCP authoring: promote reviewed drafts into optional project-generation
+  workflows after policy, file placement, and human approval hooks are designed.

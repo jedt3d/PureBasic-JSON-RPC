@@ -209,16 +209,62 @@ Acceptance criteria:
 
 ## 006-mcp-authoring-kit
 
-Status: planned
+Branch: `feature/mcp-toolkit-mcp-authoring-kit`
+
+Status: completed
 
 Purpose:
 
 - Use the JSON-RPC library and toolkit skills to create new PureBasic MCP
   servers safely and consistently.
 
-Candidate tools:
+Tools:
 
 - `purebasic/mcp/new-server`
 - `purebasic/mcp/add-tool`
 - `purebasic/mcp/probe`
 - `purebasic/mcp/validate-stdio`
+
+Acceptance criteria:
+
+- New server drafts describe a PureBasic stdio MCP console server, expected file
+  layout, committed `.pbp` target metadata, lifecycle/tool registration,
+  probe flow, safety notes, and harness verification.
+- Add-tool drafts describe tool input schema, handler and registration pattern,
+  JSON-RPC invalid-params policy, MCP `isError` policy, bounded output, and
+  `ParseJSON()`/`CreateJSON()` ownership review.
+- Probe drafts emit newline-delimited JSON-RPC input for `initialize`,
+  `notifications/initialized`, `tools/list`, and `tools/call`.
+- Stdio transcript validation rejects `Content-Length` framing, blank messages,
+  invalid JSON, non-object messages, and missing `jsonrpc: 2.0`.
+- Draft outputs may save only under
+  `.local/mcp-purebasic-toolkit/records/mcp-authoring/` when `save: true` is
+  requested.
+- Toolkit probe and stdio smoke input cover all MCP authoring tools.
+- PureUnit coverage validates registration, draft output shape, valid transcript
+  acceptance, invalid transcript tool errors, and missing transcript `-32602`.
+- Toolkit README, architecture, workflow, Sphinx bridge, release notes, and MCP
+  authoring skill guidance are updated in the same route.
+- `tools/test.sh` runs multi-file suites one file at a time with per-report
+  completion checks, bounded timeout/retry behavior, and a summary report so a
+  PureUnit pre-report standby hang cannot block `tools/check.sh` indefinitely.
+- `./tools/verify-docs.sh`, `./tools/verify-paths.sh`, and `./tools/check.sh`
+  pass before merge.
+
+## 007-seven-segment-gadget
+
+Status: planned
+
+Purpose:
+
+- Create the next route for a Seven Segment Gadget after the MCP authoring kit is
+  complete.
+- Use the toolkit's pair-development and authoring defaults: clarify target
+  shape, explain rendering/interaction flow before implementation, keep `.pbp`
+  target metadata explicit, document route decisions, and verify through the
+  harness.
+
+Candidate surface:
+
+- PureBasic gadget source and examples will be defined in the 007 route.
+- Documentation and milestone details will be updated when implementation starts.

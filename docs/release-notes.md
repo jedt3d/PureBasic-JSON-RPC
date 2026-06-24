@@ -37,9 +37,14 @@ Documentation and harness discipline:
   `005-docs-and-milestone-automation`: read-only route audits, route
   documentation update drafts, and milestone entry drafts that keep tracked
   source-of-truth edits under human review.
-- Hardened `tools/test.sh` so a successful PureUnit report can unblock
-  `tools/check.sh` when a PureBasic standby compiler process remains alive
-  after all tests complete with zero failures.
+- Added MCP toolkit authoring helpers for `006-mcp-authoring-kit`: PureBasic
+  stdio server scaffold drafts, tool handler drafts, JSONL probe drafts, and
+  stdio transcript validation that rejects `Content-Length` framing for MCP
+  stdio.
+- Hardened `tools/test.sh` so multi-file runs execute PureUnit one file at a
+  time, emit a summary report, clean up standby compiler processes after
+  successful reports, and retry bounded pre-report hangs instead of letting
+  `tools/check.sh` wait forever.
 - Added `tools/verify-docs.sh` to verify numbered routes have matching example
   READMEs, API pages, milestone sections, API index entries, docs API bridge
   entries, and required Sphinx navigation.
