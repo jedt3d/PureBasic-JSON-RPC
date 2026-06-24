@@ -16,6 +16,10 @@ XIncludeFile "../../src/jsonrpc/mcp_tools.pbi"
 #MCP_Toolkit_BriefCreateName$ = "purebasic/brief/create"
 #MCP_Toolkit_AlgorithmExplainName$ = "purebasic/algorithm/explain"
 #MCP_Toolkit_DecisionRecordCreateName$ = "purebasic/decision-record/create"
+#MCP_Toolkit_GitPreflightName$ = "purebasic/git/preflight"
+#MCP_Toolkit_GitCommitSummaryName$ = "purebasic/git/commit-summary"
+#MCP_Toolkit_GithubPrDraftName$ = "purebasic/github/pr-draft"
+#MCP_Toolkit_GithubReleaseDraftName$ = "purebasic/github/release-draft"
 
 #MCP_Toolkit_ProjectInspectSchema$ = ~"{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"
 #MCP_Toolkit_WorkflowBriefSchema$ = ~"{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"
@@ -28,6 +32,10 @@ XIncludeFile "../../src/jsonrpc/mcp_tools.pbi"
 #MCP_Toolkit_BriefCreateSchema$ = ~"{\"type\":\"object\",\"properties\":{\"goal\":{\"type\":\"string\"},\"context\":{\"type\":\"string\"},\"nonGoals\":{\"type\":\"string\"},\"deliverables\":{\"type\":\"string\"},\"risks\":{\"type\":\"string\"},\"tests\":{\"type\":\"string\"},\"docs\":{\"type\":\"string\"},\"save\":{\"type\":\"boolean\"},\"fileName\":{\"type\":\"string\"}},\"additionalProperties\":false}"
 #MCP_Toolkit_AlgorithmExplainSchema$ = ~"{\"type\":\"object\",\"properties\":{\"title\":{\"type\":\"string\"},\"inputs\":{\"type\":\"string\"},\"flow\":{\"type\":\"string\"},\"state\":{\"type\":\"string\"},\"errors\":{\"type\":\"string\"},\"humanDecisions\":{\"type\":\"string\"},\"save\":{\"type\":\"boolean\"},\"fileName\":{\"type\":\"string\"}},\"additionalProperties\":false}"
 #MCP_Toolkit_DecisionRecordCreateSchema$ = ~"{\"type\":\"object\",\"properties\":{\"title\":{\"type\":\"string\"},\"status\":{\"type\":\"string\"},\"context\":{\"type\":\"string\"},\"decision\":{\"type\":\"string\"},\"options\":{\"type\":\"string\"},\"consequences\":{\"type\":\"string\"},\"followUp\":{\"type\":\"string\"},\"save\":{\"type\":\"boolean\"},\"fileName\":{\"type\":\"string\"}},\"additionalProperties\":false}"
+#MCP_Toolkit_GitPreflightSchema$ = ~"{\"type\":\"object\",\"properties\":{\"baseBranch\":{\"type\":\"string\"}},\"additionalProperties\":false}"
+#MCP_Toolkit_GitCommitSummarySchema$ = ~"{\"type\":\"object\",\"properties\":{\"messageHint\":{\"type\":\"string\"},\"scope\":{\"type\":\"string\"}},\"additionalProperties\":false}"
+#MCP_Toolkit_GithubPrDraftSchema$ = ~"{\"type\":\"object\",\"properties\":{\"title\":{\"type\":\"string\"},\"summary\":{\"type\":\"string\"},\"tests\":{\"type\":\"string\"},\"risks\":{\"type\":\"string\"},\"baseBranch\":{\"type\":\"string\"}},\"additionalProperties\":false}"
+#MCP_Toolkit_GithubReleaseDraftSchema$ = ~"{\"type\":\"object\",\"properties\":{\"version\":{\"type\":\"string\"},\"highlights\":{\"type\":\"string\"},\"verification\":{\"type\":\"string\"},\"knownLimitations\":{\"type\":\"string\"}},\"additionalProperties\":false}"
 
 #MCP_Toolkit_DefaultMaxScanResults = 80
 #MCP_Toolkit_DefaultCommandTimeoutMs = 300000
@@ -743,6 +751,158 @@ Procedure.s MCP_Toolkit_DecisionRecordMarkdown(argumentsValue)
   ProcedureReturn text
 EndProcedure
 
+Procedure.s MCP_Toolkit_RunGitReadOnly(arguments.s, maxOutputBytes.i = 6000)
+  Protected root.s = MCP_Toolkit_Config\projectRoot
+  Protected program.i
+  Protected commandResult.MCP_Toolkit_HarnessResult
+  Protected started.q
+
+  If root = ""
+    root = MCP_Toolkit_DefaultProjectRoot()
+  EndIf
+
+  program = RunProgram("sh", ~"-c \"git " + arguments + ~" 2>&1\"", root, #PB_Program_Open | #PB_Program_Read)
+  If program = 0
+    ProcedureReturn "Could not launch git " + arguments + #LF$
+  EndIf
+
+  started = ElapsedMilliseconds()
+  While ProgramRunning(program)
+    MCP_Toolkit_DrainProgramOutput(program, root, maxOutputBytes, @commandResult)
+    If ElapsedMilliseconds() - started > 5000
+      KillProgram(program)
+      MCP_Toolkit_AppendCommandOutput(@commandResult, "Git command timed out." + #LF$, maxOutputBytes)
+      Break
+    EndIf
+    Delay(10)
+  Wend
+
+  MCP_Toolkit_DrainProgramOutput(program, root, maxOutputBytes, @commandResult)
+  CloseProgram(program)
+
+  If commandResult\output = ""
+    ProcedureReturn "(no output)" + #LF$
+  EndIf
+
+  ProcedureReturn commandResult\output
+EndProcedure
+
+Procedure.s MCP_Toolkit_CurrentGitBranch()
+  ProcedureReturn Trim(MCP_Toolkit_RunGitReadOnly("branch --show-current", 1000))
+EndProcedure
+
+Procedure.s MCP_Toolkit_GitPreflightMarkdown(argumentsValue)
+  Protected baseBranch.s
+  Protected text.s
+
+  baseBranch = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "baseBranch", "main"))
+  If baseBranch = ""
+    baseBranch = "main"
+  EndIf
+
+  text = "# Git Preflight" + #LF$ + #LF$
+  text + "Mode: read-only inspection. No Git or GitHub mutation was executed." + #LF$ + #LF$
+  text + "Base branch: `" + MCP_Toolkit_RecordField(baseBranch) + "`" + #LF$
+  text + "Current branch: `" + MCP_Toolkit_RecordField(MCP_Toolkit_CurrentGitBranch()) + "`" + #LF$ + #LF$
+  text + "## Status" + #LF$ + "```text" + #LF$ + MCP_Toolkit_RunGitReadOnly("status --short --branch") + "```" + #LF$ + #LF$
+  text + "## Unstaged Diff Stat" + #LF$ + "```text" + #LF$ + MCP_Toolkit_RunGitReadOnly("diff --stat") + "```" + #LF$ + #LF$
+  text + "## Staged Diff Stat" + #LF$ + "```text" + #LF$ + MCP_Toolkit_RunGitReadOnly("diff --cached --stat") + "```" + #LF$ + #LF$
+  text + "## Recent Commits" + #LF$ + "```text" + #LF$ + MCP_Toolkit_RunGitReadOnly("log --oneline -5") + "```" + #LF$ + #LF$
+  text + "## Recommended Checks" + #LF$
+  text + "- Review dirty files and avoid staging unrelated local changes." + #LF$
+  text + "- Run focused tests when useful." + #LF$
+  text + "- Run `./tools/check.sh` before merge or push." + #LF$
+  text + "- Use `git diff --check` before committing." + #LF$
+  text + "- Prefer a no-fast-forward merge when preserving feature route history." + #LF$
+
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_Toolkit_GitCommitSummaryMarkdown(argumentsValue)
+  Protected messageHint.s
+  Protected scope.s
+  Protected text.s
+
+  messageHint = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "messageHint", "feat: describe the focused change"))
+  scope = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "scope", "current route"))
+
+  text = "# Git Commit Summary Draft" + #LF$ + #LF$
+  text + "Mode: read-only draft. No `git add` or `git commit` was executed." + #LF$ + #LF$
+  text + "Suggested message: `" + MCP_Toolkit_RecordField(messageHint) + "`" + #LF$
+  text + "Scope: " + MCP_Toolkit_RecordField(scope) + #LF$ + #LF$
+  text + "## Status" + #LF$ + "```text" + #LF$ + MCP_Toolkit_RunGitReadOnly("status --short --branch") + "```" + #LF$ + #LF$
+  text + "## Staged Diff Stat" + #LF$ + "```text" + #LF$ + MCP_Toolkit_RunGitReadOnly("diff --cached --stat") + "```" + #LF$ + #LF$
+  text + "## Unstaged Diff Stat" + #LF$ + "```text" + #LF$ + MCP_Toolkit_RunGitReadOnly("diff --stat") + "```" + #LF$ + #LF$
+  text + "## Commit Checklist" + #LF$
+  text + "- Stage only files belonging to this route." + #LF$
+  text + "- Keep unrelated IDE metadata and generated files out of the commit." + #LF$
+  text + "- Include verification evidence in the final human-facing summary." + #LF$
+
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_Toolkit_GithubPrDraftMarkdown(argumentsValue)
+  Protected title.s
+  Protected summary.s
+  Protected tests.s
+  Protected risks.s
+  Protected baseBranch.s
+  Protected text.s
+
+  title = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "title", "PureBasic toolkit route update"))
+  summary = MCP_Toolkit_RecordField(MCP_Toolkit_ReadArgumentString(argumentsValue, "summary"))
+  tests = MCP_Toolkit_RecordField(MCP_Toolkit_ReadArgumentString(argumentsValue, "tests"))
+  risks = MCP_Toolkit_RecordField(MCP_Toolkit_ReadArgumentString(argumentsValue, "risks"))
+  baseBranch = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "baseBranch", "main"))
+  If baseBranch = ""
+    baseBranch = "main"
+  EndIf
+
+  text = "# GitHub PR Draft" + #LF$ + #LF$
+  text + "Mode: draft text only. No branch was pushed and no PR was opened." + #LF$ + #LF$
+  text + "Title: " + MCP_Toolkit_RecordField(title) + #LF$
+  text + "Base branch: `" + MCP_Toolkit_RecordField(baseBranch) + "`" + #LF$
+  text + "Current branch: `" + MCP_Toolkit_RecordField(MCP_Toolkit_CurrentGitBranch()) + "`" + #LF$ + #LF$
+  text + "## Summary" + #LF$ + summary + #LF$ + #LF$
+  text + "## Tests" + #LF$ + tests + #LF$ + #LF$
+  text + "## Risks" + #LF$ + risks + #LF$ + #LF$
+  text + "## Status Snapshot" + #LF$ + "```text" + #LF$ + MCP_Toolkit_RunGitReadOnly("status --short --branch") + "```" + #LF$ + #LF$
+  text + "## Suggested Next Commands" + #LF$
+  text + "- `./tools/check.sh`" + #LF$
+  text + "- `git push origin " + MCP_Toolkit_RecordField(MCP_Toolkit_CurrentGitBranch()) + "`" + #LF$
+  text + "- Open a draft PR only after reviewing staged files and verification evidence." + #LF$
+
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_Toolkit_GithubReleaseDraftMarkdown(argumentsValue)
+  Protected version.s
+  Protected highlights.s
+  Protected verification.s
+  Protected knownLimitations.s
+  Protected text.s
+
+  version = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "version", "unreleased"))
+  highlights = MCP_Toolkit_RecordField(MCP_Toolkit_ReadArgumentString(argumentsValue, "highlights"))
+  verification = MCP_Toolkit_RecordField(MCP_Toolkit_ReadArgumentString(argumentsValue, "verification", "./tools/check.sh"))
+  knownLimitations = MCP_Toolkit_RecordField(MCP_Toolkit_ReadArgumentString(argumentsValue, "knownLimitations"))
+
+  text = "# GitHub Release Draft" + #LF$ + #LF$
+  text + "Mode: draft text only. No tag, release, or upload was created." + #LF$ + #LF$
+  text + "Version: `" + MCP_Toolkit_RecordField(version) + "`" + #LF$ + #LF$
+  text + "## Highlights" + #LF$ + highlights + #LF$ + #LF$
+  text + "## Verification" + #LF$ + verification + #LF$ + #LF$
+  text + "## Known Limitations" + #LF$ + knownLimitations + #LF$ + #LF$
+  text + "## Artifact Checklist" + #LF$
+  text + "- Run `./tools/check.sh` from a clean route state." + #LF$
+  text + "- Confirm `.build/dist/` contains tarball, manifest, PDFs, and checksums." + #LF$
+  text + "- Confirm `tools/verify-release-artifacts.sh` passes." + #LF$
+  text + "- Confirm release notes and milestone documents match the package." + #LF$
+  text + #LF$ + "## Recent Commits" + #LF$ + "```text" + #LF$ + MCP_Toolkit_RunGitReadOnly("log --oneline -10") + "```" + #LF$
+
+  ProcedureReturn text
+EndProcedure
+
 Procedure.s MCP_Toolkit_ScanIncludesInFile(root.s, relativePath.s, *state.MCP_Toolkit_ScanState)
   Protected file.i
   Protected line.s
@@ -1183,6 +1343,8 @@ Procedure.s MCP_Toolkit_WorkflowBriefText()
   text + "4. Verify, then Git/GitHub" + #LF$
   text + "- Run focused tests first when useful." + #LF$
   text + "- Run ./tools/check.sh before merge or push." + #LF$
+  text + "- Use purebasic/git/preflight and purebasic/git/commit-summary before committing." + #LF$
+  text + "- Use purebasic/github/pr-draft or purebasic/github/release-draft as draft text only." + #LF$
   text + "- Use no-fast-forward merges for route history when appropriate." + #LF$
   text + #LF$
   text + "Default lesson learned rules:" + #LF$
@@ -1227,13 +1389,15 @@ Procedure.s MCP_Toolkit_HarnessChecklistText()
   text + "- git diff --check" + #LF$
   text + "- git commit with an intent-focused message" + #LF$
   text + "- git checkout main && git merge --no-ff branch" + #LF$
+  text + "- MCP helpers: purebasic/git/preflight and purebasic/git/commit-summary" + #LF$
   text + #LF$
   text + "GitHub workflow:" + #LF$
   text + "- git pull --ff-only on main before a collaborative branch" + #LF$
   text + "- push the feature branch when review or CI is needed" + #LF$
   text + "- open a PR with verification evidence" + #LF$
   text + "- check CI before merge" + #LF$
-  text + "- delete merged branches"
+  text + "- delete merged branches" + #LF$
+  text + "- MCP helpers: purebasic/github/pr-draft and purebasic/github/release-draft"
 
   ProcedureReturn text
 EndProcedure
@@ -1321,6 +1485,30 @@ Procedure.i MCP_Toolkit_DecisionRecordCreateHandler(argumentsValue, *context.JSO
   ProcedureReturn MCP_Toolkit_SetRecordToolResult(argumentsValue, *result, "decisions", "decision", MCP_Toolkit_DecisionRecordMarkdown(argumentsValue))
 EndProcedure
 
+Procedure.i MCP_Toolkit_GitPreflightHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  *result\ok = #True
+  *result\resultJson = MCP_Tools_TextResult(MCP_Toolkit_GitPreflightMarkdown(argumentsValue))
+  ProcedureReturn #True
+EndProcedure
+
+Procedure.i MCP_Toolkit_GitCommitSummaryHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  *result\ok = #True
+  *result\resultJson = MCP_Tools_TextResult(MCP_Toolkit_GitCommitSummaryMarkdown(argumentsValue))
+  ProcedureReturn #True
+EndProcedure
+
+Procedure.i MCP_Toolkit_GithubPrDraftHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  *result\ok = #True
+  *result\resultJson = MCP_Tools_TextResult(MCP_Toolkit_GithubPrDraftMarkdown(argumentsValue))
+  ProcedureReturn #True
+EndProcedure
+
+Procedure.i MCP_Toolkit_GithubReleaseDraftHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  *result\ok = #True
+  *result\resultJson = MCP_Tools_TextResult(MCP_Toolkit_GithubReleaseDraftMarkdown(argumentsValue))
+  ProcedureReturn #True
+EndProcedure
+
 Procedure.i MCP_Toolkit_RegisterTool(*registry.MCP_ToolRegistry, name.s, title.s, description.s, schema.s, *handler)
   If MCP_RegisterTool(*registry, name, title, description, schema) = #False
     ProcedureReturn #False
@@ -1387,6 +1575,22 @@ Procedure.i MCP_Toolkit_Register(*dispatcher.JSONRPC_Dispatcher, *registry.MCP_T
   EndIf
 
   If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_DecisionRecordCreateName$, "PureBasic Decision Record Create", "Create a concise technical decision record as Markdown, optionally saving it under .local records.", #MCP_Toolkit_DecisionRecordCreateSchema$, @MCP_Toolkit_DecisionRecordCreateHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_GitPreflightName$, "PureBasic Git Preflight", "Inspect read-only Git status, diff stats, recent commits, and route checklist before committing or pushing.", #MCP_Toolkit_GitPreflightSchema$, @MCP_Toolkit_GitPreflightHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_GitCommitSummaryName$, "PureBasic Git Commit Summary", "Draft a commit summary from read-only Git status and diff stats without staging or committing.", #MCP_Toolkit_GitCommitSummarySchema$, @MCP_Toolkit_GitCommitSummaryHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_GithubPrDraftName$, "PureBasic GitHub PR Draft", "Draft a GitHub pull request body from route summary, tests, risks, and current Git state without pushing or opening a PR.", #MCP_Toolkit_GithubPrDraftSchema$, @MCP_Toolkit_GithubPrDraftHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_GithubReleaseDraftName$, "PureBasic GitHub Release Draft", "Draft release notes and an artifact checklist without tagging, uploading, or creating a GitHub release.", #MCP_Toolkit_GithubReleaseDraftSchema$, @MCP_Toolkit_GithubReleaseDraftHandler()) = #False
     ProcedureReturn #False
   EndIf
 

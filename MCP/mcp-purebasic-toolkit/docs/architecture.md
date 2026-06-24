@@ -36,6 +36,10 @@ MCP toolkit server
   purebasic/brief/create
   purebasic/algorithm/explain
   purebasic/decision-record/create
+  purebasic/git/preflight
+  purebasic/git/commit-summary
+  purebasic/github/pr-draft
+  purebasic/github/release-draft
         |
 PureBasic JSON-RPC library
   MCP lifecycle/tools adapter
@@ -50,7 +54,9 @@ intelligence. The harness-execution slice adds fixed-script process launch for
 the repository's verification workflow, but still avoids arbitrary shell access
 or Git mutation. The pair-development records slice turns interviews,
 algorithm explanations, and technical decisions into Markdown outputs that can
-optionally be saved under `.local/`.
+optionally be saved under `.local/`. The Git/GitHub workflow slice inspects
+local Git state and drafts commit, PR, and release text without mutating the
+repository or calling GitHub.
 
 Current implementation files:
 
@@ -71,6 +77,9 @@ Current tool groups:
   `purebasic/check`, and `purebasic/docs/build`.
 - Pair-development records: `purebasic/brief/create`,
   `purebasic/algorithm/explain`, and `purebasic/decision-record/create`.
+- Git/GitHub workflow: `purebasic/git/preflight`,
+  `purebasic/git/commit-summary`, `purebasic/github/pr-draft`, and
+  `purebasic/github/release-draft`.
 
 Harness execution is deliberately not a general shell. Each tool maps to one
 fixed repository script, captures combined stdout/stderr, replaces the
@@ -84,6 +93,11 @@ MCP text results and save only when `save: true` is requested. Saved records go
 to `.local/mcp-purebasic-toolkit/records/` with simple file-name validation so
 generated notes do not become tracked source or escape the project.
 
+Git/GitHub workflow tools are read-only or draft-only. They run fixed Git
+inspection commands, generate Markdown text, and leave real `git add`,
+`git commit`, `git push`, PR creation, tagging, and release publishing to the
+human or host.
+
 ## Design Rules
 
 - Keep the toolkit as a real project under `MCP/mcp-purebasic-toolkit`.
@@ -96,6 +110,8 @@ generated notes do not become tracked source or escape the project.
 - Bound command runtime and output whenever a tool launches a process.
 - Keep generated pair-development records under `.local/` unless a human
   deliberately promotes them into tracked documentation.
+- Keep Git/GitHub mutation out of draft helpers; they may inspect and propose,
+  not commit, push, tag, or publish.
 - Run harness checks before claiming a route is complete.
 - Update documentation and ReadTheDocs navigation when user-facing guidance
   changes.
@@ -108,8 +124,8 @@ generated notes do not become tracked source or escape the project.
   verification after the initial fixed-script tools.
 - Pair workflow: add richer question generation, record templates, and optional
   promotion paths from `.local/` into reviewed docs.
-- Git/GitHub workflow: preflight, branch naming, commit summaries, PR drafts,
-  CI inspection, and release notes.
+- Git/GitHub workflow: add optional CI inspection and safer remote-aware
+  handoff after the read-only/draft helpers.
 - Docs workflow: API page skeletons, milestone updates, ReadTheDocs navigation,
   and release checklist verification.
 - MCP authoring: new stdio server skeletons, tool registration, probe inputs,

@@ -137,19 +137,38 @@ Acceptance criteria:
 
 ## 004-git-github-workflow
 
-Status: planned
+Branch: `feature/mcp-toolkit-git-github-workflow`
+
+Status: completed
 
 Purpose:
 
 - Add Git/GitHub workflow helpers for local-only and local-plus-GitHub
   development.
 
-Candidate tools:
+Tools:
 
 - `purebasic/git/preflight`
 - `purebasic/git/commit-summary`
 - `purebasic/github/pr-draft`
 - `purebasic/github/release-draft`
+
+Acceptance criteria:
+
+- Git preflight reports current branch, status, staged/unstaged diff stats,
+  recent commits, base branch, and route checks.
+- Commit summary drafts a commit message/checklist without staging or
+  committing.
+- PR draft returns Markdown for title, summary, tests, risks, branch context,
+  and suggested next commands without pushing or opening a PR.
+- Release draft returns Markdown for version, highlights, verification,
+  limitations, artifact checklist, and recent commits without tagging or
+  creating a release.
+- Tools use only fixed read-only Git inspection commands or draft text.
+- MCP output uses repository-relative/sanitized paths.
+- Toolkit probe and stdio smoke input cover the Git/GitHub tools.
+- PureUnit coverage validates registration and safe read-only/draft output.
+- `./tools/check.sh` passes.
 
 ## 005-docs-and-milestone-automation
 

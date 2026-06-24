@@ -11,6 +11,8 @@ do not accept arbitrary shell commands; each tool runs one whitelisted harness
 script with timeout and output limits. Use `dryRun: true` when an MCP host
 should explain the command before launching it. Pair-development record tools
 produce Markdown and save only under `.local/` when explicitly requested.
+Git/GitHub workflow tools inspect local Git state and draft text only; they do
+not commit, push, tag, open pull requests, or create releases.
 
 ## Current Tools
 
@@ -43,6 +45,14 @@ produce Markdown and save only under `.local/` when explicitly requested.
   explanation before implementation.
 - `purebasic/decision-record/create` - create a concise technical decision
   record.
+- `purebasic/git/preflight` - inspect branch, status, diff stats, recent
+  commits, and route checks before committing or pushing.
+- `purebasic/git/commit-summary` - draft a commit summary from current Git
+  state without staging or committing.
+- `purebasic/github/pr-draft` - draft a pull request body from route summary,
+  tests, risks, and current Git state without pushing or opening a PR.
+- `purebasic/github/release-draft` - draft release notes and an artifact
+  checklist without tagging, uploading, or creating a release.
 
 ## Build
 
@@ -118,6 +128,21 @@ record is written under `.local/mcp-purebasic-toolkit/records/`. File names must
 be simple Markdown file names; path traversal such as `../` is rejected with
 JSON-RPC `-32602`. Generated records stay outside tracked source until a human
 promotes them.
+
+## Git And GitHub Workflow Scope
+
+Git/GitHub tools are deliberately read-only or draft-only:
+
+- `purebasic/git/preflight` runs fixed read-only Git inspections.
+- `purebasic/git/commit-summary` drafts commit wording and reminds the user to
+  stage only route-owned files.
+- `purebasic/github/pr-draft` drafts PR text but does not push a branch or call
+  GitHub.
+- `purebasic/github/release-draft` drafts release notes and artifact checks but
+  does not create tags or releases.
+
+These tools are meant to support best-practice review. The human or host still
+chooses when to run real Git/GitHub commands.
 
 ## Skills
 

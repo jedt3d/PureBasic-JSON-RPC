@@ -30,6 +30,9 @@ Documentation and harness discipline:
 - Added MCP toolkit pair-development record tools for implementation briefs,
   algorithm explanations, and decision records, with optional `.local/` saves
   and filename/path validation.
+- Added MCP toolkit Git/GitHub workflow helpers for read-only preflight,
+  commit summary drafts, PR drafts, and release drafts without mutating Git or
+  GitHub state.
 - Added `tools/verify-docs.sh` to verify numbered routes have matching example
   READMEs, API pages, milestone sections, API index entries, docs API bridge
   entries, and required Sphinx navigation.

@@ -8,3 +8,5 @@
 {"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/docs/build","arguments":{"dryRun":true}},"id":7}
 {"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/brief/create","arguments":{"goal":"Prepare a PureBasic MCP feature","tests":"Focused PureUnit and ./tools/check.sh"}},"id":8}
 {"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/decision-record/create","arguments":{"title":"Keep generated records local","decision":"Save generated toolkit records under .local until a human promotes them."}},"id":9}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/git/preflight","arguments":{"baseBranch":"main"}},"id":10}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/github/pr-draft","arguments":{"title":"Toolkit Git workflow","summary":"Add read-only Git workflow helpers.","tests":"./tools/check.sh"}},"id":11}
