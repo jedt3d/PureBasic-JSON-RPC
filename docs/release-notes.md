@@ -24,6 +24,9 @@ Documentation and harness discipline:
 - Expanded `MCP/mcp-purebasic-toolkit` project intelligence with include graph,
   symbol search, procedure listing, `.pbp` target listing, probe coverage, and
   PureUnit coverage.
+- Added bounded MCP toolkit harness execution tools for `./tools/test.sh`,
+  `./tools/build.sh`, `./tools/check.sh`, and `./tools/build-docs.sh`, with
+  `dryRun`, timeout limits, output bounds, and project-root path sanitization.
 - Added `tools/verify-docs.sh` to verify numbered routes have matching example
   READMEs, API pages, milestone sections, API index entries, docs API bridge
   entries, and required Sphinx navigation.

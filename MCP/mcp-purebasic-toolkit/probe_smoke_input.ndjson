@@ -4,3 +4,5 @@
 {"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/project/inspect","arguments":{}},"id":3}
 {"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/include/graph","arguments":{}},"id":4}
 {"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/symbol/search","arguments":{"query":"MCP_Toolkit_Register"}},"id":5}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/check","arguments":{"dryRun":true}},"id":6}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/docs/build","arguments":{"dryRun":true}},"id":7}

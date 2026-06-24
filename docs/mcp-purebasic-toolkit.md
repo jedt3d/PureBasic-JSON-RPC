@@ -21,6 +21,13 @@ Current foundation tools:
 - `purebasic/symbol/search`
 - `purebasic/procedure/list`
 - `purebasic/pbp/list-targets`
+- `purebasic/test/run`
+- `purebasic/build/run`
+- `purebasic/check`
+- `purebasic/docs/build`
+
+Harness execution tools run fixed repository scripts only. They support
+`dryRun`, bounded output, timeout controls, and project-root path sanitization.
 
 Toolkit milestones are intentionally tracked in
 `MCP/mcp-purebasic-toolkit/docs/milestones.md` instead of the core library

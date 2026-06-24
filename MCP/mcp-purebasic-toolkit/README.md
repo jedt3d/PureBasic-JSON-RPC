@@ -5,10 +5,11 @@ not an example folder. It packages a stdio MCP server together with Codex skills
 and project guidance for building, reviewing, testing, documenting, and
 releasing PureBasic projects.
 
-The first foundation slice is intentionally read-only. It gives an MCP host a
-project inspection tool, a pair-development workflow brief, and a harness/Git
-checklist. Later milestones will add build/test execution, `.pbp` project
-management, docs automation, milestone generation, and MCP authoring helpers.
+The foundation and project-intelligence slices are read-only. Harness execution
+tools are now available for the repository's fixed verification scripts. They
+do not accept arbitrary shell commands; each tool runs one whitelisted harness
+script with timeout and output limits. Use `dryRun: true` when an MCP host
+should explain the command before launching it.
 
 ## Current Tools
 
@@ -27,6 +28,14 @@ management, docs automation, milestone generation, and MCP authoring helpers.
   and structure lines with an optional prefix filter.
 - `purebasic/pbp/list-targets` - list committed `.pbp` targets and target
   formats using repository-relative paths.
+- `purebasic/test/run` - run `./tools/test.sh` with bounded output and timeout
+  controls.
+- `purebasic/build/run` - run `./tools/build.sh` with bounded output and
+  timeout controls.
+- `purebasic/check` - run `./tools/check.sh` with bounded output and timeout
+  controls.
+- `purebasic/docs/build` - run `./tools/build-docs.sh` with bounded output and
+  timeout controls.
 
 ## Build
 
@@ -67,6 +76,24 @@ not a replacement for compiler or static-analysis tooling. They provide fast
 project orientation for a pair-development session: where includes point, which
 symbols exist, which procedures are likely public, and which `.pbp` targets
 define buildable PureBasic programs.
+
+## Harness Execution Scope
+
+Harness execution tools are intentionally narrow:
+
+- allowed commands are fixed in source and point to repository scripts under
+  `tools/`
+- output is bounded and marked as truncated when the response limit is reached
+- `timeoutMs` defaults to `300000` and is constrained between `1000` and
+  `900000`
+- `maxOutputBytes` defaults to `20000` and is constrained between `1000` and
+  `60000`
+- captured output replaces the configured project root with `.` so MCP results
+  do not depend on a developer's workstation path
+
+These tools are developer-facing execution helpers, not a sandbox. A host or
+human reviewer should still decide when to run expensive commands such as
+`purebasic/check`.
 
 ## Skills
 

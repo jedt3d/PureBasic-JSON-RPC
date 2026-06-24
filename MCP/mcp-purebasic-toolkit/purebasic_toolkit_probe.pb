@@ -56,6 +56,26 @@ If FindString(response, #MCP_Toolkit_PbpListTargetsName$, 1) = 0
   End 1
 EndIf
 
+If FindString(response, #MCP_Toolkit_TestRunName$, 1) = 0
+  PrintN("tools/list is missing test run")
+  End 1
+EndIf
+
+If FindString(response, #MCP_Toolkit_BuildRunName$, 1) = 0
+  PrintN("tools/list is missing build run")
+  End 1
+EndIf
+
+If FindString(response, #MCP_Toolkit_CheckName$, 1) = 0
+  PrintN("tools/list is missing check")
+  End 1
+EndIf
+
+If FindString(response, #MCP_Toolkit_DocsBuildName$, 1) = 0
+  PrintN("tools/list is missing docs build")
+  End 1
+EndIf
+
 response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/project/inspect\",\"arguments\":{}},\"id\":2}")
 If FindString(response, "Toolkit milestones: yes", 1) = 0
   PrintN("project inspect did not find toolkit milestones")
@@ -95,6 +115,18 @@ EndIf
 response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/pbp/list-targets\",\"arguments\":{}},\"id\":8}")
 If FindString(response, "MCP/mcp-purebasic-toolkit/purebasic_toolkit.pbp", 1) = 0
   PrintN("pbp target list did not find toolkit project")
+  End 1
+EndIf
+
+response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/check\",\"arguments\":{\"dryRun\":true}},\"id\":9}")
+If FindString(response, "Command: ./tools/check.sh", 1) = 0 Or FindString(response, "Mode: dry-run", 1) = 0
+  PrintN("check dry run did not describe the bounded harness command")
+  End 1
+EndIf
+
+response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/docs/build\",\"arguments\":{\"dryRun\":true}},\"id\":10}")
+If FindString(response, "Command: ./tools/build-docs.sh", 1) = 0 Or FindString(response, ~"\"isError\":false", 1) = 0
+  PrintN("docs build dry run did not return a successful MCP tool result")
   End 1
 EndIf
 

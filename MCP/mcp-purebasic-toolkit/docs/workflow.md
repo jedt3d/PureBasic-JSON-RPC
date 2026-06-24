@@ -99,6 +99,35 @@ Run:
 ./tools/build-docs.sh
 ```
 
+The MCP toolkit exposes `purebasic/docs/build` for the same documentation build
+path. Use `dryRun: true` first when the user wants to review the command before
+execution.
+
+## Harness Execution Through MCP
+
+The toolkit can run the fixed repository harness commands:
+
+- `purebasic/test/run` -> `./tools/test.sh`
+- `purebasic/build/run` -> `./tools/build.sh`
+- `purebasic/check` -> `./tools/check.sh`
+- `purebasic/docs/build` -> `./tools/build-docs.sh`
+
+Each execution tool accepts:
+
+- `dryRun`: boolean, default `false`
+- `timeoutMs`: integer, default `300000`
+- `maxOutputBytes`: integer, default `20000`
+
+These tools intentionally do not accept arbitrary shell text. They are meant to
+make the existing harness available to an MCP host while preserving the
+repository's discipline: bounded output, explicit command identity, and
+project-root path sanitization.
+
+Run these tools sequentially. The underlying harness prepares shared `.local/`
+toolchain homes, so launching multiple discovery/build/test paths at the same
+time can produce filesystem races. For full verification, prefer
+`purebasic/check` or `./tools/check.sh` as the single orchestrator.
+
 ## Lessons Learned As Defaults
 
 - Do not commit workstation-specific absolute paths.
@@ -109,4 +138,6 @@ Run:
 - Pair `ParseJSON()` and `CreateJSON()` ownership paths with `FreeJSON()`.
 - Keep tests close to features.
 - Do not assume docs, PDFs, packages, or checksums are current.
+- Do not run harness setup scripts in parallel; `.local/` is shared generated
+  state.
 - Run the harness and report evidence.
