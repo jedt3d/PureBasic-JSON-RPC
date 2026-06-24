@@ -46,5 +46,7 @@ ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 "$ROOT/.build/MCP/examples/sqlite-admin/sqlite_admin_server" < "$ROOT/MCP/examples/sqlite-admin/probe_smoke_input.ndjson" >/dev/null
 "$ROOT/.build/MCP/examples/sqlite-admin/sqlite_admin_server" < "$ROOT/MCP/examples/sqlite-admin/probe_input.ndjson" >/dev/null
 "$ROOT/.build/MCP/examples/sqlite-admin/sqlite_admin_probe"
+"$ROOT/.build/MCP/mcp-purebasic-toolkit/purebasic_toolkit_server" < "$ROOT/MCP/mcp-purebasic-toolkit/probe_smoke_input.ndjson" >/dev/null
+"$ROOT/.build/MCP/mcp-purebasic-toolkit/purebasic_toolkit_probe"
 "$ROOT/tools/package-alpha.sh"
 "$ROOT/tools/verify-release-artifacts.sh"

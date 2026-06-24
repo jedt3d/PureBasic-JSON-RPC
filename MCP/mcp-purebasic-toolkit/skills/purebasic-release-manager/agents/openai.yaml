@@ -1,0 +1,4 @@
+interface:
+  display_name: "PureBasic Release Manager"
+  short_description: "Verify docs, packages, checksums, and release gates"
+  default_prompt: "Use $purebasic-release-manager to prepare and verify this PureBasic release."
