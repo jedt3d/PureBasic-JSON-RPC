@@ -41,6 +41,9 @@ Documentation and harness discipline:
   stdio server scaffold drafts, tool handler drafts, JSONL probe drafts, and
   stdio transcript validation that rejects `Content-Length` framing for MCP
   stdio.
+- Started tracking `Gadgets/SevenSegmentClock/` as the seeded `00.07` dogfood
+  sample implementation target for the MCP toolkit plus PureBasic skills
+  workflow.
 - Hardened `tools/test.sh` so multi-file runs execute PureUnit one file at a
   time, emit a summary report, clean up standby compiler processes after
   successful reports, and retry bounded pre-report hangs instead of letting
