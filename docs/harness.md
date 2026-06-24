@@ -65,6 +65,15 @@ and probes must use repository-relative paths.
 
 `tools/check.sh` runs the path scan automatically before tests and builds.
 
+## Execution Ordering
+
+Run harness scripts that discover or prepare the PureBasic toolchain
+sequentially. `tools/discover-purebasic.sh`, `tools/test.sh`, `tools/build.sh`,
+`tools/build-docs.sh`, and `tools/check.sh` share generated state under
+`.local/`; running them in parallel can race while creating project-local
+compiler and PureUnit homes. Prefer `tools/check.sh` as the single orchestrator
+for full verification.
+
 ## Release Artifact Verification
 
 `tools/verify-release-artifacts.sh` checks generated files under `.build/dist/`

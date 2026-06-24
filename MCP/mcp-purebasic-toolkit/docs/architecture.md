@@ -31,6 +31,8 @@ MCP toolkit server
   purebasic/project/inspect
   purebasic/workflow/brief
   purebasic/harness/checklist
+  purebasic/test/run, purebasic/build/run
+  purebasic/check, purebasic/docs/build
         |
 PureBasic JSON-RPC library
   MCP lifecycle/tools adapter
@@ -38,11 +40,12 @@ PureBasic JSON-RPC library
   dispatch/protocol/connection
 ```
 
-## Current Foundation
+## Current Implementation
 
-The first milestone is read-only and low risk. It gives the MCP host enough
-context to understand a PureBasic repository and to follow the intended
-development workflow before later tools start executing build or Git commands.
+The first two slices are read-only and low risk: foundation context and project
+intelligence. The harness-execution slice adds fixed-script process launch for
+the repository's verification workflow, but still avoids arbitrary shell access
+or Git mutation.
 
 Current implementation files:
 
@@ -59,6 +62,15 @@ Current tool groups:
 - Project intelligence: `purebasic/include/graph`,
   `purebasic/symbol/search`, `purebasic/procedure/list`, and
   `purebasic/pbp/list-targets`.
+- Harness execution: `purebasic/test/run`, `purebasic/build/run`,
+  `purebasic/check`, and `purebasic/docs/build`.
+
+Harness execution is deliberately not a general shell. Each tool maps to one
+fixed repository script, captures combined stdout/stderr, replaces the
+configured project root in output with `.`, and returns an MCP text result with
+exit status, timeout status, and truncation status. `dryRun` is supported so a
+pair-development session can review what would happen before launching a longer
+command.
 
 ## Design Rules
 
@@ -68,6 +80,8 @@ Current tool groups:
 - Keep diagnostics and logs off stdout.
 - Use `.pbp` as the source of truth for PureBasic target type.
 - Keep tracked paths relative to the repository root.
+- Do not expose arbitrary shell execution through MCP tools.
+- Bound command runtime and output whenever a tool launches a process.
 - Run harness checks before claiming a route is complete.
 - Update documentation and ReadTheDocs navigation when user-facing guidance
   changes.
@@ -76,8 +90,8 @@ Current tool groups:
 
 - Project intelligence: deepen include graph, symbols, procedures, public API,
   and `.pbp` target analysis.
-- Harness execution: run focused tests, full checks, docs builds, and package
-  verification with bounded output.
+- Harness execution: add richer target selection and package/release
+  verification after the initial fixed-script tools.
 - Pair workflow: produce implementation briefs, algorithm flow summaries, and
   human decision records.
 - Git/GitHub workflow: preflight, branch naming, commit summaries, PR drafts,

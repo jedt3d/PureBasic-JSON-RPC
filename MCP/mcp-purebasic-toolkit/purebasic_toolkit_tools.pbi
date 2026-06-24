@@ -9,6 +9,10 @@ XIncludeFile "../../src/jsonrpc/mcp_tools.pbi"
 #MCP_Toolkit_SymbolSearchName$ = "purebasic/symbol/search"
 #MCP_Toolkit_ProcedureListName$ = "purebasic/procedure/list"
 #MCP_Toolkit_PbpListTargetsName$ = "purebasic/pbp/list-targets"
+#MCP_Toolkit_TestRunName$ = "purebasic/test/run"
+#MCP_Toolkit_BuildRunName$ = "purebasic/build/run"
+#MCP_Toolkit_CheckName$ = "purebasic/check"
+#MCP_Toolkit_DocsBuildName$ = "purebasic/docs/build"
 
 #MCP_Toolkit_ProjectInspectSchema$ = ~"{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"
 #MCP_Toolkit_WorkflowBriefSchema$ = ~"{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"
@@ -17,8 +21,15 @@ XIncludeFile "../../src/jsonrpc/mcp_tools.pbi"
 #MCP_Toolkit_SymbolSearchSchema$ = ~"{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\"}},\"required\":[\"query\"],\"additionalProperties\":false}"
 #MCP_Toolkit_ProcedureListSchema$ = ~"{\"type\":\"object\",\"properties\":{\"prefix\":{\"type\":\"string\"}},\"additionalProperties\":false}"
 #MCP_Toolkit_PbpListTargetsSchema$ = ~"{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"
+#MCP_Toolkit_HarnessExecutionSchema$ = ~"{\"type\":\"object\",\"properties\":{\"dryRun\":{\"type\":\"boolean\"},\"timeoutMs\":{\"type\":\"integer\",\"minimum\":1000,\"maximum\":900000},\"maxOutputBytes\":{\"type\":\"integer\",\"minimum\":1000,\"maximum\":60000}},\"additionalProperties\":false}"
 
 #MCP_Toolkit_DefaultMaxScanResults = 80
+#MCP_Toolkit_DefaultCommandTimeoutMs = 300000
+#MCP_Toolkit_MinCommandTimeoutMs = 1000
+#MCP_Toolkit_MaxCommandTimeoutMs = 900000
+#MCP_Toolkit_DefaultCommandMaxOutputBytes = 20000
+#MCP_Toolkit_MinCommandMaxOutputBytes = 1000
+#MCP_Toolkit_MaxCommandMaxOutputBytes = 60000
 
 Structure MCP_Toolkit_Config
   projectRoot.s
@@ -26,6 +37,23 @@ EndStructure
 
 Structure MCP_Toolkit_ScanState
   count.i
+  truncated.i
+EndStructure
+
+Structure MCP_Toolkit_HarnessOptions
+  dryRun.i
+  timeoutMs.i
+  maxOutputBytes.i
+EndStructure
+
+Structure MCP_Toolkit_HarnessResult
+  label.s
+  relativeScript.s
+  launched.i
+  dryRun.i
+  timedOut.i
+  exitCode.i
+  output.s
   truncated.i
 EndStructure
 
@@ -74,6 +102,21 @@ Procedure.i MCP_Toolkit_HasSuffix(text.s, suffix.s)
   EndIf
 
   ProcedureReturn Bool(LCase(Right(text, Len(suffix))) = LCase(suffix))
+EndProcedure
+
+Procedure.i MCP_Toolkit_LineStartsWithKeyword(trimmed.s, keyword.s)
+  Protected nextChar.s
+
+  If Left(trimmed, Len(keyword)) <> keyword
+    ProcedureReturn #False
+  EndIf
+
+  If Len(trimmed) = Len(keyword)
+    ProcedureReturn #True
+  EndIf
+
+  nextChar = Mid(trimmed, Len(keyword) + 1, 1)
+  ProcedureReturn Bool(nextChar = " " Or nextChar = Chr(9))
 EndProcedure
 
 Procedure.i MCP_Toolkit_IsSourceFile(name.s)
@@ -219,6 +262,254 @@ Procedure.s MCP_Toolkit_ReadArgumentString(argumentsValue, name.s, defaultValue.
   ProcedureReturn GetJSONString(value)
 EndProcedure
 
+Procedure.i MCP_Toolkit_ReadOptionalInteger(argumentsValue, name.s, defaultValue.i, *present.Integer)
+  Protected value
+
+  If *present <> 0
+    *present\i = #False
+  EndIf
+
+  If argumentsValue = 0 Or JSONType(argumentsValue) <> #PB_JSON_Object
+    ProcedureReturn defaultValue
+  EndIf
+
+  value = GetJSONMember(argumentsValue, name)
+  If value = 0
+    ProcedureReturn defaultValue
+  EndIf
+
+  If *present <> 0
+    *present\i = #True
+  EndIf
+
+  If JSONType(value) <> #PB_JSON_Number
+    ProcedureReturn defaultValue
+  EndIf
+
+  ProcedureReturn GetJSONInteger(value)
+EndProcedure
+
+Procedure.i MCP_Toolkit_ReadOptionalBoolean(argumentsValue, name.s, defaultValue.i, *present.Integer)
+  Protected value
+
+  If *present <> 0
+    *present\i = #False
+  EndIf
+
+  If argumentsValue = 0 Or JSONType(argumentsValue) <> #PB_JSON_Object
+    ProcedureReturn defaultValue
+  EndIf
+
+  value = GetJSONMember(argumentsValue, name)
+  If value = 0
+    ProcedureReturn defaultValue
+  EndIf
+
+  If *present <> 0
+    *present\i = #True
+  EndIf
+
+  If JSONType(value) <> #PB_JSON_Boolean
+    ProcedureReturn defaultValue
+  EndIf
+
+  ProcedureReturn GetJSONBoolean(value)
+EndProcedure
+
+Procedure MCP_Toolkit_SetInvalidParams(*result.JSONRPC_HandlerResult, message.s)
+  *result\ok = #False
+  *result\errorCode = #JSONRPC_Error_InvalidParams
+  *result\errorMessage = message
+EndProcedure
+
+Procedure.i MCP_Toolkit_ReadHarnessOptions(argumentsValue, *options.MCP_Toolkit_HarnessOptions, *result.JSONRPC_HandlerResult)
+  Protected present.Integer
+
+  *options\dryRun = MCP_Toolkit_ReadOptionalBoolean(argumentsValue, "dryRun", #False, @present)
+  If present\i And JSONType(GetJSONMember(argumentsValue, "dryRun")) <> #PB_JSON_Boolean
+    MCP_Toolkit_SetInvalidParams(*result, "dryRun must be a boolean")
+    ProcedureReturn #False
+  EndIf
+
+  *options\timeoutMs = MCP_Toolkit_ReadOptionalInteger(argumentsValue, "timeoutMs", #MCP_Toolkit_DefaultCommandTimeoutMs, @present)
+  If present\i
+    If JSONType(GetJSONMember(argumentsValue, "timeoutMs")) <> #PB_JSON_Number
+      MCP_Toolkit_SetInvalidParams(*result, "timeoutMs must be an integer")
+      ProcedureReturn #False
+    EndIf
+
+    If *options\timeoutMs < #MCP_Toolkit_MinCommandTimeoutMs Or *options\timeoutMs > #MCP_Toolkit_MaxCommandTimeoutMs
+      MCP_Toolkit_SetInvalidParams(*result, "timeoutMs is outside the allowed range")
+      ProcedureReturn #False
+    EndIf
+  EndIf
+
+  *options\maxOutputBytes = MCP_Toolkit_ReadOptionalInteger(argumentsValue, "maxOutputBytes", #MCP_Toolkit_DefaultCommandMaxOutputBytes, @present)
+  If present\i
+    If JSONType(GetJSONMember(argumentsValue, "maxOutputBytes")) <> #PB_JSON_Number
+      MCP_Toolkit_SetInvalidParams(*result, "maxOutputBytes must be an integer")
+      ProcedureReturn #False
+    EndIf
+
+    If *options\maxOutputBytes < #MCP_Toolkit_MinCommandMaxOutputBytes Or *options\maxOutputBytes > #MCP_Toolkit_MaxCommandMaxOutputBytes
+      MCP_Toolkit_SetInvalidParams(*result, "maxOutputBytes is outside the allowed range")
+      ProcedureReturn #False
+    EndIf
+  EndIf
+
+  ProcedureReturn #True
+EndProcedure
+
+Procedure MCP_Toolkit_AppendCommandOutput(*commandResult.MCP_Toolkit_HarnessResult, chunk.s, maxOutputBytes.i)
+  Protected remaining.i
+
+  If chunk = "" Or *commandResult\truncated
+    ProcedureReturn
+  EndIf
+
+  remaining = maxOutputBytes - Len(*commandResult\output)
+  If remaining <= 0
+    *commandResult\truncated = #True
+    ProcedureReturn
+  EndIf
+
+  If Len(chunk) > remaining
+    *commandResult\output + Left(chunk, remaining)
+    *commandResult\truncated = #True
+  Else
+    *commandResult\output + chunk
+  EndIf
+EndProcedure
+
+Procedure.s MCP_Toolkit_SanitizeCommandOutput(output.s, root.s)
+  Protected normalizedRoot.s
+
+  normalizedRoot = ReplaceString(root, "\", "/")
+  If Right(normalizedRoot, 1) = "/"
+    normalizedRoot = Left(normalizedRoot, Len(normalizedRoot) - 1)
+  EndIf
+
+  If normalizedRoot <> ""
+    output = ReplaceString(output, normalizedRoot, ".")
+  EndIf
+
+  ProcedureReturn output
+EndProcedure
+
+Procedure MCP_Toolkit_DrainProgramOutput(program.i, root.s, maxOutputBytes.i, *commandResult.MCP_Toolkit_HarnessResult)
+  Protected chunk.s
+
+  While AvailableProgramOutput(program)
+    chunk = ReadProgramString(program) + #LF$
+    MCP_Toolkit_AppendCommandOutput(*commandResult, MCP_Toolkit_SanitizeCommandOutput(chunk, root), maxOutputBytes)
+  Wend
+EndProcedure
+
+Procedure MCP_Toolkit_RunHarnessCommand(label.s, relativeScript.s, *options.MCP_Toolkit_HarnessOptions, *commandResult.MCP_Toolkit_HarnessResult)
+  Protected root.s = MCP_Toolkit_Config\projectRoot
+  Protected program.i
+  Protected started.q
+
+  If root = ""
+    root = MCP_Toolkit_DefaultProjectRoot()
+  EndIf
+
+  *commandResult\label = label
+  *commandResult\relativeScript = relativeScript
+  *commandResult\dryRun = *options\dryRun
+  *commandResult\exitCode = -1
+
+  If FileSize(MCP_Toolkit_Path(root, relativeScript)) < 0
+    *commandResult\output = "Harness script is missing: ./" + relativeScript + #LF$
+    ProcedureReturn
+  EndIf
+
+  If *options\dryRun
+    *commandResult\launched = #False
+    *commandResult\exitCode = 0
+    *commandResult\output = "Dry run only. No process was launched." + #LF$
+    ProcedureReturn
+  EndIf
+
+  program = RunProgram("sh", ~"-c \"" + relativeScript + ~" 2>&1\"", root, #PB_Program_Open | #PB_Program_Read)
+  If program = 0
+    *commandResult\output = "Could not launch harness script: ./" + relativeScript + #LF$
+    ProcedureReturn
+  EndIf
+
+  *commandResult\launched = #True
+  started = ElapsedMilliseconds()
+
+  While ProgramRunning(program)
+    MCP_Toolkit_DrainProgramOutput(program, root, *options\maxOutputBytes, *commandResult)
+    If ElapsedMilliseconds() - started > *options\timeoutMs
+      *commandResult\timedOut = #True
+      KillProgram(program)
+      Break
+    EndIf
+    Delay(10)
+  Wend
+
+  MCP_Toolkit_DrainProgramOutput(program, root, *options\maxOutputBytes, *commandResult)
+  *commandResult\exitCode = ProgramExitCode(program)
+  CloseProgram(program)
+
+  If *commandResult\timedOut
+    MCP_Toolkit_AppendCommandOutput(*commandResult, "Command timed out after " + Str(*options\timeoutMs) + " ms." + #LF$, *options\maxOutputBytes)
+  EndIf
+EndProcedure
+
+Procedure.i MCP_Toolkit_HarnessResultIsError(*commandResult.MCP_Toolkit_HarnessResult)
+  If *commandResult\dryRun
+    ProcedureReturn #False
+  EndIf
+
+  ProcedureReturn Bool(*commandResult\launched = #False Or *commandResult\timedOut Or *commandResult\exitCode <> 0)
+EndProcedure
+
+Procedure.s MCP_Toolkit_HarnessResultText(*commandResult.MCP_Toolkit_HarnessResult, *options.MCP_Toolkit_HarnessOptions)
+  Protected text.s
+
+  text = "PureBasic harness execution" + #LF$
+  text + "Command: ./" + *commandResult\relativeScript + #LF$
+  text + "Label: " + *commandResult\label + #LF$
+  text + "Mode: "
+  If *commandResult\dryRun
+    text + "dry-run" + #LF$
+  Else
+    text + "execute" + #LF$
+  EndIf
+  text + "Timeout: " + Str(*options\timeoutMs) + " ms" + #LF$
+  text + "Max output: " + Str(*options\maxOutputBytes) + " bytes" + #LF$
+  text + "Exit status: " + Str(*commandResult\exitCode) + #LF$
+  text + "Timed out: " + MCP_Toolkit_YesNo(*commandResult\timedOut) + #LF$
+  text + "Output truncated: " + MCP_Toolkit_YesNo(*commandResult\truncated) + #LF$
+  text + #LF$
+  text + "Output:" + #LF$
+  If *commandResult\output = ""
+    text + "(no output)" + #LF$
+  Else
+    text + *commandResult\output
+  EndIf
+
+  ProcedureReturn text
+EndProcedure
+
+Procedure.i MCP_Toolkit_RunHarnessTool(argumentsValue, *result.JSONRPC_HandlerResult, label.s, relativeScript.s)
+  Protected options.MCP_Toolkit_HarnessOptions
+  Protected commandResult.MCP_Toolkit_HarnessResult
+
+  If MCP_Toolkit_ReadHarnessOptions(argumentsValue, @options, *result) = #False
+    ProcedureReturn #True
+  EndIf
+
+  MCP_Toolkit_RunHarnessCommand(label, relativeScript, @options, @commandResult)
+
+  *result\ok = #True
+  *result\resultJson = MCP_Tools_TextResult(MCP_Toolkit_HarnessResultText(@commandResult, @options), MCP_Toolkit_HarnessResultIsError(@commandResult))
+  ProcedureReturn #True
+EndProcedure
+
 Procedure.s MCP_Toolkit_ScanIncludesInFile(root.s, relativePath.s, *state.MCP_Toolkit_ScanState)
   Protected file.i
   Protected line.s
@@ -239,7 +530,7 @@ Procedure.s MCP_Toolkit_ScanIncludesInFile(root.s, relativePath.s, *state.MCP_To
     line = ReadString(file, #PB_UTF8)
     trimmed = Trim(line)
 
-    If FindString(trimmed, "XIncludeFile", 1) > 0 Or FindString(trimmed, "IncludeFile", 1) > 0
+    If MCP_Toolkit_LineStartsWithKeyword(trimmed, "XIncludeFile") Or MCP_Toolkit_LineStartsWithKeyword(trimmed, "IncludeFile")
       includeTarget = MCP_Toolkit_GetQuotedValue(trimmed)
       If includeTarget <> ""
         text + relativePath + " -> " + includeTarget + #LF$
@@ -686,6 +977,14 @@ Procedure.s MCP_Toolkit_HarnessChecklistText()
   text + "- ./tools/verify-release-artifacts.sh" + #LF$
   text + "- ./tools/check.sh" + #LF$
   text + #LF$
+  text + "MCP execution tools:" + #LF$
+  text + "- purebasic/test/run -> ./tools/test.sh" + #LF$
+  text + "- purebasic/build/run -> ./tools/build.sh" + #LF$
+  text + "- purebasic/check -> ./tools/check.sh" + #LF$
+  text + "- purebasic/docs/build -> ./tools/build-docs.sh" + #LF$
+  text + "- use dryRun first when a human wants to review a long-running command" + #LF$
+  text + "- output is bounded and the configured project root is reported as ." + #LF$
+  text + #LF$
   text + "Git local workflow:" + #LF$
   text + "- git status --short --branch" + #LF$
   text + "- git checkout -b feature/or-docs-slug" + #LF$
@@ -759,6 +1058,22 @@ Procedure.i MCP_Toolkit_PbpListTargetsHandler(argumentsValue, *context.JSONRPC_R
   ProcedureReturn #True
 EndProcedure
 
+Procedure.i MCP_Toolkit_TestRunHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  ProcedureReturn MCP_Toolkit_RunHarnessTool(argumentsValue, *result, "PureUnit test suite", "tools/test.sh")
+EndProcedure
+
+Procedure.i MCP_Toolkit_BuildRunHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  ProcedureReturn MCP_Toolkit_RunHarnessTool(argumentsValue, *result, "PureBasic project build", "tools/build.sh")
+EndProcedure
+
+Procedure.i MCP_Toolkit_CheckHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  ProcedureReturn MCP_Toolkit_RunHarnessTool(argumentsValue, *result, "Full repository check", "tools/check.sh")
+EndProcedure
+
+Procedure.i MCP_Toolkit_DocsBuildHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  ProcedureReturn MCP_Toolkit_RunHarnessTool(argumentsValue, *result, "ReadTheDocs/Sphinx and PDF docs build", "tools/build-docs.sh")
+EndProcedure
+
 Procedure.i MCP_Toolkit_RegisterTool(*registry.MCP_ToolRegistry, name.s, title.s, description.s, schema.s, *handler)
   If MCP_RegisterTool(*registry, name, title, description, schema) = #False
     ProcedureReturn #False
@@ -797,6 +1112,22 @@ Procedure.i MCP_Toolkit_Register(*dispatcher.JSONRPC_Dispatcher, *registry.MCP_T
   EndIf
 
   If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_PbpListTargetsName$, "PureBasic PBP Target List", "List committed .pbp project targets using repository-relative paths.", #MCP_Toolkit_PbpListTargetsSchema$, @MCP_Toolkit_PbpListTargetsHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_TestRunName$, "PureBasic Test Run", "Run ./tools/test.sh with bounded output and timeout controls.", #MCP_Toolkit_HarnessExecutionSchema$, @MCP_Toolkit_TestRunHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_BuildRunName$, "PureBasic Build Run", "Run ./tools/build.sh with bounded output and timeout controls.", #MCP_Toolkit_HarnessExecutionSchema$, @MCP_Toolkit_BuildRunHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_CheckName$, "PureBasic Check", "Run ./tools/check.sh with bounded output and timeout controls.", #MCP_Toolkit_HarnessExecutionSchema$, @MCP_Toolkit_CheckHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_DocsBuildName$, "PureBasic Docs Build", "Run ./tools/build-docs.sh with bounded output and timeout controls.", #MCP_Toolkit_HarnessExecutionSchema$, @MCP_Toolkit_DocsBuildHandler()) = #False
     ProcedureReturn #False
   EndIf
 

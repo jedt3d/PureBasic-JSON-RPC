@@ -71,19 +71,34 @@ Acceptance criteria:
 
 ## 002-harness-execution
 
-Status: planned
+Branch: `feature/mcp-toolkit-harness-execution`
+
+Status: completed
 
 Purpose:
 
 - Add bounded execution tools for build, test, docs, and check workflows.
 - Keep command execution explicit, bounded, and developer-facing.
 
-Candidate tools:
+Tools:
 
 - `purebasic/test/run`
 - `purebasic/build/run`
 - `purebasic/check`
 - `purebasic/docs/build`
+
+Acceptance criteria:
+
+- Execution tools map only to fixed repository harness scripts.
+- Tools support `dryRun`, `timeoutMs`, and `maxOutputBytes`.
+- Command output is bounded and reports truncation state.
+- Captured output replaces the configured project root with `.`.
+- Invalid timeout or output limit returns JSON-RPC `-32602`.
+- Toolkit probe covers dry-run command dispatch without recursively launching
+  `./tools/check.sh`.
+- PureUnit coverage validates registration, invalid options, dry-run output,
+  and the shared runner through a fast verifier command.
+- `./tools/check.sh` passes.
 
 ## 003-pair-development-records
 

@@ -48,6 +48,20 @@ ProcedureUnit ToolkitRegistersProjectIntelligenceTools()
   Assert(FindString(response, #MCP_Toolkit_PbpListTargetsName$, 1) > 0, "tools/list should include pbp target list.")
 EndProcedureUnit
 
+ProcedureUnit ToolkitRegistersHarnessExecutionTools()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/list\",\"id\":1}")
+
+  Assert(FindString(response, #MCP_Toolkit_TestRunName$, 1) > 0, "tools/list should include test run.")
+  Assert(FindString(response, #MCP_Toolkit_BuildRunName$, 1) > 0, "tools/list should include build run.")
+  Assert(FindString(response, #MCP_Toolkit_CheckName$, 1) > 0, "tools/list should include check.")
+  Assert(FindString(response, #MCP_Toolkit_DocsBuildName$, 1) > 0, "tools/list should include docs build.")
+EndProcedureUnit
+
 ProcedureUnit IncludeGraphContainsJsonRpcEdges()
   Protected text.s
 
@@ -56,6 +70,7 @@ ProcedureUnit IncludeGraphContainsJsonRpcEdges()
 
   Assert(FindString(text, "src/jsonrpc/jsonrpc.pbi -> version.pbi", 1) > 0, "Include graph should include the consolidated include.")
   Assert(FindString(text, "MCP/mcp-purebasic-toolkit/purebasic_toolkit_server.pb -> ../../src/jsonrpc/version.pbi", 1) > 0, "Include graph should include toolkit server includes.")
+  Assert(FindString(text, "purebasic_toolkit_tools.pbi -> PureBasic Include Graph", 1) = 0, "Include graph should not treat string literals as include directives.")
 EndProcedureUnit
 
 ProcedureUnit SymbolSearchFindsDispatcher()
@@ -98,4 +113,56 @@ ProcedureUnit SymbolSearchRequiresQuery()
   response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/symbol/search\",\"arguments\":{}},\"id\":2}")
 
   Assert(FindString(response, ~"\"code\":-32602", 1) > 0, "Missing query should return invalid params.")
+EndProcedureUnit
+
+ProcedureUnit HarnessCheckDryRunDescribesBoundedExecution()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/check\",\"arguments\":{\"dryRun\":true,\"timeoutMs\":30000,\"maxOutputBytes\":2000}},\"id\":3}")
+
+  Assert(FindString(response, ~"\"isError\":false", 1) > 0, "Dry-run check should not be an MCP tool error.")
+  Assert(FindString(response, "Command: ./tools/check.sh", 1) > 0, "Dry-run check should name the harness script.")
+  Assert(FindString(response, "Mode: dry-run", 1) > 0, "Dry-run check should report dry-run mode.")
+  Assert(FindString(response, WorkstationAbsolutePathMarker(), 1) = 0, "Dry-run check should avoid workstation-specific paths.")
+EndProcedureUnit
+
+ProcedureUnit HarnessOptionsRejectInvalidTimeout()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/docs/build\",\"arguments\":{\"timeoutMs\":5}},\"id\":4}")
+
+  Assert(FindString(response, ~"\"code\":-32602", 1) > 0, "Invalid timeout should return invalid params.")
+EndProcedureUnit
+
+ProcedureUnit HarnessOptionsRejectInvalidOutputLimit()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/build/run\",\"arguments\":{\"maxOutputBytes\":10}},\"id\":5}")
+
+  Assert(FindString(response, ~"\"code\":-32602", 1) > 0, "Invalid output limit should return invalid params.")
+EndProcedureUnit
+
+ProcedureUnit HarnessRunnerCanExecuteFastVerifier()
+  Protected options.MCP_Toolkit_HarnessOptions
+  Protected commandResult.MCP_Toolkit_HarnessResult
+
+  MCP_Toolkit_SetConfig(ToolkitRoot())
+  options\timeoutMs = 30000
+  options\maxOutputBytes = 4000
+  MCP_Toolkit_RunHarnessCommand("Path verifier", "tools/verify-paths.sh", @options, @commandResult)
+
+  Assert(commandResult\launched, "Harness runner should launch the fast verifier.")
+  Assert(commandResult\timedOut = #False, "Fast verifier should not time out.")
+  Assert(commandResult\exitCode = 0, "Fast verifier should exit successfully: " + commandResult\output)
+  Assert(FindString(commandResult\output, "Verified tracked files", 1) > 0, "Fast verifier output should be captured.")
+  Assert(FindString(commandResult\output, WorkstationAbsolutePathMarker(), 1) = 0, "Captured output should avoid workstation-specific paths.")
 EndProcedureUnit
