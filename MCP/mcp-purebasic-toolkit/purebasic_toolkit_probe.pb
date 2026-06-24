@@ -111,6 +111,21 @@ If FindString(response, #MCP_Toolkit_GithubReleaseDraftName$, 1) = 0
   End 1
 EndIf
 
+If FindString(response, #MCP_Toolkit_DocsCheckName$, 1) = 0
+  PrintN("tools/list is missing docs check")
+  End 1
+EndIf
+
+If FindString(response, #MCP_Toolkit_DocsUpdateRouteName$, 1) = 0
+  PrintN("tools/list is missing docs update route")
+  End 1
+EndIf
+
+If FindString(response, #MCP_Toolkit_MilestoneCreateName$, 1) = 0
+  PrintN("tools/list is missing milestone create")
+  End 1
+EndIf
+
 response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/project/inspect\",\"arguments\":{}},\"id\":2}")
 If FindString(response, "Toolkit milestones: yes", 1) = 0
   PrintN("project inspect did not find toolkit milestones")
@@ -204,6 +219,24 @@ EndIf
 response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/github/release-draft\",\"arguments\":{\"version\":\"0.1.0-alpha.next\",\"highlights\":\"Toolkit Git helpers\",\"verification\":\"./tools/check.sh\"}},\"id\":17}")
 If FindString(response, "GitHub Release Draft", 1) = 0 Or FindString(response, "No tag, release, or upload was created", 1) = 0
   PrintN("github release draft did not return a safe release draft")
+  End 1
+EndIf
+
+response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/docs/check\",\"arguments\":{\"route\":\"005-docs-and-milestone-automation\",\"track\":\"toolkit\"}},\"id\":18}")
+If FindString(response, "Documentation Route Check", 1) = 0 Or FindString(response, "Mode: read-only documentation audit", 1) = 0
+  PrintN("docs check did not return a read-only documentation audit")
+  End 1
+EndIf
+
+response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/docs/update-route\",\"arguments\":{\"route\":\"005-docs-and-milestone-automation\",\"track\":\"toolkit\",\"summary\":\"Add route documentation automation helpers.\"}},\"id\":19}")
+If FindString(response, "Documentation Route Update Draft", 1) = 0 Or FindString(response, "No tracked documentation file was modified", 1) = 0
+  PrintN("docs update route did not return a safe draft")
+  End 1
+EndIf
+
+response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/milestone/create\",\"arguments\":{\"route\":\"005-docs-and-milestone-automation\",\"track\":\"toolkit\",\"branch\":\"feature/mcp-toolkit-docs-milestone-automation\",\"purpose\":\"Automate route documentation checks without replacing human review.\"}},\"id\":20}")
+If FindString(response, "Milestone Draft: 005-docs-and-milestone-automation", 1) = 0 Or FindString(response, "No tracked milestone file was modified", 1) = 0
+  PrintN("milestone create did not return a safe milestone draft")
   End 1
 EndIf
 

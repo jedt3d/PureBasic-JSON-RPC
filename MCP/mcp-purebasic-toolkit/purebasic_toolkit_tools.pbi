@@ -20,6 +20,9 @@ XIncludeFile "../../src/jsonrpc/mcp_tools.pbi"
 #MCP_Toolkit_GitCommitSummaryName$ = "purebasic/git/commit-summary"
 #MCP_Toolkit_GithubPrDraftName$ = "purebasic/github/pr-draft"
 #MCP_Toolkit_GithubReleaseDraftName$ = "purebasic/github/release-draft"
+#MCP_Toolkit_DocsCheckName$ = "purebasic/docs/check"
+#MCP_Toolkit_DocsUpdateRouteName$ = "purebasic/docs/update-route"
+#MCP_Toolkit_MilestoneCreateName$ = "purebasic/milestone/create"
 
 #MCP_Toolkit_ProjectInspectSchema$ = ~"{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"
 #MCP_Toolkit_WorkflowBriefSchema$ = ~"{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"
@@ -36,6 +39,9 @@ XIncludeFile "../../src/jsonrpc/mcp_tools.pbi"
 #MCP_Toolkit_GitCommitSummarySchema$ = ~"{\"type\":\"object\",\"properties\":{\"messageHint\":{\"type\":\"string\"},\"scope\":{\"type\":\"string\"}},\"additionalProperties\":false}"
 #MCP_Toolkit_GithubPrDraftSchema$ = ~"{\"type\":\"object\",\"properties\":{\"title\":{\"type\":\"string\"},\"summary\":{\"type\":\"string\"},\"tests\":{\"type\":\"string\"},\"risks\":{\"type\":\"string\"},\"baseBranch\":{\"type\":\"string\"}},\"additionalProperties\":false}"
 #MCP_Toolkit_GithubReleaseDraftSchema$ = ~"{\"type\":\"object\",\"properties\":{\"version\":{\"type\":\"string\"},\"highlights\":{\"type\":\"string\"},\"verification\":{\"type\":\"string\"},\"knownLimitations\":{\"type\":\"string\"}},\"additionalProperties\":false}"
+#MCP_Toolkit_DocsCheckSchema$ = ~"{\"type\":\"object\",\"properties\":{\"route\":{\"type\":\"string\"},\"track\":{\"type\":\"string\"}},\"additionalProperties\":false}"
+#MCP_Toolkit_DocsUpdateRouteSchema$ = ~"{\"type\":\"object\",\"properties\":{\"route\":{\"type\":\"string\"},\"track\":{\"type\":\"string\"},\"summary\":{\"type\":\"string\"},\"publicApi\":{\"type\":\"string\"},\"docs\":{\"type\":\"string\"},\"save\":{\"type\":\"boolean\"},\"fileName\":{\"type\":\"string\"}},\"additionalProperties\":false}"
+#MCP_Toolkit_MilestoneCreateSchema$ = ~"{\"type\":\"object\",\"properties\":{\"route\":{\"type\":\"string\"},\"track\":{\"type\":\"string\"},\"branch\":{\"type\":\"string\"},\"status\":{\"type\":\"string\"},\"purpose\":{\"type\":\"string\"},\"tools\":{\"type\":\"string\"},\"acceptance\":{\"type\":\"string\"},\"save\":{\"type\":\"boolean\"},\"fileName\":{\"type\":\"string\"}},\"additionalProperties\":false}"
 
 #MCP_Toolkit_DefaultMaxScanResults = 80
 #MCP_Toolkit_DefaultCommandTimeoutMs = 300000
@@ -903,6 +909,229 @@ Procedure.s MCP_Toolkit_GithubReleaseDraftMarkdown(argumentsValue)
   ProcedureReturn text
 EndProcedure
 
+Procedure.s MCP_Toolkit_ReadDocsTrack(argumentsValue, *result.JSONRPC_HandlerResult)
+  Protected track.s
+
+  track = LCase(Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "track", "toolkit")))
+  If track = ""
+    track = "toolkit"
+  EndIf
+
+  If track <> "toolkit" And track <> "core"
+    MCP_Toolkit_SetInvalidParams(*result, "track must be either toolkit or core")
+    ProcedureReturn ""
+  EndIf
+
+  ProcedureReturn track
+EndProcedure
+
+Procedure.s MCP_Toolkit_MilestoneFileForTrack(track.s)
+  If track = "core"
+    ProcedureReturn "docs/milestones.md"
+  EndIf
+
+  ProcedureReturn "MCP/mcp-purebasic-toolkit/docs/milestones.md"
+EndProcedure
+
+Procedure.i MCP_Toolkit_TextFileContains(root.s, relativePath.s, needle.s)
+  Protected file.i
+  Protected line.s
+  Protected found.i
+
+  If root = ""
+    root = MCP_Toolkit_DefaultProjectRoot()
+  EndIf
+
+  If needle = ""
+    ProcedureReturn #False
+  EndIf
+
+  file = ReadFile(#PB_Any, MCP_Toolkit_Path(root, relativePath), #PB_UTF8)
+  If file = 0
+    ProcedureReturn #False
+  EndIf
+
+  While Eof(file) = 0
+    line = ReadString(file, #PB_UTF8)
+    If FindString(line, needle, 1) > 0
+      found = #True
+      Break
+    EndIf
+  Wend
+
+  CloseFile(file)
+  ProcedureReturn found
+EndProcedure
+
+Procedure.s MCP_Toolkit_PresenceLine(root.s, relativePath.s, label.s = "")
+  If label = ""
+    label = relativePath
+  EndIf
+
+  If MCP_Toolkit_FileExists(root, relativePath)
+    ProcedureReturn "- [x] " + label + " (`" + relativePath + "`)" + #LF$
+  EndIf
+
+  ProcedureReturn "- [ ] " + label + " (`" + relativePath + "`)" + #LF$
+EndProcedure
+
+Procedure.s MCP_Toolkit_DocsCheckMarkdown(argumentsValue, track.s)
+  Protected root.s = MCP_Toolkit_Config\projectRoot
+  Protected route.s
+  Protected milestoneFile.s
+  Protected text.s
+
+  If root = ""
+    root = MCP_Toolkit_DefaultProjectRoot()
+  EndIf
+
+  route = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "route", "current route"))
+  If route = ""
+    route = "current route"
+  EndIf
+
+  milestoneFile = MCP_Toolkit_MilestoneFileForTrack(track)
+
+  text = "# Documentation Route Check" + #LF$ + #LF$
+  text + "Mode: read-only documentation audit. No tracked file was modified." + #LF$ + #LF$
+  text + "Route: `" + MCP_Toolkit_RecordField(route) + "`" + #LF$
+  text + "Track: `" + track + "`" + #LF$
+  text + "Milestone file: `" + milestoneFile + "`" + #LF$ + #LF$
+
+  text + "## Source-Of-Truth Files" + #LF$
+  text + MCP_Toolkit_PresenceLine(root, "AGENTS.md", "agent workflow")
+  text + MCP_Toolkit_PresenceLine(root, "docs/guideline.md", "project guideline")
+  text + MCP_Toolkit_PresenceLine(root, "docs/project-request.md", "project request")
+  text + MCP_Toolkit_PresenceLine(root, "docs/index.md", "ReadTheDocs/Sphinx entry")
+  text + MCP_Toolkit_PresenceLine(root, "docs/release-notes.md", "release notes")
+  text + MCP_Toolkit_PresenceLine(root, milestoneFile, "milestone log")
+
+  If track = "core"
+    text + MCP_Toolkit_PresenceLine(root, "API/index.md", "API index")
+    text + MCP_Toolkit_PresenceLine(root, "docs/api.md", "docs API bridge")
+  Else
+    text + MCP_Toolkit_PresenceLine(root, "MCP/mcp-purebasic-toolkit/README.md", "toolkit README")
+    text + MCP_Toolkit_PresenceLine(root, "MCP/mcp-purebasic-toolkit/docs/architecture.md", "toolkit architecture")
+    text + MCP_Toolkit_PresenceLine(root, "MCP/mcp-purebasic-toolkit/docs/workflow.md", "toolkit workflow")
+    text + MCP_Toolkit_PresenceLine(root, "docs/mcp-purebasic-toolkit.md", "Sphinx toolkit bridge")
+  EndIf
+
+  text + #LF$ + "## Route Mentions" + #LF$
+  text + "- Milestone mentions route: " + MCP_Toolkit_YesNo(MCP_Toolkit_TextFileContains(root, milestoneFile, route)) + #LF$
+  text + "- Release notes mention route: " + MCP_Toolkit_YesNo(MCP_Toolkit_TextFileContains(root, "docs/release-notes.md", route)) + #LF$
+  text + "- Sphinx toolkit bridge mentions route: " + MCP_Toolkit_YesNo(MCP_Toolkit_TextFileContains(root, "docs/mcp-purebasic-toolkit.md", route)) + #LF$
+
+  text + #LF$ + "## Required Human Review" + #LF$
+  text + "- Confirm route docs describe behavior, tests, risks, and limitations." + #LF$
+  text + "- Confirm milestone status matches implementation reality." + #LF$
+  text + "- Confirm major docs are present in `docs/index.md` when needed." + #LF$
+  text + "- Confirm no workstation-specific absolute paths are introduced." + #LF$
+  text + "- Confirm generated PDFs/packages are rebuilt, not assumed current." + #LF$
+
+  text + #LF$ + "## Verification Commands" + #LF$
+  text + "- `./tools/verify-docs.sh`" + #LF$
+  text + "- `./tools/verify-paths.sh`" + #LF$
+  text + "- `./tools/build-docs.sh`" + #LF$
+  text + "- `./tools/check.sh`" + #LF$
+
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_Toolkit_DocsUpdateRouteMarkdown(argumentsValue, track.s)
+  Protected route.s
+  Protected summary.s
+  Protected publicApi.s
+  Protected docs.s
+  Protected milestoneFile.s
+  Protected text.s
+
+  route = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "route", "current route"))
+  If route = ""
+    route = "current route"
+  EndIf
+
+  summary = MCP_Toolkit_RecordField(MCP_Toolkit_ReadArgumentString(argumentsValue, "summary"))
+  publicApi = MCP_Toolkit_RecordField(MCP_Toolkit_ReadArgumentString(argumentsValue, "publicApi"))
+  docs = MCP_Toolkit_RecordField(MCP_Toolkit_ReadArgumentString(argumentsValue, "docs"))
+  milestoneFile = MCP_Toolkit_MilestoneFileForTrack(track)
+
+  text = "# Documentation Route Update Draft" + #LF$ + #LF$
+  text + "Mode: draft text only. No tracked documentation file was modified." + #LF$ + #LF$
+  text + "Route: `" + MCP_Toolkit_RecordField(route) + "`" + #LF$
+  text + "Track: `" + track + "`" + #LF$
+  text + "Milestone file: `" + milestoneFile + "`" + #LF$ + #LF$
+  text + "## Summary" + #LF$ + summary + #LF$ + #LF$
+  text + "## Public API Impact" + #LF$ + publicApi + #LF$ + #LF$
+  text + "## Requested Docs Notes" + #LF$ + docs + #LF$ + #LF$
+  text + "## Default Files To Review" + #LF$
+
+  If track = "core"
+    text + "- `API/index.md` and a route-specific API page when public API changes." + #LF$
+    text + "- `docs/api.md` for the API bridge." + #LF$
+    text + "- `docs/milestones.md` for numbered core milestones." + #LF$
+  Else
+    text + "- `MCP/mcp-purebasic-toolkit/docs/milestones.md` for toolkit milestones." + #LF$
+    text + "- `MCP/mcp-purebasic-toolkit/README.md` for tool inventory and usage." + #LF$
+    text + "- `MCP/mcp-purebasic-toolkit/docs/architecture.md` and `workflow.md` for design and process." + #LF$
+    text + "- `docs/mcp-purebasic-toolkit.md` for the Sphinx bridge." + #LF$
+  EndIf
+
+  text + "- `docs/release-notes.md` for route-visible changes." + #LF$
+  text + "- `docs/index.md` when adding or moving major docs." + #LF$
+  text + "- `AGENTS.md` when the agent workflow contract changes." + #LF$
+  text + #LF$ + "## Completion Checklist" + #LF$
+  text + "- Docs and milestones agree with code, tests, examples, and harness behavior." + #LF$
+  text + "- Path references are repository-relative in tracked source and docs." + #LF$
+  text + "- `./tools/verify-docs.sh` and `./tools/build-docs.sh` pass before final check." + #LF$
+  text + "- `./tools/check.sh` passes before merge or push." + #LF$
+
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_Toolkit_MilestoneCreateMarkdown(argumentsValue, track.s)
+  Protected route.s
+  Protected branch.s
+  Protected status.s
+  Protected purpose.s
+  Protected tools.s
+  Protected acceptance.s
+  Protected milestoneFile.s
+  Protected text.s
+
+  route = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "route", "untitled-route"))
+  If route = ""
+    route = "untitled-route"
+  EndIf
+
+  branch = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "branch", "feature/" + route))
+  status = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "status", "planned"))
+  purpose = MCP_Toolkit_RecordField(MCP_Toolkit_ReadArgumentString(argumentsValue, "purpose"))
+  tools = MCP_Toolkit_RecordField(MCP_Toolkit_ReadArgumentString(argumentsValue, "tools"))
+  acceptance = MCP_Toolkit_RecordField(MCP_Toolkit_ReadArgumentString(argumentsValue, "acceptance"))
+  milestoneFile = MCP_Toolkit_MilestoneFileForTrack(track)
+
+  text = "# Milestone Draft: " + route + #LF$ + #LF$
+  text + "Mode: draft text only. No tracked milestone file was modified." + #LF$ + #LF$
+  text + "Track: `" + track + "`" + #LF$
+  text + "Milestone file: `" + milestoneFile + "`" + #LF$ + #LF$
+  text + "## " + route + #LF$ + #LF$
+  text + "Branch: `" + MCP_Toolkit_RecordField(branch) + "`" + #LF$ + #LF$
+  text + "Status: " + MCP_Toolkit_RecordField(status) + #LF$ + #LF$
+  text + "Purpose:" + #LF$ + #LF$
+  text + purpose + #LF$ + #LF$
+  text + "Tools or surface:" + #LF$ + #LF$
+  text + tools + #LF$ + #LF$
+  text + "Acceptance criteria:" + #LF$ + #LF$
+  text + acceptance + #LF$ + #LF$
+  text + "- Route has focused PureUnit coverage or documented docs-only verification." + #LF$
+  text + "- Probe or smoke input covers any MCP-facing behavior." + #LF$
+  text + "- Docs, release notes, and milestone file are updated in the same route." + #LF$
+  text + "- `./tools/verify-docs.sh`, `./tools/verify-paths.sh`, and `./tools/check.sh` pass." + #LF$
+  text + #LF$ + "Copy this draft into `" + milestoneFile + "` only after human review." + #LF$
+
+  ProcedureReturn text
+EndProcedure
+
 Procedure.s MCP_Toolkit_ScanIncludesInFile(root.s, relativePath.s, *state.MCP_Toolkit_ScanState)
   Protected file.i
   Protected line.s
@@ -1345,6 +1574,7 @@ Procedure.s MCP_Toolkit_WorkflowBriefText()
   text + "- Run ./tools/check.sh before merge or push." + #LF$
   text + "- Use purebasic/git/preflight and purebasic/git/commit-summary before committing." + #LF$
   text + "- Use purebasic/github/pr-draft or purebasic/github/release-draft as draft text only." + #LF$
+  text + "- Use purebasic/docs/check before final verification to catch route-doc gaps." + #LF$
   text + "- Use no-fast-forward merges for route history when appropriate." + #LF$
   text + #LF$
   text + "Default lesson learned rules:" + #LF$
@@ -1379,6 +1609,9 @@ Procedure.s MCP_Toolkit_HarnessChecklistText()
   text + "- purebasic/build/run -> ./tools/build.sh" + #LF$
   text + "- purebasic/check -> ./tools/check.sh" + #LF$
   text + "- purebasic/docs/build -> ./tools/build-docs.sh" + #LF$
+  text + "- purebasic/docs/check -> read-only route documentation audit" + #LF$
+  text + "- purebasic/docs/update-route -> route documentation update draft" + #LF$
+  text + "- purebasic/milestone/create -> milestone entry draft" + #LF$
   text + "- use dryRun first when a human wants to review a long-running command" + #LF$
   text + "- output is bounded and the configured project root is reported as ." + #LF$
   text + #LF$
@@ -1509,6 +1742,41 @@ Procedure.i MCP_Toolkit_GithubReleaseDraftHandler(argumentsValue, *context.JSONR
   ProcedureReturn #True
 EndProcedure
 
+Procedure.i MCP_Toolkit_DocsCheckHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  Protected track.s
+
+  track = MCP_Toolkit_ReadDocsTrack(argumentsValue, *result)
+  If track = ""
+    ProcedureReturn #True
+  EndIf
+
+  *result\ok = #True
+  *result\resultJson = MCP_Tools_TextResult(MCP_Toolkit_DocsCheckMarkdown(argumentsValue, track))
+  ProcedureReturn #True
+EndProcedure
+
+Procedure.i MCP_Toolkit_DocsUpdateRouteHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  Protected track.s
+
+  track = MCP_Toolkit_ReadDocsTrack(argumentsValue, *result)
+  If track = ""
+    ProcedureReturn #True
+  EndIf
+
+  ProcedureReturn MCP_Toolkit_SetRecordToolResult(argumentsValue, *result, "routes", "route", MCP_Toolkit_DocsUpdateRouteMarkdown(argumentsValue, track))
+EndProcedure
+
+Procedure.i MCP_Toolkit_MilestoneCreateHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  Protected track.s
+
+  track = MCP_Toolkit_ReadDocsTrack(argumentsValue, *result)
+  If track = ""
+    ProcedureReturn #True
+  EndIf
+
+  ProcedureReturn MCP_Toolkit_SetRecordToolResult(argumentsValue, *result, "milestones", "milestone", MCP_Toolkit_MilestoneCreateMarkdown(argumentsValue, track))
+EndProcedure
+
 Procedure.i MCP_Toolkit_RegisterTool(*registry.MCP_ToolRegistry, name.s, title.s, description.s, schema.s, *handler)
   If MCP_RegisterTool(*registry, name, title, description, schema) = #False
     ProcedureReturn #False
@@ -1591,6 +1859,18 @@ Procedure.i MCP_Toolkit_Register(*dispatcher.JSONRPC_Dispatcher, *registry.MCP_T
   EndIf
 
   If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_GithubReleaseDraftName$, "PureBasic GitHub Release Draft", "Draft release notes and an artifact checklist without tagging, uploading, or creating a GitHub release.", #MCP_Toolkit_GithubReleaseDraftSchema$, @MCP_Toolkit_GithubReleaseDraftHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_DocsCheckName$, "PureBasic Docs Check", "Return a read-only documentation route audit for core or toolkit work without modifying tracked files.", #MCP_Toolkit_DocsCheckSchema$, @MCP_Toolkit_DocsCheckHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_DocsUpdateRouteName$, "PureBasic Docs Update Route", "Draft route documentation updates for API docs, milestones, Sphinx navigation, release notes, and workflow docs.", #MCP_Toolkit_DocsUpdateRouteSchema$, @MCP_Toolkit_DocsUpdateRouteHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_MilestoneCreateName$, "PureBasic Milestone Create", "Draft a core or toolkit milestone entry without editing the tracked milestone file automatically.", #MCP_Toolkit_MilestoneCreateSchema$, @MCP_Toolkit_MilestoneCreateHandler()) = #False
     ProcedureReturn #False
   EndIf
 

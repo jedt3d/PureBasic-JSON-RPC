@@ -40,6 +40,11 @@ Confirm:
 - ReadTheDocs navigation includes new major docs
 - package manifest includes current API, docs, examples, tests, tools, and project files
 
+When the MCP toolkit is available, run or request `purebasic/docs/check` for the
+route and use `purebasic/docs/update-route` or `purebasic/milestone/create` to
+draft any missing release documentation. Promote those drafts into tracked docs
+only after human review.
+
 ## Final Evidence
 
 Report:

@@ -10,3 +10,5 @@
 {"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/decision-record/create","arguments":{"title":"Keep generated records local","decision":"Save generated toolkit records under .local until a human promotes them."}},"id":9}
 {"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/git/preflight","arguments":{"baseBranch":"main"}},"id":10}
 {"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/github/pr-draft","arguments":{"title":"Toolkit Git workflow","summary":"Add read-only Git workflow helpers.","tests":"./tools/check.sh"}},"id":11}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/docs/check","arguments":{"route":"005-docs-and-milestone-automation","track":"toolkit"}},"id":12}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/milestone/create","arguments":{"route":"005-docs-and-milestone-automation","track":"toolkit","branch":"feature/mcp-toolkit-docs-milestone-automation","purpose":"Automate route documentation checks without replacing human review."}},"id":13}

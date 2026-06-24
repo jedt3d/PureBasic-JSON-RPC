@@ -126,6 +126,23 @@ The MCP toolkit exposes `purebasic/docs/build` for the same documentation build
 path. Use `dryRun: true` first when the user wants to review the command before
 execution.
 
+Use the route documentation helpers before final verification:
+
+- `purebasic/docs/check` audits the current route against the expected
+  source-of-truth files. It is read-only and reports required verification
+  commands such as `./tools/verify-docs.sh`, `./tools/verify-paths.sh`,
+  `./tools/build-docs.sh`, and `./tools/check.sh`.
+- `purebasic/docs/update-route` drafts the documentation update plan for a core
+  or toolkit route. It should be treated as a checklist for human editing, not
+  as an automatic patch.
+- `purebasic/milestone/create` drafts a milestone entry for either
+  `docs/milestones.md` or
+  `MCP/mcp-purebasic-toolkit/docs/milestones.md`.
+
+Draft tools may save Markdown under `.local/mcp-purebasic-toolkit/records/`
+when `save: true` is supplied. They never modify tracked source-of-truth files
+directly.
+
 ## Harness Execution Through MCP
 
 The toolkit can run the fixed repository harness commands:
@@ -134,6 +151,9 @@ The toolkit can run the fixed repository harness commands:
 - `purebasic/build/run` -> `./tools/build.sh`
 - `purebasic/check` -> `./tools/check.sh`
 - `purebasic/docs/build` -> `./tools/build-docs.sh`
+- `purebasic/docs/check` -> read-only route documentation audit
+- `purebasic/docs/update-route` -> route documentation update draft
+- `purebasic/milestone/create` -> milestone entry draft
 
 Each execution tool accepts:
 
