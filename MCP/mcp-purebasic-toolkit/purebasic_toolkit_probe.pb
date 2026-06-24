@@ -126,6 +126,26 @@ If FindString(response, #MCP_Toolkit_MilestoneCreateName$, 1) = 0
   End 1
 EndIf
 
+If FindString(response, #MCP_Toolkit_McpNewServerName$, 1) = 0
+  PrintN("tools/list is missing MCP new server")
+  End 1
+EndIf
+
+If FindString(response, #MCP_Toolkit_McpAddToolName$, 1) = 0
+  PrintN("tools/list is missing MCP add tool")
+  End 1
+EndIf
+
+If FindString(response, #MCP_Toolkit_McpProbeName$, 1) = 0
+  PrintN("tools/list is missing MCP probe")
+  End 1
+EndIf
+
+If FindString(response, #MCP_Toolkit_McpValidateStdioName$, 1) = 0
+  PrintN("tools/list is missing MCP stdio validator")
+  End 1
+EndIf
+
 response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/project/inspect\",\"arguments\":{}},\"id\":2}")
 If FindString(response, "Toolkit milestones: yes", 1) = 0
   PrintN("project inspect did not find toolkit milestones")
@@ -237,6 +257,30 @@ EndIf
 response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/milestone/create\",\"arguments\":{\"route\":\"005-docs-and-milestone-automation\",\"track\":\"toolkit\",\"branch\":\"feature/mcp-toolkit-docs-milestone-automation\",\"purpose\":\"Automate route documentation checks without replacing human review.\"}},\"id\":20}")
 If FindString(response, "Milestone Draft: 005-docs-and-milestone-automation", 1) = 0 Or FindString(response, "No tracked milestone file was modified", 1) = 0
   PrintN("milestone create did not return a safe milestone draft")
+  End 1
+EndIf
+
+response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/mcp/new-server\",\"arguments\":{\"serverName\":\"toolkit-demo-server\",\"toolName\":\"toolkit/demo\",\"projectDir\":\"MCP/toolkit-demo\"}},\"id\":21}")
+If FindString(response, "MCP Server Scaffold Draft: toolkit-demo-server", 1) = 0 Or FindString(response, "Console .pbp Checklist", 1) = 0
+  PrintN("MCP new server did not return a scaffold draft")
+  End 1
+EndIf
+
+response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/mcp/add-tool\",\"arguments\":{\"toolName\":\"toolkit/demo\",\"title\":\"Toolkit Demo\",\"description\":\"Demonstrate a toolkit MCP tool.\"}},\"id\":22}")
+If FindString(response, "MCP Tool Implementation Draft: toolkit/demo", 1) = 0 Or FindString(response, "FreeJSON", 1) = 0
+  PrintN("MCP add tool did not return a handler draft")
+  End 1
+EndIf
+
+response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/mcp/probe\",\"arguments\":{\"serverName\":\"toolkit-demo-server\",\"toolName\":\"toolkit/demo\",\"argumentsJson\":\"{}\"}},\"id\":23}")
+If FindString(response, "MCP Stdio Probe Draft: toolkit-demo-server", 1) = 0 Or FindString(response, "tools/call", 1) = 0
+  PrintN("MCP probe did not return jsonl probe guidance")
+  End 1
+EndIf
+
+response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/mcp/validate-stdio\",\"arguments\":{\"transcript\":\"{\\\"jsonrpc\\\":\\\"2.0\\\",\\\"method\\\":\\\"initialize\\\",\\\"id\\\":1}\\n{\\\"jsonrpc\\\":\\\"2.0\\\",\\\"method\\\":\\\"tools/list\\\",\\\"id\\\":2}\"}},\"id\":24}")
+If FindString(response, "Valid: yes", 1) = 0 Or FindString(response, "Messages: 2", 1) = 0
+  PrintN("MCP stdio validator did not accept a valid transcript")
   End 1
 EndIf
 

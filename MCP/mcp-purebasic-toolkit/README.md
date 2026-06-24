@@ -15,6 +15,8 @@ Git/GitHub workflow tools inspect local Git state and draft text only; they do
 not commit, push, tag, open pull requests, or create releases.
 Documentation and milestone automation tools audit and draft route updates, but
 they do not edit tracked source-of-truth documents automatically.
+MCP authoring tools draft new stdio server scaffolds, tool handlers, probe
+input, and transcript validation reports without writing tracked source files.
 
 ## Current Tools
 
@@ -60,6 +62,14 @@ they do not edit tracked source-of-truth documents automatically.
 - `purebasic/docs/update-route` - draft the documentation updates a route
   should make before final verification.
 - `purebasic/milestone/create` - draft a core or toolkit milestone entry.
+- `purebasic/mcp/new-server` - draft a PureBasic stdio MCP server scaffold with
+  console `.pbp`, probe, docs, tests, and safety checklist.
+- `purebasic/mcp/add-tool` - draft a new MCP tool handler, input schema,
+  registration pattern, result policy, and tests.
+- `purebasic/mcp/probe` - draft newline-delimited JSON-RPC probe input for a
+  PureBasic MCP stdio server.
+- `purebasic/mcp/validate-stdio` - validate an MCP stdio transcript for
+  LF-delimited JSON-RPC object messages and reject `Content-Length` framing.
 
 ## Build
 
@@ -168,6 +178,28 @@ These tools return MCP text by default. Draft tools may save under
 `.local/mcp-purebasic-toolkit/records/` when `save: true` is supplied. They do
 not mutate `docs/milestones.md`, `MCP/mcp-purebasic-toolkit/docs/milestones.md`,
 or other tracked documentation files; a human reviewer must promote the text.
+
+## MCP Authoring Kit
+
+The authoring kit helps create real PureBasic MCP servers consistently:
+
+- `purebasic/mcp/new-server` returns a scaffold plan for a stdio console server,
+  expected files, `.pbp` target checklist, lifecycle/tool registration skeleton,
+  probe flow, and verification commands.
+- `purebasic/mcp/add-tool` returns a handler and registration draft for one MCP
+  tool, including invalid-params behavior, MCP `isError` policy, bounded output,
+  and JSON ownership checks.
+- `purebasic/mcp/probe` returns JSONL-style probe input for `initialize`,
+  `notifications/initialized`, `tools/list`, and `tools/call`.
+- `purebasic/mcp/validate-stdio` checks transcript text before it is trusted:
+  each non-empty LF-delimited line must parse as a JSON-RPC 2.0 object message,
+  and `Content-Length` framing is rejected because MCP stdio is newline
+  delimited.
+
+Draft tools can save under
+`.local/mcp-purebasic-toolkit/records/mcp-authoring/` when `save: true` is
+supplied. They intentionally do not create tracked server source files; a human
+or implementation route should promote reviewed drafts into a real project.
 
 ## Skills
 

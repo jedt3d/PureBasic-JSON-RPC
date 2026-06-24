@@ -104,11 +104,17 @@ Some tools still need real system paths at runtime. The PureBasic installation p
 
 - PureBasic version must be `6.40`.
 - PureUnit must come from the PureBasic SDK.
-- `tools/test.sh` runs every `tests/unit/*.pb` file by default so new tests are not silently skipped.
-- `tools/test.sh` treats the PureUnit HTML report as completion evidence when
+- `tools/test.sh` runs every `tests/unit/*.pb` file by default so new tests are
+  not silently skipped. In multi-file mode it runs PureUnit one test file at a
+  time and writes a summary report at `.reports/pureunit/index.html`.
+- `tools/test.sh` treats each PureUnit HTML report as completion evidence when
   it says all tests completed with zero failures. If PureUnit leaves a standby
   compiler process running after that successful report, the script cleans up
   the stalled process so `tools/check.sh` can continue.
+- `tools/test.sh` also guards pre-report PureUnit hangs with
+  `PUREUNIT_TIMEOUT_SECONDS` and `PUREUNIT_RETRY_LIMIT`. The defaults are
+  60 seconds per attempt and three attempts, which keeps `tools/check.sh` from
+  waiting forever while still retrying transient standby compiler stalls.
 - `tools/verify-paths.sh` must pass so tracked files do not commit workstation-specific absolute paths.
 - `tools/verify-release-artifacts.sh` must pass after packaging so release
   artifacts and dist manifests match the current tree.

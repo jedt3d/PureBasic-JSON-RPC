@@ -143,6 +143,41 @@ Draft tools may save Markdown under `.local/mcp-purebasic-toolkit/records/`
 when `save: true` is supplied. They never modify tracked source-of-truth files
 directly.
 
+## MCP Server Authoring
+
+Use the MCP authoring tools when a route creates or extends a real PureBasic
+MCP stdio server:
+
+- `purebasic/mcp/new-server` drafts the server shape: console `.pbp`, stdio
+  entrypoint, tool include, README, probe input, PureUnit tests, safety notes,
+  and verification commands.
+- `purebasic/mcp/add-tool` drafts one tool contract: name, title, description,
+  input schema, handler pattern, registration pattern, result policy, invalid
+  parameter behavior, and memory ownership checklist.
+- `purebasic/mcp/probe` drafts newline-delimited JSON-RPC probe input covering
+  `initialize`, `notifications/initialized`, `tools/list`, and `tools/call`.
+- `purebasic/mcp/validate-stdio` validates probe or captured transcript text
+  before treating it as a good MCP stdio sample.
+
+Recommended route:
+
+1. Interview and decide the server goal, allowed roots, target platform, and
+   tool safety policy.
+2. Draft a server with `purebasic/mcp/new-server`.
+3. Draft each tool with `purebasic/mcp/add-tool`.
+4. Ask the human to review policy choices before creating tracked source files.
+5. Add `.pbp`, PureUnit tests, probe input, README, and any API/docs route
+   updates in the implementation branch.
+6. Run `purebasic/mcp/probe` and then `purebasic/mcp/validate-stdio` against the
+   actual probe text.
+7. Run the compiled dispatcher probe, stdio smoke probe, docs verifier, path
+   verifier, and `./tools/check.sh`.
+
+The authoring draft tools may save under
+`.local/mcp-purebasic-toolkit/records/mcp-authoring/` when `save: true` is
+provided. Saved drafts are working notes; they are not the implementation and
+should not be committed unless a human intentionally promotes them.
+
 ## Harness Execution Through MCP
 
 The toolkit can run the fixed repository harness commands:
@@ -154,6 +189,7 @@ The toolkit can run the fixed repository harness commands:
 - `purebasic/docs/check` -> read-only route documentation audit
 - `purebasic/docs/update-route` -> route documentation update draft
 - `purebasic/milestone/create` -> milestone entry draft
+- `purebasic/mcp/validate-stdio` -> MCP stdio transcript validation
 
 Each execution tool accepts:
 

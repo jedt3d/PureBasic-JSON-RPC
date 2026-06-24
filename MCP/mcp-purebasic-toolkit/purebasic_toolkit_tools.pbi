@@ -23,6 +23,10 @@ XIncludeFile "../../src/jsonrpc/mcp_tools.pbi"
 #MCP_Toolkit_DocsCheckName$ = "purebasic/docs/check"
 #MCP_Toolkit_DocsUpdateRouteName$ = "purebasic/docs/update-route"
 #MCP_Toolkit_MilestoneCreateName$ = "purebasic/milestone/create"
+#MCP_Toolkit_McpNewServerName$ = "purebasic/mcp/new-server"
+#MCP_Toolkit_McpAddToolName$ = "purebasic/mcp/add-tool"
+#MCP_Toolkit_McpProbeName$ = "purebasic/mcp/probe"
+#MCP_Toolkit_McpValidateStdioName$ = "purebasic/mcp/validate-stdio"
 
 #MCP_Toolkit_ProjectInspectSchema$ = ~"{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"
 #MCP_Toolkit_WorkflowBriefSchema$ = ~"{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"
@@ -42,6 +46,10 @@ XIncludeFile "../../src/jsonrpc/mcp_tools.pbi"
 #MCP_Toolkit_DocsCheckSchema$ = ~"{\"type\":\"object\",\"properties\":{\"route\":{\"type\":\"string\"},\"track\":{\"type\":\"string\"}},\"additionalProperties\":false}"
 #MCP_Toolkit_DocsUpdateRouteSchema$ = ~"{\"type\":\"object\",\"properties\":{\"route\":{\"type\":\"string\"},\"track\":{\"type\":\"string\"},\"summary\":{\"type\":\"string\"},\"publicApi\":{\"type\":\"string\"},\"docs\":{\"type\":\"string\"},\"save\":{\"type\":\"boolean\"},\"fileName\":{\"type\":\"string\"}},\"additionalProperties\":false}"
 #MCP_Toolkit_MilestoneCreateSchema$ = ~"{\"type\":\"object\",\"properties\":{\"route\":{\"type\":\"string\"},\"track\":{\"type\":\"string\"},\"branch\":{\"type\":\"string\"},\"status\":{\"type\":\"string\"},\"purpose\":{\"type\":\"string\"},\"tools\":{\"type\":\"string\"},\"acceptance\":{\"type\":\"string\"},\"save\":{\"type\":\"boolean\"},\"fileName\":{\"type\":\"string\"}},\"additionalProperties\":false}"
+#MCP_Toolkit_McpNewServerSchema$ = ~"{\"type\":\"object\",\"properties\":{\"serverName\":{\"type\":\"string\"},\"toolName\":{\"type\":\"string\"},\"toolDescription\":{\"type\":\"string\"},\"projectDir\":{\"type\":\"string\"},\"save\":{\"type\":\"boolean\"},\"fileName\":{\"type\":\"string\"}},\"additionalProperties\":false}"
+#MCP_Toolkit_McpAddToolSchema$ = ~"{\"type\":\"object\",\"properties\":{\"toolName\":{\"type\":\"string\"},\"title\":{\"type\":\"string\"},\"description\":{\"type\":\"string\"},\"inputSchema\":{\"type\":\"string\"},\"resultShape\":{\"type\":\"string\"},\"save\":{\"type\":\"boolean\"},\"fileName\":{\"type\":\"string\"}},\"additionalProperties\":false}"
+#MCP_Toolkit_McpProbeSchema$ = ~"{\"type\":\"object\",\"properties\":{\"serverName\":{\"type\":\"string\"},\"toolName\":{\"type\":\"string\"},\"argumentsJson\":{\"type\":\"string\"},\"protocolVersion\":{\"type\":\"string\"},\"save\":{\"type\":\"boolean\"},\"fileName\":{\"type\":\"string\"}},\"additionalProperties\":false}"
+#MCP_Toolkit_McpValidateStdioSchema$ = ~"{\"type\":\"object\",\"properties\":{\"transcript\":{\"type\":\"string\"}},\"required\":[\"transcript\"],\"additionalProperties\":false}"
 
 #MCP_Toolkit_DefaultMaxScanResults = 80
 #MCP_Toolkit_DefaultCommandTimeoutMs = 300000
@@ -1132,6 +1140,295 @@ Procedure.s MCP_Toolkit_MilestoneCreateMarkdown(argumentsValue, track.s)
   ProcedureReturn text
 EndProcedure
 
+Procedure.s MCP_Toolkit_McpDisplayValue(argumentsValue, name.s, defaultValue.s)
+  Protected value.s
+
+  value = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, name, defaultValue))
+  If value = ""
+    ProcedureReturn defaultValue
+  EndIf
+
+  ProcedureReturn value
+EndProcedure
+
+Procedure.s MCP_Toolkit_McpNewServerMarkdown(argumentsValue)
+  Protected serverName.s
+  Protected toolName.s
+  Protected toolDescription.s
+  Protected projectDir.s
+  Protected text.s
+
+  serverName = MCP_Toolkit_McpDisplayValue(argumentsValue, "serverName", "purebasic-tool-server")
+  toolName = MCP_Toolkit_McpDisplayValue(argumentsValue, "toolName", "purebasic/example")
+  toolDescription = MCP_Toolkit_McpDisplayValue(argumentsValue, "toolDescription", "Run a focused PureBasic developer task.")
+  projectDir = MCP_Toolkit_McpDisplayValue(argumentsValue, "projectDir", "MCP/my-server")
+
+  text = "# MCP Server Scaffold Draft: " + serverName + #LF$ + #LF$
+  text + "Mode: authoring draft only. No tracked files were created or modified." + #LF$ + #LF$
+  text + "Project directory: `" + projectDir + "`" + #LF$
+  text + "First tool: `" + toolName + "`" + #LF$
+  text + "Tool description: " + MCP_Toolkit_RecordField(toolDescription) + #LF$ + #LF$
+  text + "## Senior-Architect Plan" + #LF$
+  text + "- Build a PureBasic console application controlled by a committed `.pbp` file." + #LF$
+  text + "- Use `MCP_RegisterLifecycle()`, `MCP_RegisterTool()`, `MCP_RegisterToolHandler()`, `MCP_RegisterToolsList()`, and `MCP_RegisterToolsCall()`." + #LF$
+  text + "- Keep the server stdio-only for v1: stdout is protocol output and stderr is diagnostics." + #LF$
+  text + "- Keep all user-provided paths repository-relative or inside an explicit allowed root." + #LF$
+  text + "- Add PureUnit coverage and a `.ndjson` smoke probe before calling the server ready." + #LF$ + #LF$
+  text + "## File Layout" + #LF$
+  text + "- `" + projectDir + "/" + serverName + "_server.pb` - stdio entrypoint." + #LF$
+  text + "- `" + projectDir + "/" + serverName + "_tools.pbi` - tool registration and handlers." + #LF$
+  text + "- `" + projectDir + "/" + serverName + ".pbp` - Console target metadata." + #LF$
+  text + "- `" + projectDir + "/probe_smoke_input.ndjson` - initialize, initialized, tools/list, and tools/call probe." + #LF$
+  text + "- `" + projectDir + "/README.md` - build, run, register, and safety notes." + #LF$ + #LF$
+  text + "## Entrypoint Skeleton" + #LF$
+  text + "```purebasic" + #LF$
+  text + "EnableExplicit" + #LF$
+  text + "XIncludeFile " + #DQUOTE$ + "../../src/jsonrpc/mcp_stdio_runtime.pbi" + #DQUOTE$ + #LF$
+  text + "XIncludeFile " + #DQUOTE$ + serverName + "_tools.pbi" + #DQUOTE$ + #LF$
+  text + "Define dispatcher.JSONRPC_Dispatcher, registry.MCP_ToolRegistry, server.MCP_ServerInfo" + #LF$
+  text + "JSONRPC_Dispatcher_Init(@dispatcher)" + #LF$
+  text + "MCP_ToolRegistry_Init(@registry)" + #LF$
+  text + "MCP_ServerInfo_Init(@server, " + #DQUOTE$ + serverName + #DQUOTE$ + ", JSONRPC_LibraryVersion(), " + #DQUOTE$ + serverName + #DQUOTE$ + ", " + #DQUOTE$ + toolDescription + #DQUOTE$ + ")" + #LF$
+  text + "MCP_RegisterLifecycle(@dispatcher, @server)" + #LF$
+  text + "RegisterProjectTools(@dispatcher, @registry)" + #LF$
+  text + "MCP_StdioRuntime_Run(@dispatcher)" + #LF$
+  text + "```" + #LF$ + #LF$
+  text + "## Console .pbp Checklist" + #LF$
+  text + "- Target format is `console`." + #LF$
+  text + "- Input file points to the server entrypoint." + #LF$
+  text + "- Output path is repository-relative under `.build/` or the project folder." + #LF$
+  text + "- CPU target is explicit for macOS arm64 and build-as-is for macOS x64 when practical." + #LF$ + #LF$
+  text + "## Required Probe Flow" + #LF$
+  text + "1. `initialize` request." + #LF$
+  text + "2. `notifications/initialized` notification." + #LF$
+  text + "3. `tools/list` request confirms `" + toolName + "`." + #LF$
+  text + "4. `tools/call` request exercises the first tool with bounded output." + #LF$ + #LF$
+  text + "## Verification" + #LF$
+  text + "- `./tools/verify-projects.sh`" + #LF$
+  text + "- focused PureUnit tests for registration and tool behavior" + #LF$
+  text + "- compiled probe for dispatcher behavior" + #LF$
+  text + "- stdio smoke probe using newline-delimited JSON-RPC" + #LF$
+  text + "- `./tools/check.sh`" + #LF$
+
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_Toolkit_McpAddToolMarkdown(argumentsValue)
+  Protected toolName.s
+  Protected title.s
+  Protected description.s
+  Protected inputSchema.s
+  Protected resultShape.s
+  Protected text.s
+
+  toolName = MCP_Toolkit_McpDisplayValue(argumentsValue, "toolName", "purebasic/example")
+  title = MCP_Toolkit_McpDisplayValue(argumentsValue, "title", "PureBasic Example")
+  description = MCP_Toolkit_McpDisplayValue(argumentsValue, "description", "Run a focused PureBasic developer task.")
+  inputSchema = MCP_Toolkit_RecordField(MCP_Toolkit_ReadArgumentString(argumentsValue, "inputSchema", ~"{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"))
+  resultShape = MCP_Toolkit_RecordField(MCP_Toolkit_ReadArgumentString(argumentsValue, "resultShape", "MCP text content with `isError` set only for tool-level failure."))
+
+  text = "# MCP Tool Implementation Draft: " + toolName + #LF$ + #LF$
+  text + "Mode: authoring draft only. No tracked files were created or modified." + #LF$ + #LF$
+  text + "Title: " + title + #LF$
+  text + "Description: " + description + #LF$ + #LF$
+  text + "## Input Schema" + #LF$
+  text + "```json" + #LF$ + inputSchema + #LF$ + "```" + #LF$ + #LF$
+  text + "## Result Shape" + #LF$ + resultShape + #LF$ + #LF$
+  text + "## Handler Pattern" + #LF$
+  text + "```purebasic" + #LF$
+  text + "Procedure.i HandleTool(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)" + #LF$
+  text + "  ; Validate required arguments before doing work." + #LF$
+  text + "  *result\\ok = #True" + #LF$
+  text + "  *result\\resultJson = MCP_Tools_TextResult(" + #DQUOTE$ + "tool output" + #DQUOTE$ + ", #False)" + #LF$
+  text + "  ProcedureReturn #True" + #LF$
+  text + "EndProcedure" + #LF$
+  text + "```" + #LF$ + #LF$
+  text + "## Registration Pattern" + #LF$
+  text + "```purebasic" + #LF$
+  text + "MCP_RegisterTool(*registry, " + #DQUOTE$ + toolName + #DQUOTE$ + ", " + #DQUOTE$ + title + #DQUOTE$ + ", " + #DQUOTE$ + description + #DQUOTE$ + ", schemaJson)" + #LF$
+  text + "MCP_RegisterToolHandler(*registry, " + #DQUOTE$ + toolName + #DQUOTE$ + ", @HandleTool())" + #LF$
+  text + "```" + #LF$ + #LF$
+  text + "## Review Checklist" + #LF$
+  text + "- Return JSON-RPC `-32602` for invalid parameters." + #LF$
+  text + "- Return MCP `isError: true` for tool execution failure after arguments are valid." + #LF$
+  text + "- Bound command output, query output, and generated text." + #LF$
+  text + "- Pair every `ParseJSON()` or `CreateJSON()` ownership path with `FreeJSON()`." + #LF$
+  text + "- Add PureUnit coverage for success, invalid params, and failure result shape." + #LF$
+  text + "- Add stdio probe input for `tools/list` and `tools/call`." + #LF$
+
+  ProcedureReturn text
+EndProcedure
+
+Procedure.s MCP_Toolkit_McpProbeMarkdown(argumentsValue)
+  Protected serverName.s
+  Protected toolName.s
+  Protected argumentsJson.s
+  Protected protocolVersion.s
+  Protected text.s
+
+  serverName = MCP_Toolkit_McpDisplayValue(argumentsValue, "serverName", "purebasic-tool-server")
+  toolName = MCP_Toolkit_McpDisplayValue(argumentsValue, "toolName", "purebasic/example")
+  argumentsJson = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "argumentsJson", "{}"))
+  If argumentsJson = ""
+    argumentsJson = "{}"
+  EndIf
+  protocolVersion = MCP_Toolkit_McpDisplayValue(argumentsValue, "protocolVersion", "2025-11-25")
+
+  text = "# MCP Stdio Probe Draft: " + serverName + #LF$ + #LF$
+  text + "Mode: newline-delimited JSON-RPC input. Feed these lines to the console server stdin." + #LF$
+  text + "Do not add `Content-Length` headers; MCP stdio uses one UTF-8 JSON-RPC message per line." + #LF$ + #LF$
+  text + "```jsonl" + #LF$
+  text + ~"{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"" + JSONRPC_Protocol_EscapeString(protocolVersion) + ~"\",\"capabilities\":{},\"clientInfo\":{\"name\":\"purebasic-toolkit-probe\",\"version\":\"0\"}},\"id\":1}" + #LF$
+  text + ~"{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\",\"params\":{}}" + #LF$
+  text + ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/list\",\"id\":2}" + #LF$
+  text + ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"" + JSONRPC_Protocol_EscapeString(toolName) + ~"\",\"arguments\":" + argumentsJson + ~"},\"id\":3}" + #LF$
+  text + "```" + #LF$ + #LF$
+  text + "## Expected Review" + #LF$
+  text + "- `initialize` returns server info and capabilities." + #LF$
+  text + "- `notifications/initialized` produces no response." + #LF$
+  text + "- `tools/list` includes `" + toolName + "`." + #LF$
+  text + "- `tools/call` returns bounded MCP content and keeps diagnostics off stdout." + #LF$
+
+  ProcedureReturn text
+EndProcedure
+
+Procedure.i MCP_Toolkit_JsonMemberStringEquals(objectValue, name.s, expected.s)
+  Protected member
+
+  If objectValue = 0 Or JSONType(objectValue) <> #PB_JSON_Object
+    ProcedureReturn #False
+  EndIf
+
+  member = GetJSONMember(objectValue, name)
+  If member = 0 Or JSONType(member) <> #PB_JSON_String
+    ProcedureReturn #False
+  EndIf
+
+  ProcedureReturn Bool(GetJSONString(member) = expected)
+EndProcedure
+
+Procedure.i MCP_Toolkit_JsonTextIsObject(text.s)
+  Protected json.i
+  Protected ok.i
+
+  json = ParseJSON(#PB_Any, text)
+  If json = 0
+    ProcedureReturn #False
+  EndIf
+
+  ok = Bool(JSONType(JSONValue(json)) = #PB_JSON_Object)
+  FreeJSON(json)
+  ProcedureReturn ok
+EndProcedure
+
+Procedure.s MCP_Toolkit_McpValidateStdioMarkdown(argumentsValue, *isError.Integer)
+  Protected transcript.s
+  Protected text.s
+  Protected index.i
+  Protected count.i
+  Protected line.s
+  Protected trimmed.s
+  Protected json.i
+  Protected rootValue
+  Protected methodValue
+  Protected method.s
+  Protected messages.i
+  Protected invalid.i
+  Protected initializeCount.i
+  Protected toolsListCount.i
+  Protected toolsCallCount.i
+
+  transcript = MCP_Toolkit_ReadArgumentString(argumentsValue, "transcript")
+  text = "# Stdio transcript validation" + #LF$ + #LF$
+
+  If transcript = ""
+    invalid + 1
+    text + "- transcript is required and must not be empty." + #LF$
+  EndIf
+
+  count = CountString(transcript, #LF$) + 1
+  For index = 1 To count
+    line = StringField(transcript, index, #LF$)
+    If index = count And line = "" And Right(transcript, 1) = #LF$
+      Continue
+    EndIf
+
+    trimmed = Trim(line)
+    If trimmed = ""
+      invalid + 1
+      text + "- line " + Str(index) + " is blank; MCP stdio expects one message per non-empty line." + #LF$
+      Continue
+    EndIf
+
+    If FindString(line, #CR$, 1) > 0
+      invalid + 1
+      text + "- line " + Str(index) + " contains CR; normalize probe input to LF-delimited UTF-8 lines." + #LF$
+      Continue
+    EndIf
+
+    If FindString(trimmed, "Content-Length", 1) > 0
+      invalid + 1
+      text + "- line " + Str(index) + ": Content-Length framing is not valid for MCP stdio." + #LF$
+      Continue
+    EndIf
+
+    json = ParseJSON(#PB_Any, trimmed)
+    If json = 0
+      invalid + 1
+      text + "- line " + Str(index) + " is invalid JSON." + #LF$
+      Continue
+    EndIf
+
+    rootValue = JSONValue(json)
+    If JSONType(rootValue) <> #PB_JSON_Object
+      invalid + 1
+      text + "- line " + Str(index) + " is JSON but not an object message." + #LF$
+      FreeJSON(json)
+      Continue
+    EndIf
+
+    If MCP_Toolkit_JsonMemberStringEquals(rootValue, "jsonrpc", "2.0") = #False
+      invalid + 1
+      text + "- line " + Str(index) + " is missing `jsonrpc: 2.0`." + #LF$
+    EndIf
+
+    messages + 1
+    methodValue = GetJSONMember(rootValue, "method")
+    If methodValue <> 0 And JSONType(methodValue) = #PB_JSON_String
+      method = GetJSONString(methodValue)
+      Select method
+        Case "initialize"
+          initializeCount + 1
+        Case "tools/list"
+          toolsListCount + 1
+        Case "tools/call"
+          toolsCallCount + 1
+      EndSelect
+    EndIf
+
+    FreeJSON(json)
+  Next
+
+  If invalid = 0
+    text + "- Valid: yes" + #LF$
+  Else
+    text + "- Valid: no" + #LF$
+  EndIf
+
+  text + "- Messages: " + Str(messages) + #LF$
+  text + "- initialize requests: " + Str(initializeCount) + #LF$
+  text + "- tools/list requests: " + Str(toolsListCount) + #LF$
+  text + "- tools/call requests: " + Str(toolsCallCount) + #LF$
+  text + "- Errors: " + Str(invalid) + #LF$ + #LF$
+  text + "Rules checked: UTF-8 text as provided by the caller, LF-delimited messages, no Content-Length framing, JSON object shape, and `jsonrpc: 2.0`." + #LF$
+
+  If *isError <> 0
+    *isError\i = Bool(invalid > 0)
+  EndIf
+
+  ProcedureReturn text
+EndProcedure
+
 Procedure.s MCP_Toolkit_ScanIncludesInFile(root.s, relativePath.s, *state.MCP_Toolkit_ScanState)
   Protected file.i
   Protected line.s
@@ -1777,6 +2074,50 @@ Procedure.i MCP_Toolkit_MilestoneCreateHandler(argumentsValue, *context.JSONRPC_
   ProcedureReturn MCP_Toolkit_SetRecordToolResult(argumentsValue, *result, "milestones", "milestone", MCP_Toolkit_MilestoneCreateMarkdown(argumentsValue, track))
 EndProcedure
 
+Procedure.i MCP_Toolkit_McpNewServerHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  ProcedureReturn MCP_Toolkit_SetRecordToolResult(argumentsValue, *result, "mcp-authoring", "mcp-server", MCP_Toolkit_McpNewServerMarkdown(argumentsValue))
+EndProcedure
+
+Procedure.i MCP_Toolkit_McpAddToolHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  ProcedureReturn MCP_Toolkit_SetRecordToolResult(argumentsValue, *result, "mcp-authoring", "mcp-tool", MCP_Toolkit_McpAddToolMarkdown(argumentsValue))
+EndProcedure
+
+Procedure.i MCP_Toolkit_McpProbeHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  Protected argumentsJson.s
+
+  argumentsJson = Trim(MCP_Toolkit_ReadArgumentString(argumentsValue, "argumentsJson", "{}"))
+  If argumentsJson = ""
+    argumentsJson = "{}"
+  EndIf
+
+  If MCP_Toolkit_JsonTextIsObject(argumentsJson) = #False
+    MCP_Toolkit_SetInvalidParams(*result, "argumentsJson must be a JSON object string")
+    ProcedureReturn #True
+  EndIf
+
+  ProcedureReturn MCP_Toolkit_SetRecordToolResult(argumentsValue, *result, "mcp-authoring", "mcp-probe", MCP_Toolkit_McpProbeMarkdown(argumentsValue))
+EndProcedure
+
+Procedure.i MCP_Toolkit_McpValidateStdioHandler(argumentsValue, *context.JSONRPC_RequestContext, *result.JSONRPC_HandlerResult)
+  Protected transcriptValue
+  Protected isError.Integer
+
+  If argumentsValue = 0 Or JSONType(argumentsValue) <> #PB_JSON_Object
+    MCP_Toolkit_SetInvalidParams(*result, "purebasic/mcp/validate-stdio requires transcript")
+    ProcedureReturn #True
+  EndIf
+
+  transcriptValue = GetJSONMember(argumentsValue, "transcript")
+  If transcriptValue = 0 Or JSONType(transcriptValue) <> #PB_JSON_String Or GetJSONString(transcriptValue) = ""
+    MCP_Toolkit_SetInvalidParams(*result, "transcript must be a non-empty string")
+    ProcedureReturn #True
+  EndIf
+
+  *result\ok = #True
+  *result\resultJson = MCP_Tools_TextResult(MCP_Toolkit_McpValidateStdioMarkdown(argumentsValue, @isError), isError\i)
+  ProcedureReturn #True
+EndProcedure
+
 Procedure.i MCP_Toolkit_RegisterTool(*registry.MCP_ToolRegistry, name.s, title.s, description.s, schema.s, *handler)
   If MCP_RegisterTool(*registry, name, title, description, schema) = #False
     ProcedureReturn #False
@@ -1871,6 +2212,22 @@ Procedure.i MCP_Toolkit_Register(*dispatcher.JSONRPC_Dispatcher, *registry.MCP_T
   EndIf
 
   If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_MilestoneCreateName$, "PureBasic Milestone Create", "Draft a core or toolkit milestone entry without editing the tracked milestone file automatically.", #MCP_Toolkit_MilestoneCreateSchema$, @MCP_Toolkit_MilestoneCreateHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_McpNewServerName$, "PureBasic MCP New Server", "Draft a PureBasic stdio MCP server scaffold with console .pbp, probe, docs, tests, and safety checklist.", #MCP_Toolkit_McpNewServerSchema$, @MCP_Toolkit_McpNewServerHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_McpAddToolName$, "PureBasic MCP Add Tool", "Draft a new PureBasic MCP tool handler, schema, registration plan, result policy, and tests.", #MCP_Toolkit_McpAddToolSchema$, @MCP_Toolkit_McpAddToolHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_McpProbeName$, "PureBasic MCP Probe Draft", "Draft newline-delimited JSON-RPC probe input for a PureBasic MCP stdio server.", #MCP_Toolkit_McpProbeSchema$, @MCP_Toolkit_McpProbeHandler()) = #False
+    ProcedureReturn #False
+  EndIf
+
+  If MCP_Toolkit_RegisterTool(*registry, #MCP_Toolkit_McpValidateStdioName$, "PureBasic MCP Stdio Validate", "Validate MCP stdio transcript shape: LF-delimited JSON-RPC object messages with no Content-Length framing.", #MCP_Toolkit_McpValidateStdioSchema$, @MCP_Toolkit_McpValidateStdioHandler()) = #False
     ProcedureReturn #False
   EndIf
 
