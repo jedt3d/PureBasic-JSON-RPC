@@ -203,6 +203,8 @@ Acceptance criteria:
 - Toolkit probe and stdio smoke input cover docs/milestone automation.
 - PureUnit coverage validates registration, read-only/draft behavior, saved
   draft paths, and invalid track handling.
+- `tools/test.sh` handles the observed PureUnit standby-compiler hang only
+  after the report confirms all tests completed with zero failures.
 - `./tools/check.sh` passes.
 
 ## 006-mcp-authoring-kit
