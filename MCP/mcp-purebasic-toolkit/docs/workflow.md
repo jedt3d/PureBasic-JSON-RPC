@@ -21,6 +21,10 @@ clear enough to build. The interview should identify:
 The agent should summarize the brief before code changes unless the user has
 already supplied a complete implementation plan.
 
+Use `purebasic/brief/create` to turn that summary into a Markdown brief. Leave
+`save` unset for transient MCP output, or use `save: true` to write the brief
+under `.local/mcp-purebasic-toolkit/records/briefs/`.
+
 Use the toolkit project-intelligence tools early in the interview when the code
 base is unfamiliar:
 
@@ -45,6 +49,11 @@ Before touching risky code, explain:
 
 Ask the human to decide when semantics are product choices rather than mechanical
 implementation details.
+
+Use `purebasic/algorithm/explain` before implementation when the flow needs to
+be reviewed, and `purebasic/decision-record/create` when a product or technical
+choice should be preserved. Saved records are generated under `.local/` and
+should be promoted into tracked documentation only after human review.
 
 Examples:
 

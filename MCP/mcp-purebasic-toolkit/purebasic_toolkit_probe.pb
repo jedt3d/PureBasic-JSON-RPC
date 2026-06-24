@@ -76,6 +76,21 @@ If FindString(response, #MCP_Toolkit_DocsBuildName$, 1) = 0
   End 1
 EndIf
 
+If FindString(response, #MCP_Toolkit_BriefCreateName$, 1) = 0
+  PrintN("tools/list is missing brief create")
+  End 1
+EndIf
+
+If FindString(response, #MCP_Toolkit_AlgorithmExplainName$, 1) = 0
+  PrintN("tools/list is missing algorithm explain")
+  End 1
+EndIf
+
+If FindString(response, #MCP_Toolkit_DecisionRecordCreateName$, 1) = 0
+  PrintN("tools/list is missing decision record create")
+  End 1
+EndIf
+
 response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/project/inspect\",\"arguments\":{}},\"id\":2}")
 If FindString(response, "Toolkit milestones: yes", 1) = 0
   PrintN("project inspect did not find toolkit milestones")
@@ -127,6 +142,24 @@ EndIf
 response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/docs/build\",\"arguments\":{\"dryRun\":true}},\"id\":10}")
 If FindString(response, "Command: ./tools/build-docs.sh", 1) = 0 Or FindString(response, ~"\"isError\":false", 1) = 0
   PrintN("docs build dry run did not return a successful MCP tool result")
+  End 1
+EndIf
+
+response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/brief/create\",\"arguments\":{\"goal\":\"Add a focused PureBasic feature\",\"tests\":\"Focused PureUnit plus check.sh\"}},\"id\":11}")
+If FindString(response, "# PureBasic Implementation Brief", 1) = 0 Or FindString(response, "Questions To Clarify", 1) = 0
+  PrintN("brief create did not return a pair-development brief")
+  End 1
+EndIf
+
+response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/algorithm/explain\",\"arguments\":{\"title\":\"Bounded harness execution\",\"flow\":\"Validate arguments, run fixed script, capture bounded output.\"}},\"id\":12}")
+If FindString(response, "Algorithm Explanation: Bounded harness execution", 1) = 0 Or FindString(response, "Default Review Checklist", 1) = 0
+  PrintN("algorithm explain did not return an implementation flow")
+  End 1
+EndIf
+
+response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/decision-record/create\",\"arguments\":{\"title\":\"Keep toolkit records under .local\",\"decision\":\"Generated records should stay outside tracked source unless promoted by a human.\"}},\"id\":13}")
+If FindString(response, "Decision Record: Keep toolkit records under .local", 1) = 0 Or FindString(response, "Generated records should stay outside tracked source", 1) = 0
+  PrintN("decision record create did not return a decision record")
   End 1
 EndIf
 

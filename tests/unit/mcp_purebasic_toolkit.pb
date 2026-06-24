@@ -62,6 +62,19 @@ ProcedureUnit ToolkitRegistersHarnessExecutionTools()
   Assert(FindString(response, #MCP_Toolkit_DocsBuildName$, 1) > 0, "tools/list should include docs build.")
 EndProcedureUnit
 
+ProcedureUnit ToolkitRegistersPairDevelopmentRecordTools()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/list\",\"id\":1}")
+
+  Assert(FindString(response, #MCP_Toolkit_BriefCreateName$, 1) > 0, "tools/list should include brief create.")
+  Assert(FindString(response, #MCP_Toolkit_AlgorithmExplainName$, 1) > 0, "tools/list should include algorithm explain.")
+  Assert(FindString(response, #MCP_Toolkit_DecisionRecordCreateName$, 1) > 0, "tools/list should include decision record create.")
+EndProcedureUnit
+
 ProcedureUnit IncludeGraphContainsJsonRpcEdges()
   Protected text.s
 
@@ -165,4 +178,56 @@ ProcedureUnit HarnessRunnerCanExecuteFastVerifier()
   Assert(commandResult\exitCode = 0, "Fast verifier should exit successfully: " + commandResult\output)
   Assert(FindString(commandResult\output, "Verified tracked files", 1) > 0, "Fast verifier output should be captured.")
   Assert(FindString(commandResult\output, WorkstationAbsolutePathMarker(), 1) = 0, "Captured output should avoid workstation-specific paths.")
+EndProcedureUnit
+
+ProcedureUnit BriefCreateReturnsInterviewScaffold()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/brief/create\",\"arguments\":{\"goal\":\"Build a focused PureBasic MCP tool\",\"tests\":\"PureUnit plus probe\"}},\"id\":6}")
+
+  Assert(FindString(response, "# PureBasic Implementation Brief", 1) > 0, "Brief tool should return a markdown brief.")
+  Assert(FindString(response, "Build a focused PureBasic MCP tool", 1) > 0, "Brief should include the supplied goal.")
+  Assert(FindString(response, "Questions To Clarify", 1) > 0, "Brief should include interview questions.")
+EndProcedureUnit
+
+ProcedureUnit AlgorithmExplainReturnsReviewChecklist()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/algorithm/explain\",\"arguments\":{\"title\":\"Record creation\",\"flow\":\"Validate fields, format markdown, optionally save.\"}},\"id\":7}")
+
+  Assert(FindString(response, "Algorithm Explanation: Record creation", 1) > 0, "Algorithm tool should include the title.")
+  Assert(FindString(response, "Validate fields, format markdown", 1) > 0, "Algorithm tool should include the flow.")
+  Assert(FindString(response, "Default Review Checklist", 1) > 0, "Algorithm tool should include the default review checklist.")
+EndProcedureUnit
+
+ProcedureUnit DecisionRecordCanBeSavedRelative()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+  Protected savedPath.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/decision-record/create\",\"arguments\":{\"title\":\"Generated records stay local\",\"decision\":\"Use .local for generated MCP toolkit records.\",\"save\":true,\"fileName\":\"unit-decision-record\"}},\"id\":8}")
+
+  savedPath = ".local/mcp-purebasic-toolkit/records/decisions/unit-decision-record.md"
+  Assert(FindString(response, "Saved record: " + savedPath, 1) > 0, "Decision record should report a repository-relative saved path.")
+  Assert(FindString(response, WorkstationAbsolutePathMarker(), 1) = 0, "Saved record response should avoid workstation-specific paths.")
+  Assert(FileSize(ToolkitRoot() + savedPath) >= 0, "Decision record file should be written under .local.")
+EndProcedureUnit
+
+ProcedureUnit RecordSaveRejectsPathTraversal()
+  Protected dispatcher.JSONRPC_Dispatcher
+  Protected registry.MCP_ToolRegistry
+  Protected response.s
+
+  ToolkitInit(@dispatcher, @registry)
+  response = JSONRPC_Dispatcher_Dispatch(@dispatcher, 0, ~"{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"purebasic/brief/create\",\"arguments\":{\"save\":true,\"fileName\":\"../bad.md\"}},\"id\":9}")
+
+  Assert(FindString(response, ~"\"code\":-32602", 1) > 0, "Record save should reject path traversal.")
 EndProcedureUnit

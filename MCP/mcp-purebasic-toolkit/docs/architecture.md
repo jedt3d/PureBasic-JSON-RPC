@@ -33,6 +33,9 @@ MCP toolkit server
   purebasic/harness/checklist
   purebasic/test/run, purebasic/build/run
   purebasic/check, purebasic/docs/build
+  purebasic/brief/create
+  purebasic/algorithm/explain
+  purebasic/decision-record/create
         |
 PureBasic JSON-RPC library
   MCP lifecycle/tools adapter
@@ -45,7 +48,9 @@ PureBasic JSON-RPC library
 The first two slices are read-only and low risk: foundation context and project
 intelligence. The harness-execution slice adds fixed-script process launch for
 the repository's verification workflow, but still avoids arbitrary shell access
-or Git mutation.
+or Git mutation. The pair-development records slice turns interviews,
+algorithm explanations, and technical decisions into Markdown outputs that can
+optionally be saved under `.local/`.
 
 Current implementation files:
 
@@ -64,6 +69,8 @@ Current tool groups:
   `purebasic/pbp/list-targets`.
 - Harness execution: `purebasic/test/run`, `purebasic/build/run`,
   `purebasic/check`, and `purebasic/docs/build`.
+- Pair-development records: `purebasic/brief/create`,
+  `purebasic/algorithm/explain`, and `purebasic/decision-record/create`.
 
 Harness execution is deliberately not a general shell. Each tool maps to one
 fixed repository script, captures combined stdout/stderr, replaces the
@@ -71,6 +78,11 @@ configured project root in output with `.`, and returns an MCP text result with
 exit status, timeout status, and truncation status. `dryRun` is supported so a
 pair-development session can review what would happen before launching a longer
 command.
+
+Record tools are conversational structure tools. They produce Markdown through
+MCP text results and save only when `save: true` is requested. Saved records go
+to `.local/mcp-purebasic-toolkit/records/` with simple file-name validation so
+generated notes do not become tracked source or escape the project.
 
 ## Design Rules
 
@@ -82,6 +94,8 @@ command.
 - Keep tracked paths relative to the repository root.
 - Do not expose arbitrary shell execution through MCP tools.
 - Bound command runtime and output whenever a tool launches a process.
+- Keep generated pair-development records under `.local/` unless a human
+  deliberately promotes them into tracked documentation.
 - Run harness checks before claiming a route is complete.
 - Update documentation and ReadTheDocs navigation when user-facing guidance
   changes.
@@ -92,8 +106,8 @@ command.
   and `.pbp` target analysis.
 - Harness execution: add richer target selection and package/release
   verification after the initial fixed-script tools.
-- Pair workflow: produce implementation briefs, algorithm flow summaries, and
-  human decision records.
+- Pair workflow: add richer question generation, record templates, and optional
+  promotion paths from `.local/` into reviewed docs.
 - Git/GitHub workflow: preflight, branch naming, commit summaries, PR drafts,
   CI inspection, and release notes.
 - Docs workflow: API page skeletons, milestone updates, ReadTheDocs navigation,

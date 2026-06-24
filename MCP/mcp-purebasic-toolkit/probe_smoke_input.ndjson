@@ -6,3 +6,5 @@
 {"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/symbol/search","arguments":{"query":"MCP_Toolkit_Register"}},"id":5}
 {"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/check","arguments":{"dryRun":true}},"id":6}
 {"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/docs/build","arguments":{"dryRun":true}},"id":7}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/brief/create","arguments":{"goal":"Prepare a PureBasic MCP feature","tests":"Focused PureUnit and ./tools/check.sh"}},"id":8}
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"purebasic/decision-record/create","arguments":{"title":"Keep generated records local","decision":"Save generated toolkit records under .local until a human promotes them."}},"id":9}
